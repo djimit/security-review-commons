@@ -17,11 +17,10 @@
 
 ## Not Yet Done
 
-- npm registry publish
 - OpenCode runtime fixture tests
 - model-backed deeper agentic review
 - AST or Semgrep integration
-- release automation beyond plain GitHub source publishing
+- npm publish still depends on `NPM_TOKEN` being configured in repository secrets
 
 ## Current Deterministic Coverage
 
@@ -37,3 +36,9 @@ The CI workflow now publishes:
 - a sample SARIF artifact
 - a Markdown summary artifact
 - a corpus report artifact tied to the baseline fixture set
+
+## Release Workflow
+
+- `.github/workflows/release.yml` triggers on tags matching `v*`
+- it runs checks, creates an npm tarball, attaches it to a GitHub release, and publishes to npm only if `NPM_TOKEN` is present
+- this keeps release automation honest: the repo is release-ready, but secret setup remains an explicit operational step

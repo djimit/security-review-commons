@@ -56,6 +56,12 @@ Run checks:
 npm run check
 ```
 
+Dry-run the published package contents:
+
+```bash
+npm run pack:dry-run
+```
+
 Run the example deterministic review from Node:
 
 ```bash
@@ -87,7 +93,7 @@ npm run corpus
 - No live OpenCode payload-shape verification yet.
 - No live Codex background hook parity yet.
 - No AST or Semgrep integration yet.
-- No npm registry publish yet.
+- npm publish requires `NPM_TOKEN` to be configured in GitHub Actions.
 
 ## Current Rule Coverage
 
@@ -109,3 +115,8 @@ npm run corpus
   exits non-zero when a finding at or above `high` is present
 - `node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus`
   exits non-zero when any corpus case deviates from expected findings
+
+## Release
+
+- tag a release as `v<version>` to trigger `.github/workflows/release.yml`
+- the workflow runs checks, creates an npm tarball, publishes a GitHub release, and publishes to npm only when `NPM_TOKEN` is configured

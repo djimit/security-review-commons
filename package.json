@@ -3,10 +3,26 @@
   "version": "0.1.0",
   "private": false,
   "description": "Portable, auditable code security review core with OpenCode and Codex adapters.",
+  "homepage": "https://github.com/djimit/security-review-commons",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/djimit/security-review-commons.git"
+  },
+  "bugs": {
+    "url": "https://github.com/djimit/security-review-commons/issues"
+  },
+  "author": "Dutch Dim",
   "type": "module",
   "bin": {
     "security-review-commons": "./src/cli.js"
   },
+  "files": [
+    "src/",
+    "schemas/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "exports": {
     ".": "./src/index.js",
     "./core/config": "./src/core/config.js",
@@ -22,14 +38,17 @@
     "test": "node --test",
     "lint": "node --check src/index.js src/cli.js src/core/*.js src/adapters/opencode/*.js src/adapters/codex/*.js",
     "corpus": "node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus",
-    "check": "npm run lint && npm test && npm run corpus"
+    "check": "npm run lint && npm test && npm run corpus",
+    "pack:dry-run": "npm pack --dry-run"
   },
   "keywords": [
     "security",
     "code-review",
     "opencode",
     "codex",
-    "plugin"
+    "plugin",
+    "sarif",
+    "sast"
   ],
   "license": "MIT"
 }
