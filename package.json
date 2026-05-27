@@ -50,5 +50,9 @@
     "sarif",
     "sast"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "acorn": "^8.16.0",
+    "acorn-walk": "^8.3.5"
+  }
 }

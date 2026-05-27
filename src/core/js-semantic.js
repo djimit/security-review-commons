@@ -1,9 +1,8 @@
+import { parse } from "acorn";
+import * as walk from "acorn-walk";
 import { makeFinding } from "./findings.js";
-import { lineColumnFromIndex } from "./location.js";
 
 const JS_PATH_REGEX = /(^|\/).+\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
-const TAINT_SOURCE_REGEX =
-  /\b(?:req\.(?:body|query|params)|request\.(?:body|query|params)|ctx\.request\.(?:body|query|params)|userInput)\b/;
 
 const JS_SEMANTIC_RULES = [
   {
@@ -11,7 +10,9 @@ const JS_SEMANTIC_RULES = [
     title: "Tainted input reaches command execution",
     severity: "high",
     category: "command-injection",
-    sinkRegex: /\b(exec|execSync|spawn|spawnSync)\s*\(([^)]*)\)/,
+    matchesSink(node) {
+      return isIdentifierCall(node, ["exec", "execSync", "spawn", "spawnSync"]);
+    },
     explanation:
       "A value derived from request-controlled input appears to reach command execution.",
     proposedFix:
@@ -22,7 +23,9 @@ const JS_SEMANTIC_RULES = [
     title: "Tainted input reaches eval-like execution",
     severity: "high",
     category: "code-injection",
-    sinkRegex: /\b(eval|Function)\s*\(([^)]*)\)/,
+    matchesSink(node) {
+      return isIdentifierCall(node, ["eval", "Function"]);
+    },
     explanation:
       "A value derived from request-controlled input appears to reach dynamic code execution.",
     proposedFix:
@@ -33,7 +36,12 @@ const JS_SEMANTIC_RULES = [
     title: "Tainted input reaches outbound request target",
     severity: "medium",
     category: "ssrf",
-    sinkRegex: /\b(fetch|got|request|axios\.(?:get|post|request))\s*\(([^)]*)\)/,
+    matchesSink(node) {
+      return (
+        isIdentifierCall(node, ["fetch", "got", "request"]) ||
+        isMemberCall(node, "axios", ["get", "post", "request"])
+      );
+    },
     explanation:
       "A value derived from request-controlled input appears to reach an outbound URL sink.",
     proposedFix:
@@ -44,7 +52,9 @@ const JS_SEMANTIC_RULES = [
     title: "Tainted input reaches filesystem path construction",
     severity: "medium",
     category: "path-traversal",
-    sinkRegex: /\bpath\.(join|resolve)\s*\(([^)]*)\)/,
+    matchesSink(node) {
+      return isMemberCall(node, "path", ["join", "resolve"]);
+    },
     explanation:
       "A value derived from request-controlled input appears to reach filesystem path construction.",
     proposedFix:
@@ -57,77 +67,189 @@ export function evaluateJsSemanticFindings({ diff, changedFiles, layer }) {
     return [];
   }
 
-  const taintedIdentifiers = collectTaintedIdentifiers(diff);
+  const ast = tryParse(diff);
+  if (!ast) {
+    return [];
+  }
+
+  const taintedIdentifiers = collectTaintedIdentifiers(ast);
   if (taintedIdentifiers.size === 0) {
     return [];
   }
 
   const findings = [];
-  for (const rule of JS_SEMANTIC_RULES) {
-    const match = rule.sinkRegex.exec(diff);
-    if (!match) {
-      continue;
-    }
-    const sinkArgs = match[2] ?? match[0];
-    if (!containsTaintedIdentifier(sinkArgs, taintedIdentifiers)) {
-      continue;
-    }
+  walk.simple(ast, {
+    CallExpression(node) {
+      for (const rule of JS_SEMANTIC_RULES) {
+        if (!rule.matchesSink(node)) {
+          continue;
+        }
+        if (!node.arguments.some((argument) => expressionIsTainted(argument, taintedIdentifiers))) {
+          continue;
+        }
 
-    findings.push(
-      makeFinding({
-        title: rule.title,
-        severity: rule.severity,
-        confidence: "high",
-        category: rule.category,
-        files: changedFiles,
-        explanation: rule.explanation,
-        proposedFix: rule.proposedFix,
-        location: {
-          file: changedFiles[0],
-          ...lineColumnFromIndex(diff, match.index)
-        },
-        source: { ruleId: rule.id, layer }
-      })
-    );
-  }
+        findings.push(
+          makeFinding({
+            title: rule.title,
+            severity: rule.severity,
+            confidence: "high",
+            category: rule.category,
+            files: changedFiles,
+            explanation: rule.explanation,
+            proposedFix: rule.proposedFix,
+            location: {
+              file: changedFiles[0],
+              line: node.loc.start.line,
+              column: node.loc.start.column + 1
+            },
+            source: { ruleId: rule.id, layer }
+          })
+        );
+      }
+    }
+  });
 
   return findings;
 }
 
-function collectTaintedIdentifiers(diff) {
-  const tainted = new Set();
-  const lines = diff.split("\n");
+function tryParse(diff) {
+  try {
+    return parse(diff, {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      locations: true
+    });
+  } catch {
+    return null;
+  }
+}
 
-  for (let pass = 0; pass < 3; pass += 1) {
-    for (const line of lines) {
-      const assignment =
-        /\b(?:const|let|var)?\s*([A-Za-z_$][\w$]*)\s*=\s*(.+?);?\s*$/.exec(line);
-      if (!assignment) {
-        continue;
+function collectTaintedIdentifiers(ast) {
+  const tainted = new Set();
+
+  for (let pass = 0; pass < 4; pass += 1) {
+    walk.simple(ast, {
+      VariableDeclarator(node) {
+        if (
+          node.id?.type === "Identifier" &&
+          node.init &&
+          expressionIsTainted(node.init, tainted)
+        ) {
+          tainted.add(node.id.name);
+        }
+      },
+      AssignmentExpression(node) {
+        if (
+          node.left?.type === "Identifier" &&
+          expressionIsTainted(node.right, tainted)
+        ) {
+          tainted.add(node.left.name);
+        }
       }
-      const [, identifier, value] = assignment;
-      if (TAINT_SOURCE_REGEX.test(value) || referencesKnownTaint(value, tainted)) {
-        tainted.add(identifier);
-      }
-    }
+    });
   }
 
   return tainted;
 }
 
-function referencesKnownTaint(value, taintedIdentifiers) {
-  for (const identifier of taintedIdentifiers) {
-    if (new RegExp(`\\b${escapeRegex(identifier)}\\b`).test(value)) {
-      return true;
-    }
+function expressionIsTainted(node, taintedIdentifiers) {
+  if (!node) {
+    return false;
   }
-  return false;
+
+  switch (node.type) {
+    case "Identifier":
+      return taintedIdentifiers.has(node.name);
+    case "MemberExpression":
+      return memberExpressionIsTaintSource(node) || expressionIsTainted(node.object, taintedIdentifiers);
+    case "CallExpression":
+      return (
+        expressionIsTainted(node.callee, taintedIdentifiers) ||
+        node.arguments.some((argument) => expressionIsTainted(argument, taintedIdentifiers))
+      );
+    case "TemplateLiteral":
+      return node.expressions.some((expression) => expressionIsTainted(expression, taintedIdentifiers));
+    case "BinaryExpression":
+    case "LogicalExpression":
+      return (
+        expressionIsTainted(node.left, taintedIdentifiers) ||
+        expressionIsTainted(node.right, taintedIdentifiers)
+      );
+    case "ConditionalExpression":
+      return (
+        expressionIsTainted(node.test, taintedIdentifiers) ||
+        expressionIsTainted(node.consequent, taintedIdentifiers) ||
+        expressionIsTainted(node.alternate, taintedIdentifiers)
+      );
+    case "ArrayExpression":
+      return node.elements.some((element) => expressionIsTainted(element, taintedIdentifiers));
+    case "ObjectExpression":
+      return node.properties.some((property) =>
+        property.type === "Property"
+          ? expressionIsTainted(property.value, taintedIdentifiers)
+          : false
+      );
+    case "ChainExpression":
+      return expressionIsTainted(node.expression, taintedIdentifiers);
+    case "AwaitExpression":
+    case "UnaryExpression":
+      return expressionIsTainted(node.argument, taintedIdentifiers);
+    default:
+      return false;
+  }
 }
 
-function containsTaintedIdentifier(value, taintedIdentifiers) {
-  return referencesKnownTaint(value, taintedIdentifiers);
+function memberExpressionIsTaintSource(node) {
+  const parts = flattenMemberExpression(node);
+  if (parts.length < 2) {
+    return false;
+  }
+
+  const patterns = [
+    ["req", "body"],
+    ["req", "query"],
+    ["req", "params"],
+    ["request", "body"],
+    ["request", "query"],
+    ["request", "params"],
+    ["ctx", "request", "body"],
+    ["ctx", "request", "query"],
+    ["ctx", "request", "params"]
+  ];
+
+  return patterns.some((pattern) => pattern.every((segment, index) => parts[index] === segment));
 }
 
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function flattenMemberExpression(node) {
+  if (node.type === "Identifier") {
+    return [node.name];
+  }
+  if (node.type !== "MemberExpression" || node.computed) {
+    return [];
+  }
+  return [
+    ...flattenMemberExpression(node.object),
+    propertyName(node.property)
+  ].filter(Boolean);
+}
+
+function propertyName(node) {
+  return node?.type === "Identifier" ? node.name : null;
+}
+
+function isIdentifierCall(node, identifiers) {
+  return (
+    node.callee?.type === "Identifier" && identifiers.includes(node.callee.name)
+  );
+}
+
+function isMemberCall(node, objectName, propertyNames) {
+  return (
+    node.callee?.type === "MemberExpression" &&
+    !node.callee.computed &&
+    node.callee.object?.type === "Identifier" &&
+    node.callee.object.name === objectName &&
+    node.callee.property?.type === "Identifier" &&
+    propertyNames.includes(node.callee.property.name)
+  );
 }
