@@ -1,0 +1,13 @@
+name: Dangerous Workflow
+
+on:
+  pull_request_target:
+
+permissions: write-all
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://example.com/install.sh | sh
+

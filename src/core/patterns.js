@@ -5,7 +5,10 @@ export function evaluatePatterns({ diff, changedFiles, layer, config }) {
   const findings = [];
 
   for (const rule of BUILTIN_RULES) {
-    if (rule.regex.test(diff)) {
+    const pathMatch =
+      !rule.pathRegex ||
+      changedFiles.some((changedFile) => rule.pathRegex.test(changedFile));
+    if (pathMatch && rule.regex.test(diff)) {
       findings.push(
         makeFinding({
           title: rule.title,

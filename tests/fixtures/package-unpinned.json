@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "left-pad": "latest",
+    "debug": "*"
+  }
+}
+

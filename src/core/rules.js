@@ -64,6 +64,101 @@ export const BUILTIN_RULES = [
       "Network requests built from attacker-controlled URLs can reach internal services or metadata endpoints.",
     proposedFix:
       "Validate schemes, hosts, ports, and destination allowlists before issuing outbound requests."
+  },
+  {
+    id: "builtin-github-actions-pull-request-target",
+    title: "GitHub Actions workflow uses pull_request_target",
+    severity: "high",
+    category: "ci-trust-boundary",
+    pathRegex: /(^|\/)\.github\/workflows\/.+\.(yml|yaml)$/i,
+    regex: /\bpull_request_target\s*:/i,
+    explanation:
+      "pull_request_target runs with the base repository context and can become dangerous when combined with untrusted pull request content.",
+    proposedFix:
+      "Prefer pull_request unless write permissions or secrets are strictly required, and isolate any untrusted code paths."
+  },
+  {
+    id: "builtin-github-actions-write-all-permissions",
+    title: "GitHub Actions workflow grants broad write-all permissions",
+    severity: "high",
+    category: "ci-privilege",
+    pathRegex: /(^|\/)\.github\/workflows\/.+\.(yml|yaml)$/i,
+    regex: /\bpermissions\s*:\s*write-all\b/i,
+    explanation:
+      "write-all grants a broad token scope that increases blast radius for compromised workflow steps.",
+    proposedFix:
+      "Replace write-all with the minimum explicit permissions required by each workflow."
+  },
+  {
+    id: "builtin-github-actions-curl-pipe-shell",
+    title: "Workflow step pipes remote content into a shell",
+    severity: "high",
+    category: "supply-chain",
+    pathRegex: /(^|\/)\.github\/workflows\/.+\.(yml|yaml)$/i,
+    regex: /\bcurl\b[^\n|]*\|\s*(sh|bash)\b/i,
+    explanation:
+      "Piping remote network content directly into a shell removes reviewable integrity boundaries and increases supply-chain risk.",
+    proposedFix:
+      "Download artifacts explicitly, pin their source and checksum, and execute only verified local files."
+  },
+  {
+    id: "builtin-dockerfile-missing-user",
+    title: "Dockerfile does not appear to switch away from root",
+    severity: "medium",
+    category: "container-hardening",
+    pathRegex: /(^|\/)(dockerfile|Dockerfile|.+\.dockerfile)$/i,
+    regex: /^(?![\s\S]*^\s*USER\s+)/m,
+    explanation:
+      "Containers that never set USER commonly run as root, increasing impact if the service is compromised.",
+    proposedFix:
+      "Create a dedicated unprivileged runtime user and switch to it before the final execution stage."
+  },
+  {
+    id: "builtin-kubernetes-privileged-container",
+    title: "Kubernetes manifest enables privileged container execution",
+    severity: "high",
+    category: "container-privilege",
+    pathRegex: /(^|\/).+\.(yml|yaml)$/i,
+    regex: /\bprivileged\s*:\s*true\b/i,
+    explanation:
+      "Privileged containers significantly expand kernel and host access, often beyond what an application needs.",
+    proposedFix:
+      "Avoid privileged mode unless there is a strong host-level requirement and document the exact need."
+  },
+  {
+    id: "builtin-kubernetes-runas-root",
+    title: "Kubernetes manifest explicitly runs as root",
+    severity: "medium",
+    category: "container-hardening",
+    pathRegex: /(^|\/).+\.(yml|yaml)$/i,
+    regex: /\brunAsUser\s*:\s*0\b/i,
+    explanation:
+      "Explicit root execution in Kubernetes increases the impact of container escape and application compromise.",
+    proposedFix:
+      "Use a non-root runtime user and pair it with read-only or least-privilege filesystem settings where possible."
+  },
+  {
+    id: "builtin-terraform-public-ssh-ingress",
+    title: "Terraform resource exposes SSH to the public internet",
+    severity: "high",
+    category: "network-exposure",
+    pathRegex: /(^|\/).+\.tf$/i,
+    regex: /((from_port|to_port)\s*=\s*22[\s\S]{0,220}cidr_blocks\s*=\s*\[[^\]]*"0\.0\.0\.0\/0"[^\]]*\])|(cidr_blocks\s*=\s*\[[^\]]*"0\.0\.0\.0\/0"[^\]]*\][\s\S]{0,220}(from_port|to_port)\s*=\s*22)/i,
+    explanation:
+      "Opening SSH to 0.0.0.0/0 is a high-noise exposure pattern that expands brute-force and credential-attack surface.",
+    proposedFix:
+      "Restrict SSH ingress to trusted administrator ranges or remove direct public SSH entirely."
+  },
+  {
+    id: "builtin-package-json-unpinned-version",
+    title: "package.json uses unpinned or catch-all dependency version",
+    severity: "medium",
+    category: "dependency-governance",
+    pathRegex: /(^|\/)package\.json$/i,
+    regex: /:\s*"(latest|\*|x)"/i,
+    explanation:
+      "Unpinned dependency selectors reduce change control and increase the chance of unexpected or malicious version drift.",
+    proposedFix:
+      "Use explicit versions or a narrow reviewed range and update intentionally."
   }
 ];
-

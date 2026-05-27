@@ -15,6 +15,7 @@ This repository implements the first vertical slice:
 - a runnable CLI,
 - OpenCode hook mapping for documented events,
 - a Codex adapter scaffold,
+- deterministic coverage for CI, containers, Terraform, and dependency-governance drift,
 - CI for lint and tests.
 
 It does not claim security guarantees. It is a review assistant with explicit trust boundaries.
@@ -81,3 +82,10 @@ node ./src/cli.js --diff-file ./tests/fixtures/sample.diff --changed-files src/a
 - No live Codex background hook parity yet.
 - No AST or Semgrep integration yet.
 - No npm registry publish yet.
+
+## Current Rule Coverage
+
+- application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets
+- CI and workflow drift: `pull_request_target`, `permissions: write-all`, `curl | sh`
+- container and IaC drift: Docker root runtime, Kubernetes privileged/root execution, Terraform public SSH ingress
+- dependency governance: `latest`, `*`, and `x` package selectors in `package.json`
