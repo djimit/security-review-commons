@@ -92,6 +92,7 @@ npm run corpus
 ## Current Rule Coverage
 
 - application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets
+- lightweight JS semantic flow checks: request-derived values into `exec`, `eval`, `fetch`, and `path.join/resolve`
 - CI and workflow drift: `pull_request_target`, `permissions: write-all`, `curl | sh`
 - container and IaC drift: Docker root runtime, Kubernetes privileged/root execution, Terraform public SSH ingress
 - dependency governance: `latest`, `*`, and `x` package selectors in `package.json`

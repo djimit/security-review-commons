@@ -152,3 +152,35 @@ test("safe fixtures do not trigger current drift rules", () => {
   assert.equal(dockerResult.findings.length, 0);
   assert.equal(packageResult.findings.length, 0);
 });
+
+test("semantic JS analysis catches tainted flows into sinks", () => {
+  const execResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "js-exec-tainted.js"), "utf8"),
+    changedFiles: ["src/exec-tainted.js"],
+    layer: "turn"
+  });
+  const fetchResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "js-fetch-tainted.js"), "utf8"),
+    changedFiles: ["src/fetch-tainted.js"],
+    layer: "turn"
+  });
+  const pathResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "js-path-tainted.js"), "utf8"),
+    changedFiles: ["src/path-tainted.js"],
+    layer: "turn"
+  });
+
+  assert.equal(execResult.findings[0].source.ruleId, "semantic-js-exec-tainted-input");
+  assert.equal(fetchResult.findings[0].source.ruleId, "semantic-js-fetch-tainted-url");
+  assert.equal(pathResult.findings[0].source.ruleId, "semantic-js-path-tainted-input");
+});
+
+test("semantic JS analysis avoids clean non-request flows", () => {
+  const result = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "js-safe-flow.js"), "utf8"),
+    changedFiles: ["src/js-safe-flow.js"],
+    layer: "turn"
+  });
+
+  assert.equal(result.findings.length, 0);
+});

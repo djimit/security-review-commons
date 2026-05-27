@@ -2,6 +2,7 @@ import { loadConfig } from "./config.js";
 import { evaluatePatterns } from "./patterns.js";
 import { toJsonlEvent } from "./jsonl.js";
 import { normalizeSuppressions, applySuppressions } from "./suppressions.js";
+import { evaluateJsSemanticFindings } from "./js-semantic.js";
 
 export function capReviewInput({ diff, changedFiles, config }) {
   const cappedDiff = diff.slice(0, config.caps.maxDiffBytes);
@@ -22,12 +23,19 @@ export function runDeterministicReview({
     changedFiles,
     config
   });
-  const findings = evaluatePatterns({
-    diff: cappedDiff,
-    changedFiles: cappedFiles,
-    layer,
-    config
-  });
+  const findings = [
+    ...evaluatePatterns({
+      diff: cappedDiff,
+      changedFiles: cappedFiles,
+      layer,
+      config
+    }),
+    ...evaluateJsSemanticFindings({
+      diff: cappedDiff,
+      changedFiles: cappedFiles,
+      layer
+    })
+  ];
   const { activeFindings, suppressedFindings } = applySuppressions(
     findings,
     suppressions

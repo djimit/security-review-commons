@@ -79,6 +79,40 @@
       "fixture": "./tests/fixtures/package-pinned.json",
       "changedFiles": ["package.json"],
       "expectedRuleIds": []
+    },
+    {
+      "id": "js-exec-tainted",
+      "description": "JS tainted request input into exec should be detected",
+      "fixture": "./tests/fixtures/js-exec-tainted.js",
+      "changedFiles": ["src/exec-tainted.js"],
+      "expectedRuleIds": [
+        "semantic-js-exec-tainted-input"
+      ]
+    },
+    {
+      "id": "js-fetch-tainted",
+      "description": "JS tainted request input into fetch should be detected",
+      "fixture": "./tests/fixtures/js-fetch-tainted.js",
+      "changedFiles": ["src/fetch-tainted.js"],
+      "expectedRuleIds": [
+        "semantic-js-fetch-tainted-url"
+      ]
+    },
+    {
+      "id": "js-path-tainted",
+      "description": "JS tainted request input into path.join should be detected",
+      "fixture": "./tests/fixtures/js-path-tainted.js",
+      "changedFiles": ["src/path-tainted.js"],
+      "expectedRuleIds": [
+        "semantic-js-path-tainted-input"
+      ]
+    },
+    {
+      "id": "js-safe-flow",
+      "description": "Non-request JS flow should remain clean",
+      "fixture": "./tests/fixtures/js-safe-flow.js",
+      "changedFiles": ["src/js-safe-flow.js"],
+      "expectedRuleIds": []
     }
   ]
 }
