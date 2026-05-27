@@ -1,0 +1,24 @@
+{
+  "name": "security-review-commons",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Portable, auditable code security review core with OpenCode and Codex adapters.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "node --check src/core/*.js src/adapters/opencode/*.js src/adapters/codex/*.js",
+    "check": "npm run lint && npm test"
+  },
+  "keywords": [
+    "security",
+    "code-review",
+    "opencode",
+    "codex",
+    "plugin"
+  ],
+  "license": "MIT"
+}
+

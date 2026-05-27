@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/security-review.config.schema.json",
+  "title": "SecurityReviewConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "enabledLayers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["edit", "turn", "commit", "push"]
+      }
+    },
+    "caps": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxDiffBytes": { "type": "integer", "minimum": 1024 },
+        "maxChangedFiles": { "type": "integer", "minimum": 1 },
+        "maxCustomPatterns": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "repoGuidance": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "customPatterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "regex", "severity"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "regex": { "type": "string" },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"]
+          },
+          "pathRegex": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+

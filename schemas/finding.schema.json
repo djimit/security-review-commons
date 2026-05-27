@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/finding.schema.json",
+  "title": "SecurityReviewFinding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "severity",
+    "confidence",
+    "category",
+    "files",
+    "explanation",
+    "source"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "category": { "type": "string" },
+    "files": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "explanation": { "type": "string" },
+    "exploitScenario": { "type": "string" },
+    "proposedFix": { "type": "string" },
+    "verificationStatus": {
+      "type": "string",
+      "enum": ["unverified", "partially-fixed", "fixed"]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "layer"],
+      "properties": {
+        "ruleId": { "type": "string" },
+        "layer": {
+          "type": "string",
+          "enum": ["edit", "turn", "commit", "push"]
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,11 @@
+diff --git a/src/auth/login.js b/src/auth/login.js
+index 1111111..2222222 100644
+--- a/src/auth/login.js
++++ b/src/auth/login.js
+@@ -1,3 +1,5 @@
++const token = "supersecret12345";
++const child = spawn(userInput, { shell: true });
+ export function login(req, res) {
+   return res.json({ ok: true });
+ }
+
