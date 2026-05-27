@@ -113,6 +113,31 @@
       "fixture": "./tests/fixtures/js-safe-flow.js",
       "changedFiles": ["src/js-safe-flow.js"],
       "expectedRuleIds": []
+    },
+    {
+      "id": "ts-exec-tainted",
+      "description": "TS tainted request input into exec should be detected",
+      "fixture": "./tests/fixtures/ts-exec-tainted.ts",
+      "changedFiles": ["src/ts-exec-tainted.ts"],
+      "expectedRuleIds": [
+        "semantic-js-exec-tainted-input"
+      ]
+    },
+    {
+      "id": "ts-fetch-tainted",
+      "description": "TS tainted request input into fetch should be detected",
+      "fixture": "./tests/fixtures/ts-fetch-tainted.ts",
+      "changedFiles": ["src/ts-fetch-tainted.ts"],
+      "expectedRuleIds": [
+        "semantic-js-fetch-tainted-url"
+      ]
+    },
+    {
+      "id": "ts-safe-flow",
+      "description": "Non-request TS flow should remain clean",
+      "fixture": "./tests/fixtures/ts-safe-flow.ts",
+      "changedFiles": ["src/ts-safe-flow.ts"],
+      "expectedRuleIds": []
     }
   ]
 }

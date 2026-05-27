@@ -28,6 +28,7 @@
 - GitHub Actions trust-boundary and privilege-drift checks
 - Docker, Kubernetes, and Terraform hardening checks
 - dependency selector governance in `package.json`
+- parser-backed JS/TS request-to-sink semantic checks for a narrow set of execution, fetch, and path-construction sinks
 
 ## Verification Artifacts
 

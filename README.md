@@ -92,14 +92,14 @@ npm run corpus
 
 - No live OpenCode payload-shape verification yet.
 - No live Codex background hook parity yet.
-- Parser-backed semantic analysis currently targets JavaScript syntax only; TypeScript-specific syntax still falls back to deterministic checks.
+- Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, but not full TS-only constructs, decorators, or type-aware flow analysis.
 - No Semgrep or deeper inter-file dataflow integration yet.
 - npm publish requires `NPM_TOKEN` to be configured in GitHub Actions.
 
 ## Current Rule Coverage
 
 - application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets
-- parser-backed JS semantic flow checks: request-derived values into `exec`, `eval`, `fetch`, and `path.join/resolve`
+- parser-backed JS/TS semantic flow checks: request-derived values into `exec`, `eval`, `fetch`, and `path.join/resolve`
 - CI and workflow drift: `pull_request_target`, `permissions: write-all`, `curl | sh`
 - container and IaC drift: Docker root runtime, Kubernetes privileged/root execution, Terraform public SSH ingress
 - dependency governance: `latest`, `*`, and `x` package selectors in `package.json`

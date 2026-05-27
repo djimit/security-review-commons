@@ -197,3 +197,25 @@ test("semantic JS analysis avoids clean non-request flows", () => {
 
   assert.equal(result.findings.length, 0);
 });
+
+test("semantic analysis supports TypeScript syntax", () => {
+  const execResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "ts-exec-tainted.ts"), "utf8"),
+    changedFiles: ["src/ts-exec-tainted.ts"],
+    layer: "turn"
+  });
+  const fetchResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "ts-fetch-tainted.ts"), "utf8"),
+    changedFiles: ["src/ts-fetch-tainted.ts"],
+    layer: "turn"
+  });
+  const safeResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "ts-safe-flow.ts"), "utf8"),
+    changedFiles: ["src/ts-safe-flow.ts"],
+    layer: "turn"
+  });
+
+  assert.equal(execResult.findings[0].source.ruleId, "semantic-js-exec-tainted-input");
+  assert.equal(fetchResult.findings[0].source.ruleId, "semantic-js-fetch-tainted-url");
+  assert.equal(safeResult.findings.length, 0);
+});

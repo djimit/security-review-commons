@@ -1,8 +1,9 @@
-import { parse } from "acorn";
-import * as walk from "acorn-walk";
+import { Parser } from "acorn";
+import { tsPlugin } from "acorn-typescript";
 import { makeFinding } from "./findings.js";
 
 const JS_PATH_REGEX = /(^|\/).+\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
+const TypeScriptParser = Parser.extend(tsPlugin());
 
 const JS_SEMANTIC_RULES = [
   {
@@ -78,34 +79,36 @@ export function evaluateJsSemanticFindings({ diff, changedFiles, layer }) {
   }
 
   const findings = [];
-  walk.simple(ast, {
-    CallExpression(node) {
-      for (const rule of JS_SEMANTIC_RULES) {
-        if (!rule.matchesSink(node)) {
-          continue;
-        }
-        if (!node.arguments.some((argument) => expressionIsTainted(argument, taintedIdentifiers))) {
-          continue;
-        }
+  visitNodes(ast, (node) => {
+    if (node.type !== "CallExpression") {
+      return;
+    }
 
-        findings.push(
-          makeFinding({
-            title: rule.title,
-            severity: rule.severity,
-            confidence: "high",
-            category: rule.category,
-            files: changedFiles,
-            explanation: rule.explanation,
-            proposedFix: rule.proposedFix,
-            location: {
-              file: changedFiles[0],
-              line: node.loc.start.line,
-              column: node.loc.start.column + 1
-            },
-            source: { ruleId: rule.id, layer }
-          })
-        );
+    for (const rule of JS_SEMANTIC_RULES) {
+      if (!rule.matchesSink(node)) {
+        continue;
       }
+      if (!node.arguments.some((argument) => expressionIsTainted(argument, taintedIdentifiers))) {
+        continue;
+      }
+
+      findings.push(
+        makeFinding({
+          title: rule.title,
+          severity: rule.severity,
+          confidence: "high",
+          category: rule.category,
+          files: changedFiles,
+          explanation: rule.explanation,
+          proposedFix: rule.proposedFix,
+          location: {
+            file: changedFiles[0],
+            line: node.loc.start.line,
+            column: node.loc.start.column + 1
+          },
+          source: { ruleId: rule.id, layer }
+        })
+      );
     }
   });
 
@@ -114,7 +117,7 @@ export function evaluateJsSemanticFindings({ diff, changedFiles, layer }) {
 
 function tryParse(diff) {
   try {
-    return parse(diff, {
+    return TypeScriptParser.parse(diff, {
       ecmaVersion: "latest",
       sourceType: "module",
       locations: true
@@ -128,23 +131,21 @@ function collectTaintedIdentifiers(ast) {
   const tainted = new Set();
 
   for (let pass = 0; pass < 4; pass += 1) {
-    walk.simple(ast, {
-      VariableDeclarator(node) {
-        if (
-          node.id?.type === "Identifier" &&
-          node.init &&
-          expressionIsTainted(node.init, tainted)
-        ) {
-          tainted.add(node.id.name);
-        }
-      },
-      AssignmentExpression(node) {
-        if (
-          node.left?.type === "Identifier" &&
-          expressionIsTainted(node.right, tainted)
-        ) {
-          tainted.add(node.left.name);
-        }
+    visitNodes(ast, (node) => {
+      if (
+        node.type === "VariableDeclarator" &&
+        node.id?.type === "Identifier" &&
+        node.init &&
+        expressionIsTainted(node.init, tainted)
+      ) {
+        tainted.add(node.id.name);
+      }
+      if (
+        node.type === "AssignmentExpression" &&
+        node.left?.type === "Identifier" &&
+        expressionIsTainted(node.right, tainted)
+      ) {
+        tainted.add(node.left.name);
       }
     });
   }
@@ -252,4 +253,25 @@ function isMemberCall(node, objectName, propertyNames) {
     node.callee.property?.type === "Identifier" &&
     propertyNames.includes(node.callee.property.name)
   );
+}
+
+function visitNodes(node, visitor) {
+  if (!node || typeof node !== "object") {
+    return;
+  }
+  if (typeof node.type === "string") {
+    visitor(node);
+  }
+  for (const [key, value] of Object.entries(node)) {
+    if (key === "loc") {
+      continue;
+    }
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        visitNodes(entry, visitor);
+      }
+    } else if (value && typeof value === "object") {
+      visitNodes(value, visitor);
+    }
+  }
 }
