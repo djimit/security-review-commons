@@ -10,8 +10,12 @@ This repository implements the first vertical slice:
 - additive policy and reminder loading,
 - capped diff review,
 - JSONL audit logging,
-- an OpenCode adapter scaffold,
-- a Codex adapter scaffold.
+- suppression governance with expiry and ownership,
+- SARIF emission,
+- a runnable CLI,
+- OpenCode hook mapping for documented events,
+- a Codex adapter scaffold,
+- CI for lint and tests.
 
 It does not claim security guarantees. It is a review assistant with explicit trust boundaries.
 
@@ -31,6 +35,7 @@ It does not claim security guarantees. It is a review assistant with explicit tr
 - `src/core/` shared review logic
 - `src/adapters/opencode/` OpenCode integration scaffold
 - `src/adapters/codex/` Codex integration scaffold
+- `.github/workflows/` CI
 - `schemas/` JSON Schemas
 - `examples/` sample additive policy and custom patterns
 - `docs/` architecture, parity spec, threat model
@@ -56,17 +61,23 @@ Run the example deterministic review from Node:
 node -e 'import { runDeterministicReview } from "./src/core/review.js"; import fs from "node:fs"; const diff = fs.readFileSync("./tests/fixtures/sample.diff","utf8"); const res = runDeterministicReview({ diff, changedFiles:["src/auth/login.js"] }); console.log(JSON.stringify(res, null, 2));'
 ```
 
+Run the CLI and emit SARIF:
+
+```bash
+node ./src/cli.js --diff-file ./tests/fixtures/sample.diff --changed-files src/auth/login.js --format sarif
+```
+
 ## Trust Boundaries
 
 - Repository files are untrusted input.
 - Plugin config and repo policy are untrusted until parsed and validated.
 - Tool and MCP output are untrusted.
 - Model output, when added in later slices, must be treated as advisory and verified.
+- Suppressions are allowed only with explicit owner, justification, and optional expiry.
 
 ## Current Limitations
 
-- No live OpenCode event verification yet.
+- No live OpenCode payload-shape verification yet.
 - No live Codex background hook parity yet.
 - No AST or Semgrep integration yet.
-- No CI publishing workflow yet.
-
+- No npm registry publish yet.

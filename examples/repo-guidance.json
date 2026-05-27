@@ -17,6 +17,14 @@
       "severity": "high",
       "pathRegex": "(auth|login|session|middleware)"
     }
+  ],
+  "suppressions": [
+    {
+      "ruleId": "builtin-path-join-user-input",
+      "pathRegex": "fixtures/",
+      "owner": "security-team",
+      "justification": "Fixture coverage for path traversal cases requires deliberate vulnerable strings.",
+      "expiresOn": "2027-01-31"
+    }
   ]
 }
-

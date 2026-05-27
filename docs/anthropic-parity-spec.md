@@ -26,5 +26,5 @@ These points are informed by the public implementation shape but still need plat
 1. Shared review core reused by all adapters.
 2. Local-first mode with no model requirement for baseline coverage.
 3. Structured findings, JSONL audit trail, and SARIF-friendly output.
-4. Future AST, Semgrep, IaC, dependency, and trust-boundary rules.
-
+4. Suppression governance with owner, justification, and expiry.
+5. Future AST, Semgrep, IaC, dependency, and trust-boundary rules.

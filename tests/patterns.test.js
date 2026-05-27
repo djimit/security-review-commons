@@ -40,3 +40,25 @@ test("custom additive pattern is applied", () => {
   assert.equal(result.findings[0].source.ruleId, "custom-no-bypass-auth");
 });
 
+test("suppressions remove only matching active findings", () => {
+  const diff = `const token = "supersecret12345";`;
+  const result = runDeterministicReview({
+    diff,
+    changedFiles: ["fixtures/demo.js"],
+    layer: "turn",
+    config: {
+      suppressions: [
+        {
+          ruleId: "builtin-hardcoded-secret-token",
+          pathRegex: "fixtures/",
+          owner: "security-team",
+          justification: "Intentional fixture pattern",
+          expiresOn: "2027-01-31"
+        }
+      ]
+    }
+  });
+
+  assert.equal(result.findings.length, 0);
+  assert.equal(result.suppressedFindings.length, 1);
+});

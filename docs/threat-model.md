@@ -26,8 +26,10 @@
 
 - metadata-only audit logging
 - additive-only policy merge
+- attributable suppressions with justification and expiry
 - pattern count and diff size caps
 - regex compilation guardrails
+- SARIF for external review pipelines
 - stable finding schema
 
 ## Deferred Mitigations
@@ -36,4 +38,3 @@
 - SARIF emission
 - model isolation and independent reviewer prompts
 - suppression expiry and owner metadata
-

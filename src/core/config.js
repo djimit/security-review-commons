@@ -1,12 +1,14 @@
 const DEFAULT_CONFIG = {
-  enabledLayers: ["edit", "turn", "commit"],
+  enabledLayers: ["edit", "turn", "commit", "push"],
   caps: {
     maxDiffBytes: 64 * 1024,
     maxChangedFiles: 25,
-    maxCustomPatterns: 50
+    maxCustomPatterns: 50,
+    maxSuppressions: 100
   },
   repoGuidance: [],
-  customPatterns: []
+  customPatterns: [],
+  suppressions: []
 };
 
 function assertStringArray(value, field) {
@@ -34,7 +36,8 @@ export function loadConfig(raw = {}) {
       ...(raw.caps ?? {})
     },
     repoGuidance: [...DEFAULT_CONFIG.repoGuidance, ...(raw.repoGuidance ?? [])],
-    customPatterns: [...DEFAULT_CONFIG.customPatterns, ...(raw.customPatterns ?? [])]
+    customPatterns: [...DEFAULT_CONFIG.customPatterns, ...(raw.customPatterns ?? [])],
+    suppressions: [...DEFAULT_CONFIG.suppressions, ...(raw.suppressions ?? [])]
   };
 
   assertStringArray(merged.enabledLayers, "enabledLayers");
@@ -42,6 +45,9 @@ export function loadConfig(raw = {}) {
 
   if (merged.customPatterns.length > merged.caps.maxCustomPatterns) {
     throw new Error("customPatterns exceeds maxCustomPatterns");
+  }
+  if (merged.suppressions.length > merged.caps.maxSuppressions) {
+    throw new Error("suppressions exceeds maxSuppressions");
   }
 
   const compiledPatterns = merged.customPatterns.map((pattern) => {
@@ -64,4 +70,3 @@ export function loadConfig(raw = {}) {
 }
 
 export { DEFAULT_CONFIG };
-

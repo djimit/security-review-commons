@@ -28,7 +28,10 @@ Build a portable security-review system that preserves Anthropic's three-layer r
 
 - `config.js` parses additive policy and validates shape.
 - `findings.js` creates stable finding objects.
+- `rules.js` defines built-in deterministic rules.
 - `patterns.js` evaluates deterministic rules over diffs and file paths.
+- `suppressions.js` applies owner- and expiry-bound suppressions.
+- `sarif.js` emits CI- and IDE-friendly result bundles.
 - `review.js` orchestrates capped review and audit logging.
 - `jsonl.js` emits metadata-only audit events.
 
@@ -46,7 +49,7 @@ Build a portable security-review system that preserves Anthropic's three-layer r
 ## Security Stance
 
 - Additive-only repo policy.
+- Suppressions must be explicit, attributable, and optionally expiring.
 - No suppressive repo hints for built-in rules.
 - No shell execution in core.
 - Path and input normalization before evaluation.
-

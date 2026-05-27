@@ -30,3 +30,18 @@ test("loadConfig rejects excessive custom patterns", () => {
     })
   );
 });
+
+test("loadConfig accepts suppression metadata", () => {
+  const config = loadConfig({
+    suppressions: [
+      {
+        ruleId: "builtin-path-join-user-input",
+        owner: "security-team",
+        justification: "Test suppression coverage",
+        expiresOn: "2027-01-31"
+      }
+    ]
+  });
+
+  assert.equal(config.suppressions.length, 1);
+});

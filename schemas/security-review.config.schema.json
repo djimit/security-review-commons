@@ -42,7 +42,24 @@
           "pathRegex": { "type": "string" }
         }
       }
+    },
+    "suppressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId", "owner", "justification"],
+        "properties": {
+          "ruleId": { "type": "string" },
+          "pathRegex": { "type": "string" },
+          "owner": { "type": "string" },
+          "justification": { "type": "string" },
+          "expiresOn": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        }
+      }
     }
   }
 }
-
