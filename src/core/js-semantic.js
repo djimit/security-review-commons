@@ -4,6 +4,19 @@ import { makeFinding } from "./findings.js";
 
 const JS_PATH_REGEX = /(^|\/).+\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
 const TypeScriptParser = Parser.extend(tsPlugin());
+const SANITIZER_NAMES_BY_CATEGORY = {
+  "path-traversal": new Set([
+    "sanitizePathSegment",
+    "sanitizeRelativePath",
+    "validateRelativePath",
+    "assertSafeRelativePath"
+  ]),
+  ssrf: new Set([
+    "sanitizeUrl",
+    "validateUrl",
+    "assertAllowedUrl"
+  ])
+};
 
 const JS_SEMANTIC_RULES = [
   {
@@ -88,7 +101,11 @@ export function evaluateJsSemanticFindings({ diff, changedFiles, layer }) {
       if (!rule.matchesSink(node)) {
         continue;
       }
-      if (!node.arguments.some((argument) => expressionIsTainted(argument, taintedIdentifiers))) {
+      if (
+        !node.arguments.some((argument) =>
+          expressionNeedsFinding(argument, taintedIdentifiers, rule.category)
+        )
+      ) {
         continue;
       }
 
@@ -200,6 +217,26 @@ function expressionIsTainted(node, taintedIdentifiers) {
   }
 }
 
+function expressionNeedsFinding(node, taintedIdentifiers, category) {
+  return (
+    expressionIsTainted(node, taintedIdentifiers) &&
+    !expressionIsRecognizedSanitizerCall(node, taintedIdentifiers, category)
+  );
+}
+
+function expressionIsRecognizedSanitizerCall(node, taintedIdentifiers, category) {
+  if (node?.type !== "CallExpression") {
+    return false;
+  }
+
+  const sanitizerNames = SANITIZER_NAMES_BY_CATEGORY[category];
+  if (!sanitizerNames || !calleeMatchesNames(node.callee, sanitizerNames)) {
+    return false;
+  }
+
+  return node.arguments.some((argument) => expressionIsTainted(argument, taintedIdentifiers));
+}
+
 function memberExpressionIsTaintSource(node) {
   const parts = flattenMemberExpression(node);
   if (parts.length < 2) {
@@ -252,6 +289,19 @@ function isMemberCall(node, objectName, propertyNames) {
     node.callee.object.name === objectName &&
     node.callee.property?.type === "Identifier" &&
     propertyNames.includes(node.callee.property.name)
+  );
+}
+
+function calleeMatchesNames(node, names) {
+  if (node?.type === "Identifier") {
+    return names.has(node.name);
+  }
+
+  return (
+    node?.type === "MemberExpression" &&
+    !node.computed &&
+    node.property?.type === "Identifier" &&
+    names.has(node.property.name)
   );
 }
 

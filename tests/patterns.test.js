@@ -219,3 +219,25 @@ test("semantic analysis supports TypeScript syntax", () => {
   assert.equal(fetchResult.findings[0].source.ruleId, "semantic-js-fetch-tainted-url");
   assert.equal(safeResult.findings.length, 0);
 });
+
+test("semantic analysis honors explicit sink-scoped sanitizers", () => {
+  const jsFetchResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "js-fetch-sanitized.js"), "utf8"),
+    changedFiles: ["src/js-fetch-sanitized.js"],
+    layer: "turn"
+  });
+  const jsPathResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "js-path-sanitized.js"), "utf8"),
+    changedFiles: ["src/js-path-sanitized.js"],
+    layer: "turn"
+  });
+  const tsFetchResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "ts-fetch-sanitized.ts"), "utf8"),
+    changedFiles: ["src/ts-fetch-sanitized.ts"],
+    layer: "turn"
+  });
+
+  assert.equal(jsFetchResult.findings.length, 0);
+  assert.equal(jsPathResult.findings.length, 0);
+  assert.equal(tsFetchResult.findings.length, 0);
+});

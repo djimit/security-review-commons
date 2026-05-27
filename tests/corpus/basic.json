@@ -115,6 +115,20 @@
       "expectedRuleIds": []
     },
     {
+      "id": "js-fetch-sanitized",
+      "description": "Explicit URL sanitizer wrapper should suppress SSRF semantic finding",
+      "fixture": "./tests/fixtures/js-fetch-sanitized.js",
+      "changedFiles": ["src/js-fetch-sanitized.js"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "js-path-sanitized",
+      "description": "Explicit relative path sanitizer wrapper should suppress path semantic finding",
+      "fixture": "./tests/fixtures/js-path-sanitized.js",
+      "changedFiles": ["src/js-path-sanitized.js"],
+      "expectedRuleIds": []
+    },
+    {
       "id": "ts-exec-tainted",
       "description": "TS tainted request input into exec should be detected",
       "fixture": "./tests/fixtures/ts-exec-tainted.ts",
@@ -137,6 +151,13 @@
       "description": "Non-request TS flow should remain clean",
       "fixture": "./tests/fixtures/ts-safe-flow.ts",
       "changedFiles": ["src/ts-safe-flow.ts"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "ts-fetch-sanitized",
+      "description": "Explicit TS URL sanitizer wrapper should suppress SSRF semantic finding",
+      "fixture": "./tests/fixtures/ts-fetch-sanitized.ts",
+      "changedFiles": ["src/ts-fetch-sanitized.ts"],
       "expectedRuleIds": []
     }
   ]
