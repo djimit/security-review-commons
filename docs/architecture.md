@@ -22,7 +22,8 @@ Build a portable security-review system that preserves Anthropic's three-layer r
 
 - Triggered before `git commit` or `git push`.
 - Reads all changed files fully.
-- May expand to nearby callers and control points.
+- Expands one hop of local JS/TS import context.
+- Continues when nearby context files cannot be parsed or read.
 
 ## Core Modules
 
@@ -33,16 +34,17 @@ Build a portable security-review system that preserves Anthropic's three-layer r
 - `suppressions.js` applies owner- and expiry-bound suppressions.
 - `sarif.js` emits CI- and IDE-friendly result bundles.
 - `review.js` orchestrates capped review and audit logging.
+- `review.js` also owns checkpoint-mode file collection and one-hop import expansion.
 - `jsonl.js` emits metadata-only audit events.
 
 ## Adapter Strategy
 
 - OpenCode adapter:
   - thin plugin entrypoints,
-  - platform event mapping,
+  - explicit payload normalization per supported event,
   - logging bridge.
 - Codex adapter:
-  - explicit command-driven and plugin-driven fallback path,
+  - explicit edit, turn, and checkpoint entrypoints,
   - same finding schema,
   - same policy loading.
 

@@ -9,12 +9,13 @@ This repository implements the first vertical slice:
 - a shared finding schema and deterministic rule engine,
 - additive policy and reminder loading,
 - capped diff review,
+- checkpoint review over full changed-file contents with one-hop local JS/TS import context,
 - JSONL audit logging,
 - suppression governance with expiry and ownership,
 - SARIF emission,
 - a runnable CLI,
-- OpenCode hook mapping for documented events,
-- a Codex adapter scaffold,
+- OpenCode hook mapping with explicit payload normalizers for documented events,
+- explicit Codex edit, turn, and checkpoint entrypoints,
 - deterministic coverage for CI, containers, Terraform, and dependency-governance drift,
 - CI for lint and tests.
 
@@ -74,6 +75,12 @@ Run the CLI and emit SARIF:
 node ./src/cli.js --diff-file ./tests/fixtures/sample.diff --changed-files src/auth/login.js --format sarif
 ```
 
+Run checkpoint review against working tree files:
+
+```bash
+node ./src/cli.js --review-mode checkpoint --repo-root ./tests/fixtures/checkpoint-repo --changed-files-file ./tests/fixtures/checkpoint-changed-files.txt --layer commit
+```
+
 Run the baseline corpus:
 
 ```bash
@@ -90,10 +97,10 @@ npm run corpus
 
 ## Current Limitations
 
-- No live OpenCode payload-shape verification yet.
-- No live Codex background hook parity yet.
+- OpenCode payload normalization is fixture-backed, but host runtime payload capture is still synthetic rather than collected from a live session.
+- Codex still does not claim native background hook or native git interception parity.
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
-- No Semgrep or deeper inter-file dataflow integration yet.
+- Checkpoint review expands only one hop of local JS/TS import context and does not attempt full inter-file taint tracking.
 - npm publish requires `NPM_TOKEN` to be configured in GitHub Actions.
 
 ## Current Rule Coverage

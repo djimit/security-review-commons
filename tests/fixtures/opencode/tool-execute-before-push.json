@@ -1,0 +1,7 @@
+{
+  "tool": "bash",
+  "args": {
+    "command": "git push origin main"
+  },
+  "changedFiles": ["src/feature.js"]
+}

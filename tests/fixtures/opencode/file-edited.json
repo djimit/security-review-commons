@@ -1,0 +1,4 @@
+{
+  "diff": "const token = \"supersecret12345\";",
+  "changedFiles": ["src/auth/login.js"]
+}

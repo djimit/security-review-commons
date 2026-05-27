@@ -4,11 +4,11 @@ This adapter is intentionally thin. It maps OpenCode events into the shared revi
 
 ## Event Mapping
 
-- file edit or tool-write event -> `onFileEdited`
-- session idle or turn completion -> `onSessionIdle`
-- git commit or push interception -> `onGitCheckpoint`
+- `file.edited` -> `normalizeFileEditedEvent()` -> `onFileEdited()`
+- `session.diff` -> `normalizeSessionDiffEvent()` -> `onSessionDiff()`
+- `session.idle` -> `normalizeSessionIdleEvent()` -> `onSessionIdle()`
+- `tool.execute.before` -> `normalizeToolExecuteBeforeEvent()` -> `onToolExecuteBefore()`
 
 ## Verification Gap
 
-The exact OpenCode event names and payload shape still need runtime verification against the installed host. This repository keeps the adapter honest by isolating those assumptions here.
-
+Event names are documented and the supported payload fields are fixture-backed, but live runtime capture from an installed OpenCode host is still pending. This repository keeps the adapter honest by isolating those assumptions here.

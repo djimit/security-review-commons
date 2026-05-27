@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { runDeterministicReview } from "./review.js";
+import { runDeterministicReview, runCheckpointReview } from "./review.js";
 import { summarizeFindings } from "./summary.js";
 
 export function loadCorpus(manifestPath) {
@@ -10,13 +10,20 @@ export function loadCorpus(manifestPath) {
 export function runCorpus({ manifestPath, baseDir = process.cwd(), config = {} }) {
   const manifest = loadCorpus(manifestPath);
   const executedCases = manifest.cases.map((testCase) => {
-    const diff = fs.readFileSync(path.resolve(baseDir, testCase.fixture), "utf8");
-    const review = runDeterministicReview({
-      diff,
-      changedFiles: testCase.changedFiles,
-      layer: testCase.layer ?? "turn",
-      config
-    });
+    const review =
+      testCase.reviewMode === "checkpoint"
+        ? runCheckpointReview({
+            repoRoot: path.resolve(baseDir, testCase.repoRoot),
+            changedFiles: testCase.changedFiles,
+            layer: testCase.layer ?? "commit",
+            config
+          })
+        : runDeterministicReview({
+            diff: fs.readFileSync(path.resolve(baseDir, testCase.fixture), "utf8"),
+            changedFiles: testCase.changedFiles,
+            layer: testCase.layer ?? "turn",
+            config
+          });
     const actualRuleIds = review.findings.map((finding) => finding.source.ruleId).sort();
     const expectedRuleIds = [...testCase.expectedRuleIds].sort();
     const pass =

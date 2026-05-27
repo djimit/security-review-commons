@@ -31,10 +31,12 @@
 - regex compilation guardrails
 - SARIF for external review pipelines
 - stable finding schema
+- checkpoint review keeps context expansion local-repo only
+- checkpoint review tolerates unreadable nearby files without logging file contents
 
 ## Deferred Mitigations
 
-- AST-based dataflow
-- SARIF emission
+- deeper inter-file taint propagation
+- live OpenCode payload capture from a verified host session
 - model isolation and independent reviewer prompts
-- suppression expiry and owner metadata
+- native Codex background-hook parity

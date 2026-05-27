@@ -1,0 +1,4 @@
+{
+  "diff": "eval(userInput)",
+  "changedFiles": ["src/worker.js"]
+}

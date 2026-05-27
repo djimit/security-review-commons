@@ -19,9 +19,8 @@ As verified against the OpenCode plugin docs updated May 27, 2026:
 - `file.edited` -> deterministic edit warnings
 - `session.diff` -> capped turn diff review
 - `session.idle` -> second turn review checkpoint for background-style usage
-- `tool.execute.before` -> inspect bash commands and elevate `git commit` / `git push` into deeper review layers
+- `tool.execute.before` -> inspect bash commands and elevate `git commit` / `git push` into checkpoint review layers
 
 ## Important Gap
 
-The docs confirm event names, loading, and logging, but they do not fully specify the event payload shape for every event. This repository keeps payload extraction isolated in the adapter so host-specific normalization can evolve without changing the shared core.
-
+The docs confirm event names, loading, and logging, but they do not fully specify the event payload shape for every event. This repository now keeps explicit normalizers per supported event and backs them with synthetic fixtures so host-specific normalization can evolve without changing the shared core.

@@ -159,6 +159,26 @@
       "fixture": "./tests/fixtures/ts-fetch-sanitized.ts",
       "changedFiles": ["src/ts-fetch-sanitized.ts"],
       "expectedRuleIds": []
+    },
+    {
+      "id": "checkpoint-import-context",
+      "description": "Checkpoint review should inspect a one-hop imported local helper",
+      "reviewMode": "checkpoint",
+      "repoRoot": "./tests/fixtures/checkpoint-repo",
+      "changedFiles": ["src/feature.js"],
+      "layer": "commit",
+      "expectedRuleIds": [
+        "builtin-dangerous-child-process-shell-true"
+      ]
+    },
+    {
+      "id": "checkpoint-safe-import-context",
+      "description": "Safe imported local helper should remain clean during checkpoint review",
+      "reviewMode": "checkpoint",
+      "repoRoot": "./tests/fixtures/checkpoint-safe-repo",
+      "changedFiles": ["src/feature.js"],
+      "layer": "commit",
+      "expectedRuleIds": []
     }
   ]
 }

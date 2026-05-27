@@ -2,7 +2,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { runDeterministicReview } from "./core/review.js";
+import {
+  runDeterministicReview,
+  runCheckpointReview
+} from "./core/review.js";
 import { findingsToSarif } from "./core/sarif.js";
 import { runCorpus, corpusFailed, corpusToMarkdown } from "./core/corpus.js";
 import { findingsMeetSeverityThreshold } from "./core/severity.js";
@@ -12,7 +15,8 @@ function parseArgs(argv) {
   const args = {
     format: "json",
     layer: "turn",
-    changedFiles: []
+    changedFiles: [],
+    reviewMode: "deterministic"
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -37,6 +41,9 @@ function parseArgs(argv) {
         .map((item) => item.trim())
         .filter(Boolean);
       index += 1;
+    } else if (token === "--changed-files-file") {
+      args.changedFilesFile = next;
+      index += 1;
     } else if (token === "--corpus") {
       args.corpusFile = next;
       index += 1;
@@ -45,6 +52,12 @@ function parseArgs(argv) {
       index += 1;
     } else if (token === "--strict-corpus") {
       args.strictCorpus = true;
+    } else if (token === "--repo-root") {
+      args.repoRoot = next;
+      index += 1;
+    } else if (token === "--review-mode") {
+      args.reviewMode = next;
+      index += 1;
     }
   }
 
@@ -62,9 +75,25 @@ function readDiff(args) {
   return fs.readFileSync(0, "utf8");
 }
 
+function readChangedFiles(args) {
+  const inlineFiles = Array.isArray(args.changedFiles) ? args.changedFiles : [];
+  if (!args.changedFilesFile) {
+    return [...new Set(inlineFiles)];
+  }
+
+  const fileLines = fs
+    .readFileSync(path.resolve(args.changedFilesFile), "utf8")
+    .split(/\r?\n/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  return [...new Set([...inlineFiles, ...fileLines])];
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const config = args.configFile ? readJsonFile(args.configFile) : {};
+  const changedFiles = readChangedFiles(args);
 
   if (args.corpusFile) {
     const report = runCorpus({
@@ -84,13 +113,20 @@ function main() {
     return;
   }
 
-  const diff = readDiff(args);
-  const result = runDeterministicReview({
-    diff,
-    changedFiles: args.changedFiles,
-    layer: args.layer,
-    config
-  });
+  const result =
+    args.reviewMode === "checkpoint"
+      ? runCheckpointReview({
+          repoRoot: args.repoRoot,
+          changedFiles,
+          layer: args.layer,
+          config
+        })
+      : runDeterministicReview({
+          diff: readDiff(args),
+          changedFiles,
+          layer: args.layer,
+          config
+        });
 
   if (args.format === "sarif") {
     process.stdout.write(

@@ -4,7 +4,7 @@ This adapter exposes the shared review core to Codex-compatible entrypoints.
 
 ## Current Mode
 
-- explicit review invocation is supported
+- explicit `reviewCodexEdit()`, `reviewCodexTurn()`, and `reviewCodexCheckpoint()` entrypoints are supported
 - native background-hook parity is not yet verified
-- platform gap is documented rather than hidden
-
+- native git interception parity is not yet verified
+- platform gaps are documented rather than hidden

@@ -70,3 +70,25 @@ test("CLI strict corpus exits zero on clean baseline corpus expectations", () =>
   const parsed = JSON.parse(output);
   assert.equal(parsed.failedCases, 0);
 });
+
+test("CLI checkpoint mode reads working tree files from repoRoot", () => {
+  const output = execFileSync(
+    "node",
+    [
+      "./src/cli.js",
+      "--review-mode",
+      "checkpoint",
+      "--repo-root",
+      "./tests/fixtures/checkpoint-repo",
+      "--changed-files-file",
+      "./tests/fixtures/checkpoint-changed-files.txt",
+      "--layer",
+      "commit"
+    ],
+    { cwd: repoRoot, encoding: "utf8" }
+  );
+
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.findings.length, 1);
+  assert.equal(parsed.findings[0].source.ruleId, "builtin-dangerous-child-process-shell-true");
+});

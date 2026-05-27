@@ -15,7 +15,7 @@ The public `security-guidance` docs and repository show these behaviors:
 
 ## Inferred Design Constraints
 
-These points are informed by the public implementation shape but still need platform verification in our adapters:
+These points are informed by the public implementation shape and remain the places where host-runtime drift can still appear:
 
 1. Event binding differs by host runtime.
 2. Background review must be rate-limited and deduplicated.
@@ -27,4 +27,11 @@ These points are informed by the public implementation shape but still need plat
 2. Local-first mode with no model requirement for baseline coverage.
 3. Structured findings, JSONL audit trail, and SARIF-friendly output.
 4. Suppression governance with owner, justification, and expiry.
-5. Future AST, Semgrep, IaC, dependency, and trust-boundary rules.
+5. Checkpoint review that reads full changed files plus one-hop local JS/TS import context.
+
+## Current Parity Status
+
+1. Diff review parity is implemented in the shared core and exposed in both adapters.
+2. Checkpoint review now reads working tree files and nearby local JS/TS imports, which is materially closer to the public deeper-review model.
+3. OpenCode event names are documented and payload normalization is fixture-backed, but live host payload capture is still pending.
+4. Codex parity remains explicit-entrypoint based. Native background lifecycle parity is still not claimed.
