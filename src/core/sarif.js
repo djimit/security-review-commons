@@ -13,11 +13,19 @@ export function findingsToSarif({ findings, toolName = "security-review-commons"
     message: {
       text: `${finding.title}: ${finding.explanation}`
     },
-    locations: finding.files.map((file) => ({
-      physicalLocation: {
-        artifactLocation: { uri: file }
+    locations: [
+      {
+        physicalLocation: {
+          artifactLocation: { uri: finding.location?.file ?? finding.files[0] },
+          region: finding.location
+            ? {
+                startLine: finding.location.line,
+                startColumn: finding.location.column
+              }
+            : undefined
+        }
       }
-    })),
+    ],
     properties: {
       category: finding.category,
       confidence: finding.confidence,
@@ -67,4 +75,3 @@ function dedupeRules(findings) {
   }
   return rules;
 }
-

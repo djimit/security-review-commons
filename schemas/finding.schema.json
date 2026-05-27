@@ -37,6 +37,16 @@
       "type": "string",
       "enum": ["unverified", "partially-fixed", "fixed"]
     },
+    "location": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["file", "line", "column"],
+      "properties": {
+        "file": { "type": "string" },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 }
+      }
+    },
     "source": {
       "type": "object",
       "additionalProperties": false,
@@ -51,4 +61,3 @@
     }
   }
 }
-

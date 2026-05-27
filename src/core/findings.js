@@ -20,7 +20,7 @@ export function makeFinding(input) {
     exploitScenario: input.exploitScenario ?? "",
     proposedFix: input.proposedFix ?? "",
     verificationStatus: input.verificationStatus ?? "unverified",
+    location: input.location ?? null,
     source: input.source
   };
 }
-

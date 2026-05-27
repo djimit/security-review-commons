@@ -1,4 +1,5 @@
 import { makeFinding } from "./findings.js";
+import { lineColumnFromIndex } from "./location.js";
 
 const JS_PATH_REGEX = /(^|\/).+\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
 const TAINT_SOURCE_REGEX =
@@ -81,6 +82,10 @@ export function evaluateJsSemanticFindings({ diff, changedFiles, layer }) {
         files: changedFiles,
         explanation: rule.explanation,
         proposedFix: rule.proposedFix,
+        location: {
+          file: changedFiles[0],
+          ...lineColumnFromIndex(diff, match.index)
+        },
         source: { ruleId: rule.id, layer }
       })
     );
@@ -126,4 +131,3 @@ function containsTaintedIdentifier(value, taintedIdentifiers) {
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-

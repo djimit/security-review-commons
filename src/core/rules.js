@@ -107,7 +107,10 @@ export const BUILTIN_RULES = [
     severity: "medium",
     category: "container-hardening",
     pathRegex: /(^|\/)(dockerfile|Dockerfile|.+\.dockerfile)$/i,
-    test: (diff) => !/^\s*USER\s+\S+/m.test(diff),
+    test: (diff) => ({
+      matched: !/^\s*USER\s+\S+/m.test(diff),
+      location: { line: 1, column: 1 }
+    }),
     explanation:
       "Containers that never set USER commonly run as root, increasing impact if the service is compromised.",
     proposedFix:

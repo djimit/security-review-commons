@@ -14,5 +14,8 @@ test("findingsToSarif emits one run with results", () => {
   assert.equal(sarif.version, "2.1.0");
   assert.equal(sarif.runs.length, 1);
   assert.equal(sarif.runs[0].results.length, 1);
+  assert.equal(
+    sarif.runs[0].results[0].locations[0].physicalLocation.region.startLine,
+    1
+  );
 });
-

@@ -19,6 +19,14 @@ test("deterministic review finds built-in risky patterns", () => {
 
   assert.equal(result.findings.length, 2);
   assert.match(result.auditEvent, /"findingCount":2/);
+  const secretFinding = result.findings.find(
+    (finding) => finding.source.ruleId === "builtin-hardcoded-secret-token"
+  );
+  assert.deepEqual(secretFinding.location, {
+    file: "src/auth/login.js",
+    line: 2,
+    column: 11
+  });
 });
 
 test("custom additive pattern is applied", () => {
@@ -173,6 +181,11 @@ test("semantic JS analysis catches tainted flows into sinks", () => {
   assert.equal(execResult.findings[0].source.ruleId, "semantic-js-exec-tainted-input");
   assert.equal(fetchResult.findings[0].source.ruleId, "semantic-js-fetch-tainted-url");
   assert.equal(pathResult.findings[0].source.ruleId, "semantic-js-path-tainted-input");
+  assert.deepEqual(execResult.findings[0].location, {
+    file: "src/exec-tainted.js",
+    line: 3,
+    column: 10
+  });
 });
 
 test("semantic JS analysis avoids clean non-request flows", () => {
