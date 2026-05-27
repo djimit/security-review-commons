@@ -1,0 +1,80 @@
+import fs from "node:fs";
+import path from "node:path";
+import { runDeterministicReview } from "./review.js";
+import { summarizeFindings } from "./summary.js";
+
+export function loadCorpus(manifestPath) {
+  return JSON.parse(fs.readFileSync(path.resolve(manifestPath), "utf8"));
+}
+
+export function runCorpus({ manifestPath, baseDir = process.cwd(), config = {} }) {
+  const manifest = loadCorpus(manifestPath);
+  const cases = manifest.cases.map((testCase) => {
+    const diff = fs.readFileSync(path.resolve(baseDir, testCase.fixture), "utf8");
+    const review = runDeterministicReview({
+      diff,
+      changedFiles: testCase.changedFiles,
+      layer: testCase.layer ?? "turn",
+      config
+    });
+    const actualRuleIds = review.findings.map((finding) => finding.source.ruleId).sort();
+    const expectedRuleIds = [...testCase.expectedRuleIds].sort();
+    const pass =
+      actualRuleIds.length === expectedRuleIds.length &&
+      actualRuleIds.every((ruleId, index) => ruleId === expectedRuleIds[index]);
+
+    return {
+      id: testCase.id,
+      description: testCase.description,
+      pass,
+      actualRuleIds,
+      expectedRuleIds,
+      summary: review.summary
+    };
+  });
+
+  const flattenedFindings = [];
+  for (const testCase of manifest.cases) {
+    const diff = fs.readFileSync(path.resolve(baseDir, testCase.fixture), "utf8");
+    const review = runDeterministicReview({
+      diff,
+      changedFiles: testCase.changedFiles,
+      layer: testCase.layer ?? "turn",
+      config
+    });
+    flattenedFindings.push(...review.findings);
+  }
+
+  return {
+    manifestName: manifest.name,
+    totalCases: cases.length,
+    passedCases: cases.filter((testCase) => testCase.pass).length,
+    failedCases: cases.filter((testCase) => !testCase.pass).length,
+    cases,
+    findingsSummary: summarizeFindings(flattenedFindings)
+  };
+}
+
+export function corpusToMarkdown(report) {
+  const lines = [
+    "# Corpus Report",
+    "",
+    `Corpus: ${report.manifestName}`,
+    `Cases: ${report.passedCases}/${report.totalCases} passed`,
+    ""
+  ];
+
+  for (const testCase of report.cases) {
+    lines.push(
+      `## ${testCase.id}`,
+      "",
+      `- pass: ${testCase.pass}`,
+      `- expected: ${testCase.expectedRuleIds.join(", ") || "none"}`,
+      `- actual: ${testCase.actualRuleIds.join(", ") || "none"}`,
+      ""
+    );
+  }
+
+  return lines.join("\n");
+}
+

@@ -23,3 +23,14 @@ test("CLI emits SARIF", () => {
   const parsed = JSON.parse(output);
   assert.equal(parsed.version, "2.1.0");
 });
+
+test("CLI emits corpus report", () => {
+  const output = execFileSync(
+    "node",
+    ["./src/cli.js", "--corpus", "./tests/corpus/basic.json"],
+    { cwd: repoRoot, encoding: "utf8" }
+  );
+
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.failedCases, 0);
+});

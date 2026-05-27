@@ -68,6 +68,12 @@ Run the CLI and emit SARIF:
 node ./src/cli.js --diff-file ./tests/fixtures/sample.diff --changed-files src/auth/login.js --format sarif
 ```
 
+Run the baseline corpus:
+
+```bash
+npm run corpus
+```
+
 ## Trust Boundaries
 
 - Repository files are untrusted input.
@@ -89,3 +95,9 @@ node ./src/cli.js --diff-file ./tests/fixtures/sample.diff --changed-files src/a
 - CI and workflow drift: `pull_request_target`, `permissions: write-all`, `curl | sh`
 - container and IaC drift: Docker root runtime, Kubernetes privileged/root execution, Terraform public SSH ingress
 - dependency governance: `latest`, `*`, and `x` package selectors in `package.json`
+
+## Verification Harness
+
+- `tests/corpus/basic.json` defines a baseline corpus of representative fixtures and expected rule IDs
+- `npm run corpus` validates that the published rule set still catches that baseline
+- CI uploads SARIF, a Markdown summary, and a corpus report as build artifacts

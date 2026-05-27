@@ -29,3 +29,11 @@
 - GitHub Actions trust-boundary and privilege-drift checks
 - Docker, Kubernetes, and Terraform hardening checks
 - dependency selector governance in `package.json`
+
+## Verification Artifacts
+
+The CI workflow now publishes:
+
+- a sample SARIF artifact
+- a Markdown summary artifact
+- a corpus report artifact tied to the baseline fixture set

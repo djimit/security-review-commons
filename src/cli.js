@@ -4,6 +4,8 @@ import path from "node:path";
 import process from "node:process";
 import { runDeterministicReview } from "./core/review.js";
 import { findingsToSarif } from "./core/sarif.js";
+import { runCorpus, corpusToMarkdown } from "./core/corpus.js";
+import { summarizeFindings, summaryToMarkdown } from "./core/summary.js";
 
 function parseArgs(argv) {
   const args = {
@@ -34,6 +36,9 @@ function parseArgs(argv) {
         .map((item) => item.trim())
         .filter(Boolean);
       index += 1;
+    } else if (token === "--corpus") {
+      args.corpusFile = next;
+      index += 1;
     }
   }
 
@@ -53,8 +58,25 @@ function readDiff(args) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const diff = readDiff(args);
   const config = args.configFile ? readJsonFile(args.configFile) : {};
+
+  if (args.corpusFile) {
+    const report = runCorpus({
+      manifestPath: args.corpusFile,
+      baseDir: process.cwd(),
+      config
+    });
+
+    if (args.format === "markdown") {
+      process.stdout.write(`${corpusToMarkdown(report)}\n`);
+      return;
+    }
+
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    return;
+  }
+
+  const diff = readDiff(args);
   const result = runDeterministicReview({
     diff,
     changedFiles: args.changedFiles,
@@ -65,6 +87,20 @@ function main() {
   if (args.format === "sarif") {
     process.stdout.write(
       `${JSON.stringify(findingsToSarif({ findings: result.findings }), null, 2)}\n`
+    );
+    return;
+  }
+
+  if (args.format === "summary") {
+    process.stdout.write(
+      `${JSON.stringify(summarizeFindings(result.findings), null, 2)}\n`
+    );
+    return;
+  }
+
+  if (args.format === "markdown") {
+    process.stdout.write(
+      `${summaryToMarkdown(summarizeFindings(result.findings))}\n`
     );
     return;
   }
