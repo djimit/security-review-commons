@@ -8,7 +8,8 @@ export function evaluatePatterns({ diff, changedFiles, layer, config }) {
     const pathMatch =
       !rule.pathRegex ||
       changedFiles.some((changedFile) => rule.pathRegex.test(changedFile));
-    if (pathMatch && rule.regex.test(diff)) {
+    const ruleMatched = rule.test ? rule.test(diff, changedFiles) : rule.regex.test(diff);
+    if (pathMatch && ruleMatched) {
       findings.push(
         makeFinding({
           title: rule.title,

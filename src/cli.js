@@ -4,7 +4,8 @@ import path from "node:path";
 import process from "node:process";
 import { runDeterministicReview } from "./core/review.js";
 import { findingsToSarif } from "./core/sarif.js";
-import { runCorpus, corpusToMarkdown } from "./core/corpus.js";
+import { runCorpus, corpusFailed, corpusToMarkdown } from "./core/corpus.js";
+import { findingsMeetSeverityThreshold } from "./core/severity.js";
 import { summarizeFindings, summaryToMarkdown } from "./core/summary.js";
 
 function parseArgs(argv) {
@@ -39,6 +40,11 @@ function parseArgs(argv) {
     } else if (token === "--corpus") {
       args.corpusFile = next;
       index += 1;
+    } else if (token === "--fail-on-severity") {
+      args.failOnSeverity = next;
+      index += 1;
+    } else if (token === "--strict-corpus") {
+      args.strictCorpus = true;
     }
   }
 
@@ -69,10 +75,12 @@ function main() {
 
     if (args.format === "markdown") {
       process.stdout.write(`${corpusToMarkdown(report)}\n`);
-      return;
+    } else {
+      process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     }
-
-    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    if (args.strictCorpus && corpusFailed(report)) {
+      process.exitCode = 1;
+    }
     return;
   }
 
@@ -102,10 +110,13 @@ function main() {
     process.stdout.write(
       `${summaryToMarkdown(summarizeFindings(result.findings))}\n`
     );
-    return;
+  } else {
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   }
 
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  if (findingsMeetSeverityThreshold(result.findings, args.failOnSeverity)) {
+    process.exitCode = 1;
+  }
 }
 
 main();

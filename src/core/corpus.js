@@ -9,7 +9,7 @@ export function loadCorpus(manifestPath) {
 
 export function runCorpus({ manifestPath, baseDir = process.cwd(), config = {} }) {
   const manifest = loadCorpus(manifestPath);
-  const cases = manifest.cases.map((testCase) => {
+  const executedCases = manifest.cases.map((testCase) => {
     const diff = fs.readFileSync(path.resolve(baseDir, testCase.fixture), "utf8");
     const review = runDeterministicReview({
       diff,
@@ -29,21 +29,13 @@ export function runCorpus({ manifestPath, baseDir = process.cwd(), config = {} }
       pass,
       actualRuleIds,
       expectedRuleIds,
-      summary: review.summary
+      summary: review.summary,
+      findings: review.findings
     };
   });
 
-  const flattenedFindings = [];
-  for (const testCase of manifest.cases) {
-    const diff = fs.readFileSync(path.resolve(baseDir, testCase.fixture), "utf8");
-    const review = runDeterministicReview({
-      diff,
-      changedFiles: testCase.changedFiles,
-      layer: testCase.layer ?? "turn",
-      config
-    });
-    flattenedFindings.push(...review.findings);
-  }
+  const flattenedFindings = executedCases.flatMap((testCase) => testCase.findings);
+  const cases = executedCases.map(({ findings, ...testCase }) => testCase);
 
   return {
     manifestName: manifest.name,
@@ -78,3 +70,6 @@ export function corpusToMarkdown(report) {
   return lines.join("\n");
 }
 
+export function corpusFailed(report) {
+  return report.failedCases > 0;
+}

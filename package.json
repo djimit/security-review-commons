@@ -21,7 +21,7 @@
   "scripts": {
     "test": "node --test",
     "lint": "node --check src/index.js src/cli.js src/core/*.js src/adapters/opencode/*.js src/adapters/codex/*.js",
-    "corpus": "node ./src/cli.js --corpus ./tests/corpus/basic.json",
+    "corpus": "node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus",
     "check": "npm run lint && npm test && npm run corpus"
   },
   "keywords": [

@@ -99,5 +99,12 @@ npm run corpus
 ## Verification Harness
 
 - `tests/corpus/basic.json` defines a baseline corpus of representative fixtures and expected rule IDs
-- `npm run corpus` validates that the published rule set still catches that baseline
+- `npm run corpus` validates that the published rule set still catches that baseline and fails on corpus mismatches
 - CI uploads SARIF, a Markdown summary, and a corpus report as build artifacts
+
+## CI Gate Usage
+
+- `node ./src/cli.js --diff-file <file> --changed-files <paths> --fail-on-severity high`
+  exits non-zero when a finding at or above `high` is present
+- `node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus`
+  exits non-zero when any corpus case deviates from expected findings

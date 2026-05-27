@@ -130,3 +130,25 @@ test("dependency governance rule catches catch-all selectors", () => {
     "builtin-package-json-unpinned-version"
   );
 });
+
+test("safe fixtures do not trigger current drift rules", () => {
+  const workflowResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "workflow-safe.yml"), "utf8"),
+    changedFiles: [".github/workflows/safe.yml"],
+    layer: "turn"
+  });
+  const dockerResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "Dockerfile.safe"), "utf8"),
+    changedFiles: ["Dockerfile"],
+    layer: "turn"
+  });
+  const packageResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "package-pinned.json"), "utf8"),
+    changedFiles: ["package.json"],
+    layer: "turn"
+  });
+
+  assert.equal(workflowResult.findings.length, 0);
+  assert.equal(dockerResult.findings.length, 0);
+  assert.equal(packageResult.findings.length, 0);
+});

@@ -58,7 +58,27 @@
       "expectedRuleIds": [
         "builtin-package-json-unpinned-version"
       ]
+    },
+    {
+      "id": "workflow-safe",
+      "description": "Safe workflow fixture should remain clean",
+      "fixture": "./tests/fixtures/workflow-safe.yml",
+      "changedFiles": [".github/workflows/safe.yml"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "docker-safe-runtime",
+      "description": "Safe Dockerfile fixture should remain clean",
+      "fixture": "./tests/fixtures/Dockerfile.safe",
+      "changedFiles": ["Dockerfile"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "package-pinned",
+      "description": "Pinned package selectors should remain clean",
+      "fixture": "./tests/fixtures/package-pinned.json",
+      "changedFiles": ["package.json"],
+      "expectedRuleIds": []
     }
   ]
 }
-

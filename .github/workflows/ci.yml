@@ -16,6 +16,7 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm run check
+      - run: node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus
       - run: mkdir -p artifacts
       - run: node ./src/cli.js --diff-file ./tests/fixtures/sample.diff --changed-files src/auth/login.js --format sarif > artifacts/sample.sarif
       - run: node ./src/cli.js --diff-file ./tests/fixtures/sample.diff --changed-files src/auth/login.js --format markdown > artifacts/sample-summary.md
