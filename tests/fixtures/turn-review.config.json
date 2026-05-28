@@ -4,8 +4,14 @@
     "provider": "mock",
     "model": "fixture",
     "minSeverityToBlock": "high",
+    "commandAllowlist": [
+      {
+        "id": "mock-node-reviewer",
+        "executable": "$NODE_EXEC_PATH"
+      }
+    ],
     "command": {
-      "executable": "node",
+      "id": "mock-node-reviewer",
       "args": ["./tests/fixtures/mock-turn-reviewer.js"]
     }
   }
