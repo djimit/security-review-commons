@@ -3,10 +3,10 @@
 ## What Is Proven Complete In Repo
 
 - shared deterministic, turn, and checkpoint review core
-- packaged host plugin wrapper with replayed `PostToolUse`, `PreToolUse`, and `Stop` entrypoints
+- packaged host plugin wrapper with replayed `PostToolUse`, `PreToolUse` commit and push, and `Stop` entrypoints
 - bounded checkpoint evidence collection with import and adjacent auth or config context
 - additive guidance precedence and runtime layer controls
-- corpus, benchmark, package-surface, and runtime-fixture provenance verification
+- corpus, benchmark, package-surface, comparator-sidecar, and runtime-fixture provenance verification
 - release workflows that publish the documented proof artifacts when CI or tag automation runs
 
 ## What Is Still Not Proven Complete
@@ -19,14 +19,14 @@ These remaining gaps are outside the current local repository state or require a
 
 2. External comparative benchmark evidence
    - The benchmark harness and baseline result exist locally.
-   - Comparator fields remain explicitly unresolved until a real external baseline run is captured and reviewed.
+   - Comparator sidecar entries remain explicitly unresolved until a real external baseline run is captured and reviewed.
 
 3. Tagged source release execution
    - The release workflow is present and verified textually.
    - No `v*` tag has been cut in the current local state, so no actual GitHub release run is proven here.
 
 4. npm publication
-   - Publication is intentionally gated on `NPM_TOKEN`.
+   - Publication is intentionally gated on `NPM_TOKEN` and explicit manual workflow dispatch confirmation.
    - No live publish is proven in the current local state.
 
 5. Parent-repo OpenSpec commit
@@ -35,4 +35,4 @@ These remaining gaps are outside the current local repository state or require a
 
 ## Current End-State Assessment
 
-The repository is internally consistent and locally verified for the implemented phase-3 scope. The remaining blockers are operational proof and external-state execution, not missing local code paths.
+The repository is internally consistent and locally verified for the implemented phase-4 local scope. The remaining blockers are operational proof and external-state execution, not missing local code paths.

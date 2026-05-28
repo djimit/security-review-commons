@@ -7,6 +7,7 @@ The repository now ships a small benchmark harness for evidence-backed regressio
 Artifacts:
 
 - manifest: `benchmarks/manifest.json`
+- comparator sidecar: `benchmarks/comparators/external-baseline.json`
 - execution script: `scripts/run-benchmark.js`
 - recorded baseline output: `benchmarks/results/baseline.json`
 
@@ -48,9 +49,10 @@ At the report level, it records:
 - total misses
 - total false positives
 - comparative cases that remain unresolved
+- comparator metadata from the checked-in external sidecar when present
 
 ## Current Limits
 
 - The current baseline artifact is a self-benchmark of this repository, not a recorded run against another product.
-- Comparative fields are intentionally marked unresolved until an external reference run is captured and reviewed.
+- Comparative fields are intentionally marked unresolved until an external reference run is captured and reviewed, but that unresolved state is now explicit in the checked-in comparator sidecar instead of being implied only in prose.
 - The harness covers deterministic, turn, checkpoint, and negative cases, but it does not yet capture live host-runtime payload differences.

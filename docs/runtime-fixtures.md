@@ -9,7 +9,7 @@ This manifest distinguishes:
 - synthetic replay fixtures used for current local verification
 - future scrubbed host-captured fixtures that can replace synthetic entries
 
-The current repository state is still synthetic-only. That is intentional and documented so runtime parity claims remain narrow.
+The current repository state is still synthetic-only. That remains intentional and documented so runtime parity claims stay limited to replay coverage rather than live host proof.
 
 ## Covered Fixtures
 
@@ -18,9 +18,11 @@ Current manifest coverage includes:
 - OpenCode `file.edited`
 - OpenCode `session.diff`
 - OpenCode `session.idle`
+- OpenCode `tool.execute.before` for `git commit`
 - OpenCode `tool.execute.before` for `git push`
 - packaged plugin `PostToolUse`
 - packaged plugin `PreToolUse` for `git commit`
+- packaged plugin `PreToolUse` for `git push`
 - packaged plugin `Stop`
 
 ## Capture Workflow

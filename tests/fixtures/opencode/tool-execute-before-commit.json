@@ -1,0 +1,8 @@
+{
+  "tool": "bash",
+  "command": "git commit -m \"checkpoint\"",
+  "workspace": {
+    "root": "."
+  },
+  "changedFiles": ["src/feature.js"]
+}

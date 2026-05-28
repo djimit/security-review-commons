@@ -14,6 +14,7 @@ test("benchmark harness reports hits misses and unresolved comparative gaps", ()
 
   const parsed = JSON.parse(output);
   assert.equal(parsed.manifestName, "security-review-commons-baseline-benchmark");
+  assert.equal(parsed.comparator.name, "external-baseline-sidecar");
   assert.equal(parsed.failedCases, 0);
   assert.ok(parsed.hitCount >= 1);
   assert.equal(parsed.missCount, 0);

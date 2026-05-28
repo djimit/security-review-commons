@@ -21,7 +21,7 @@ test("CI workflow publishes the documented proof artifacts", () => {
   assert.match(ci, /name:\s+security-review-artifacts/);
 });
 
-test("release workflow attaches tarball plus benchmark and runtime-proof artifacts", () => {
+test("release workflow attaches tarball plus benchmark comparator and runtime-proof artifacts", () => {
   const release = readWorkflow(".github/workflows/release.yml");
 
   assert.match(release, /push:\s*\n\s*tags:\s*\n\s*-\s+"v\*"/);
@@ -29,7 +29,18 @@ test("release workflow attaches tarball plus benchmark and runtime-proof artifac
   assert.match(release, /npm run benchmark/);
   assert.match(release, /npm pack/);
   assert.match(release, /release-artifacts\/benchmark-baseline\.json/);
+  assert.match(release, /release-artifacts\/external-baseline\.json/);
   assert.match(release, /release-artifacts\/runtime-fixtures\.json/);
-  assert.match(release, /npm publish --access public/);
-  assert.match(release, /secrets\.NPM_TOKEN/);
+  assert.doesNotMatch(release, /npm publish --access public/);
+});
+
+test("npm publication requires explicit workflow dispatch confirmation", () => {
+  const publish = readWorkflow(".github/workflows/publish-npm.yml");
+
+  assert.match(publish, /workflow_dispatch/);
+  assert.match(publish, /confirm_publish/);
+  assert.match(publish, /release_tag/);
+  assert.match(publish, /npm run check/);
+  assert.match(publish, /npm publish --access public/);
+  assert.match(publish, /secrets\.NPM_TOKEN/);
 });

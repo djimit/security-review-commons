@@ -46,14 +46,31 @@ async function main() {
   const manifestPath = path.resolve(args.baseDir, args.manifest);
   const manifestDir = path.dirname(manifestPath);
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const comparatorArtifact = loadComparatorArtifact({
+    manifest,
+    manifestDir
+  });
   const cases = [];
 
   for (const benchmarkCase of manifest.cases ?? []) {
-    cases.push(await runBenchmarkCase({ benchmarkCase, manifestDir }));
+    cases.push(
+      await runBenchmarkCase({
+        benchmarkCase,
+        manifestDir,
+        comparatorArtifact
+      })
+    );
   }
 
   const report = {
     manifestName: manifest.name ?? "security-review-benchmark",
+    comparator: comparatorArtifact
+      ? {
+          name: comparatorArtifact.name ?? "external-baseline-sidecar",
+          reviewStatus: comparatorArtifact.reviewStatus ?? "unknown",
+          notes: comparatorArtifact.notes ?? ""
+        }
+      : null,
     totalCases: cases.length,
     passedCases: cases.filter((entry) => entry.pass).length,
     failedCases: cases.filter((entry) => !entry.pass).length,
@@ -84,7 +101,11 @@ async function main() {
   }
 }
 
-async function runBenchmarkCase({ benchmarkCase, manifestDir }) {
+async function runBenchmarkCase({
+  benchmarkCase,
+  manifestDir,
+  comparatorArtifact
+}) {
   const reviewMode = benchmarkCase.reviewMode ?? "deterministic";
   const layer = benchmarkCase.layer ?? defaultLayerForReviewMode(reviewMode);
   const rawConfig = benchmarkCase.configFile
@@ -143,10 +164,34 @@ async function runBenchmarkCase({ benchmarkCase, manifestDir }) {
     actualRuleIds,
     expectedRuleIds,
     findingsSummary: result.summary,
-    comparative: benchmarkCase.comparative ?? {
-      status: "unresolved",
-      notes: "No verified external comparator result is recorded for this case yet."
-    }
+    comparative: resolveComparativeEntry({
+      benchmarkCase,
+      comparatorArtifact
+    })
+  };
+}
+
+function loadComparatorArtifact({ manifest, manifestDir }) {
+  if (typeof manifest.comparatorArtifact !== "string") {
+    return null;
+  }
+
+  return readJson(path.resolve(manifestDir, manifest.comparatorArtifact));
+}
+
+function resolveComparativeEntry({ benchmarkCase, comparatorArtifact }) {
+  if (benchmarkCase.comparative) {
+    return benchmarkCase.comparative;
+  }
+
+  const comparatorCase = comparatorArtifact?.cases?.[benchmarkCase.id];
+  if (comparatorCase) {
+    return comparatorCase;
+  }
+
+  return {
+    status: "unresolved",
+    notes: "No verified external comparator result is recorded for this case yet."
   };
 }
 

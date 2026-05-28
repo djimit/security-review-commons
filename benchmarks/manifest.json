@@ -1,5 +1,6 @@
 {
   "name": "security-review-commons-baseline-benchmark",
+  "comparatorArtifact": "./comparators/external-baseline.json",
   "cases": [
     {
       "id": "deterministic-app-sinks",
@@ -9,11 +10,7 @@
       "expectedRuleIds": [
         "builtin-dangerous-child-process-shell-true",
         "builtin-hardcoded-secret-token"
-      ],
-      "comparative": {
-        "status": "unresolved",
-        "notes": "This case exercises baseline deterministic coverage. No verified external comparator run is recorded."
-      }
+      ]
     },
     {
       "id": "deterministic-dom-xss",
@@ -22,11 +19,7 @@
       "changedFiles": ["src/render-danger.jsx"],
       "expectedRuleIds": [
         "builtin-dangerously-set-inner-html-user-input"
-      ],
-      "comparative": {
-        "status": "unresolved",
-        "notes": "Useful for future DOM-XSS comparisons once an external baseline run is captured."
-      }
+      ]
     },
     {
       "id": "deterministic-python-deserialization",
@@ -35,11 +28,25 @@
       "changedFiles": ["src/pickle-dangerous.py"],
       "expectedRuleIds": [
         "builtin-python-pickle-load"
-      ],
-      "comparative": {
-        "status": "unresolved",
-        "notes": "Python unsafe-deserialization comparison remains unverified against an external baseline."
-      }
+      ]
+    },
+    {
+      "id": "deterministic-authz-disabled",
+      "description": "Deterministic review should catch disabled authorization config",
+      "fixture": "../tests/fixtures/js-authz-disabled-tainted.js",
+      "changedFiles": ["src/authz-disabled-tainted.js"],
+      "expectedRuleIds": [
+        "builtin-authz-check-disabled"
+      ]
+    },
+    {
+      "id": "deterministic-python-os-system",
+      "description": "Deterministic review should catch Python os.system execution",
+      "fixture": "../tests/fixtures/py-os-system-dangerous.py",
+      "changedFiles": ["src/os-system-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-python-os-system"
+      ]
     },
     {
       "id": "turn-model-auth-bypass",
@@ -52,11 +59,7 @@
       "expectedRuleIds": [
         "builtin-auth-bypass-flag",
         "model-turn-review-mock-fixture"
-      ],
-      "comparative": {
-        "status": "unresolved",
-        "notes": "This exercises optional model-backed stop-review plumbing, not a live provider benchmark."
-      }
+      ]
     },
     {
       "id": "checkpoint-import-context",
@@ -67,11 +70,7 @@
       "layer": "commit",
       "expectedRuleIds": [
         "builtin-dangerous-child-process-shell-true"
-      ],
-      "comparative": {
-        "status": "unresolved",
-        "notes": "Multi-file checkpoint evidence is exercised here, but no verified external comparator output is recorded."
-      }
+      ]
     },
     {
       "id": "checkpoint-adjacent-auth-context",
@@ -82,11 +81,7 @@
       "layer": "commit",
       "expectedRuleIds": [
         "builtin-hardcoded-secret-token"
-      ],
-      "comparative": {
-        "status": "unresolved",
-        "notes": "This case demonstrates bounded adjacent evidence collection without claiming external parity."
-      }
+      ]
     },
     {
       "id": "checkpoint-safe-nearby-tree",
@@ -95,11 +90,7 @@
       "repoRoot": "../tests/fixtures/checkpoint-adjacent-safe-repo",
       "changedFiles": ["src/routes/admin.js"],
       "layer": "commit",
-      "expectedRuleIds": [],
-      "comparative": {
-        "status": "unresolved",
-        "notes": "Negative case for false-positive measurement. External comparison still needs a recorded run."
-      }
+      "expectedRuleIds": []
     }
   ]
 }

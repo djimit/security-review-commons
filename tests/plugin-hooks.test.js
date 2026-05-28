@@ -116,6 +116,71 @@ test("Plugin pre-bash hook blocks staged high-severity checkpoint findings", () 
   );
 });
 
+test("Plugin pre-bash hook blocks ahead-of-upstream push findings", () => {
+  const remoteDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-plugin-hook-remote-"));
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-plugin-hook-push-"));
+  const filePath = path.join(tempDir, "src/auth/login.js");
+
+  execFileSync("git", ["init", "--bare", remoteDir], { encoding: "utf8" });
+  execFileSync("git", ["init", "-b", "main"], { cwd: tempDir, encoding: "utf8" });
+  execFileSync("git", ["config", "user.name", "Test User"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+  execFileSync("git", ["config", "user.email", "test@example.com"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+  execFileSync("git", ["remote", "add", "origin", remoteDir], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, "export const status = 'clean';\n");
+  execFileSync("git", ["add", "."], { cwd: tempDir, encoding: "utf8" });
+  execFileSync("git", ["commit", "-m", "baseline"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+  execFileSync("git", ["push", "-u", "origin", "main"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+
+  fs.writeFileSync(filePath, 'const token = "supersecret12345";\n');
+  execFileSync("git", ["add", "."], { cwd: tempDir, encoding: "utf8" });
+  execFileSync("git", ["commit", "-m", "introduce secret"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+
+  const output = execFileSync(
+    "node",
+    ["./bin/plugin-security-hook.js", "pre-bash"],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        CLAUDE_PROJECT_DIR: tempDir,
+        CLAUDE_PLUGIN_ROOT: repoRoot
+      },
+      input: JSON.stringify({
+        ...readJsonFixture("tests/fixtures/plugin/pre-tool-use-bash-git-push.json"),
+        cwd: tempDir
+      })
+    }
+  );
+
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.hookSpecificOutput.permissionDecision, "deny");
+  assert.match(
+    parsed.hookSpecificOutput.permissionDecisionReason,
+    /Potential hardcoded credential/
+  );
+});
+
 test("Plugin stop-turn hook blocks on configured turn-review findings", () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-plugin-stop-hook-"));
   const filePath = path.join(tempDir, "src/auth/flow.js");

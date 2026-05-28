@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- support-matrix closure for synthetic replay coverage across packaged plugin `git commit` and `git push` plus OpenCode `tool.execute.before` commit and push variants
+- broader high-signal authz, IDOR helper, template-render-string, and Python command-execution coverage with added positive and negative fixtures
+- benchmark comparator sidecar artifact with explicit unresolved external statuses instead of implicit parity claims
+- source-release workflow hardened so tag releases attach proof artifacts only, while npm publish now requires an explicit manual workflow dispatch and confirmation
+- release-truth documentation for intended `v0.2.0` source release and current npm defer decision
+
 ## 0.1.0
 
 - shared review core with deterministic edit review, turn review, and checkpoint review

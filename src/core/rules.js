@@ -81,18 +81,29 @@ export const BUILTIN_RULES = [
     title: "Potential authorization bypass behind a flag",
     severity: "high",
     category: "auth-bypass",
-    regex: /\bif\s*\(\s*(bypassAuth|skipAuth|disableAuth)\s*\)\s*\{[\s\S]{0,160}?\b(return\s+true|return\s+\w+|next\s*\()/i,
+    regex: /\bif\s*\(\s*(bypassAuth|skipAuth|disableAuth|skipAuthorization|disableAuthorization|authorizationOptional|allowAnonymous|allowGuest|authDisabled)\s*\)\s*\{[\s\S]{0,160}?\b(return\s+true|return\s+\w+|next\s*\()/i,
     explanation:
       "A bypass flag that short-circuits authorization logic can create a direct privilege-escalation path.",
     proposedFix:
       "Remove bypass flags from request or runtime flow, or gate them behind a trusted operator-only boundary with explicit auditing."
   },
   {
+    id: "builtin-authz-check-disabled",
+    title: "Potential authorization check disabled in route or handler config",
+    severity: "high",
+    category: "auth-bypass",
+    regex: /\b((auth|authorization)(Required|Enabled)?\s*[:=]\s*false|(skipAuthorization|disableAuthorization|allowAnonymous)\s*[:=]\s*true)\b/i,
+    explanation:
+      "Disabling route or handler authorization checks in code can silently widen access beyond the intended trust boundary.",
+    proposedFix:
+      "Keep authorization enabled by default and isolate any operator-only exceptions behind explicit review and auditing."
+  },
+  {
     id: "builtin-idor-direct-object-reference",
     title: "Potential insecure direct object reference from request identifier",
     severity: "high",
     category: "idor",
-    regex: /\b(findByPk|findOne|findUnique|get|load)\s*\([^)]*(req\.(params|query)\.(id|[A-Za-z0-9_]*Id)|params\.(id|[A-Za-z0-9_]*Id)|query\.(id|[A-Za-z0-9_]*Id))/i,
+    regex: /\b(findByPk|findById|findOne|findFirst|findUnique|findOrFail|findByIdAndUpdate|findByIdAndDelete|get|load|get[A-Z][A-Za-z0-9_]*ById|load[A-Z][A-Za-z0-9_]*ById|fetch[A-Z][A-Za-z0-9_]*ById)\s*\([^)]*(req\.(params|query)\.(id|[A-Za-z0-9_]*Id)|params\.(id|[A-Za-z0-9_]*Id)|query\.(id|[A-Za-z0-9_]*Id))/i,
     explanation:
       "Direct lookups of sensitive records from request identifiers can create IDOR risk when authorization is missing or deferred.",
     proposedFix:
@@ -114,7 +125,7 @@ export const BUILTIN_RULES = [
     title: "Potential server-side template injection from untrusted input",
     severity: "high",
     category: "template-injection",
-    regex: /\b(ejs\.render|handlebars\.compile|mustache\.render|pug\.render)\s*\([^)]*(req\.|userInput|params\.|query\.)/i,
+    regex: /\b(ejs\.render|handlebars\.compile|mustache\.render|pug\.render|nunjucks\.renderString|eta\.renderString|liquid\.parseAndRender)\s*\([^)]*(req\.|userInput|params\.|query\.)/i,
     explanation:
       "Passing request-controlled strings into server-side template compilation or rendering can create template-injection risk.",
     proposedFix:
@@ -155,6 +166,42 @@ export const BUILTIN_RULES = [
       "Python subprocess calls with shell=True expand command-injection risk when any argument can be attacker-controlled.",
     proposedFix:
       "Prefer argv-style subprocess execution without a shell and validate untrusted inputs before process execution."
+  },
+  {
+    id: "builtin-python-os-system",
+    title: "Potential unsafe Python os.system execution",
+    severity: "high",
+    category: "command-injection",
+    pathRegex: /(^|\/).+\.py$/i,
+    regex: /\bos\.system\s*\(/i,
+    explanation:
+      "os.system executes a shell command directly and is a high-confidence command-injection sink when any argument is attacker-controlled.",
+    proposedFix:
+      "Replace os.system with argv-style subprocess execution and validate untrusted inputs before process launch."
+  },
+  {
+    id: "builtin-python-os-popen",
+    title: "Potential unsafe Python os.popen execution",
+    severity: "high",
+    category: "command-injection",
+    pathRegex: /(^|\/).+\.py$/i,
+    regex: /\bos\.popen\s*\(/i,
+    explanation:
+      "os.popen invokes a shell command and should be treated as a command-injection sink in untrusted-input paths.",
+    proposedFix:
+      "Prefer safer subprocess APIs without a shell and validate all untrusted command fragments."
+  },
+  {
+    id: "builtin-python-subprocess-output-shell",
+    title: "Potential unsafe Python subprocess string-command execution",
+    severity: "high",
+    category: "command-injection",
+    pathRegex: /(^|\/).+\.py$/i,
+    regex: /\bsubprocess\.(getoutput|getstatusoutput)\s*\(/i,
+    explanation:
+      "subprocess helpers that execute a string command through a shell expand command-injection risk for attacker-controlled input.",
+    proposedFix:
+      "Avoid string-command subprocess helpers and prefer explicit argv execution with strict input validation."
   },
   {
     id: "builtin-github-actions-pull-request-target",

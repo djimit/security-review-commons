@@ -207,6 +207,46 @@ test("auth, idor, and template-injection rules catch untrusted application flow 
   );
 });
 
+test("expanded authz, idor helper, and template-string rules catch broader high-signal patterns", () => {
+  const authzResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-authz-disabled-tainted.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/authz-disabled-tainted.js"],
+    layer: "turn"
+  });
+  const idorHelperResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-idor-helper-tainted.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/idor-helper-tainted.js"],
+    layer: "turn"
+  });
+  const templateStringResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-template-render-string-tainted.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/template-render-string-tainted.js"],
+    layer: "turn"
+  });
+
+  assert.equal(
+    authzResult.findings[0].source.ruleId,
+    "builtin-authz-check-disabled"
+  );
+  assert.equal(
+    idorHelperResult.findings[0].source.ruleId,
+    "builtin-idor-direct-object-reference"
+  );
+  assert.equal(
+    templateStringResult.findings[0].source.ruleId,
+    "builtin-template-render-user-input"
+  );
+});
+
 test("python unsafe deserialization rules catch pickle and torch loads", () => {
   const pickleResult = runDeterministicReview({
     diff: fs.readFileSync(
@@ -261,6 +301,63 @@ test("python yaml and subprocess shell rules catch unsafe execution patterns", (
     subprocessResult.findings[0].source.ruleId,
     "builtin-python-subprocess-shell-true"
   );
+});
+
+test("expanded Python command-execution rules catch os and subprocess string sinks", () => {
+  const osSystemResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "py-os-system-dangerous.py"),
+      "utf8"
+    ),
+    changedFiles: ["src/os-system-dangerous.py"],
+    layer: "turn"
+  });
+  const osPopenResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "py-os-popen-dangerous.py"),
+      "utf8"
+    ),
+    changedFiles: ["src/os-popen-dangerous.py"],
+    layer: "turn"
+  });
+  const subprocessOutputResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "py-subprocess-getoutput-dangerous.py"),
+      "utf8"
+    ),
+    changedFiles: ["src/subprocess-getoutput-dangerous.py"],
+    layer: "turn"
+  });
+
+  assert.equal(
+    osSystemResult.findings[0].source.ruleId,
+    "builtin-python-os-system"
+  );
+  assert.equal(
+    osPopenResult.findings[0].source.ruleId,
+    "builtin-python-os-popen"
+  );
+  assert.equal(
+    subprocessOutputResult.findings[0].source.ruleId,
+    "builtin-python-subprocess-output-shell"
+  );
+});
+
+test("new high-signal negative fixtures remain clean", () => {
+  for (const [fixture, changedFile] of [
+    ["js-authz-disabled-safe.js", "src/authz-disabled-safe.js"],
+    ["js-idor-helper-safe.js", "src/idor-helper-safe.js"],
+    ["js-template-render-string-safe.js", "src/template-render-string-safe.js"],
+    ["py-subprocess-safe.py", "src/subprocess-safe.py"]
+  ]) {
+    const result = runDeterministicReview({
+      diff: fs.readFileSync(path.join(fixturesDir, fixture), "utf8"),
+      changedFiles: [changedFile],
+      layer: "turn"
+    });
+
+    assert.deepEqual(result.findings, []);
+  }
 });
 
 test("safe fixtures do not trigger current drift rules", () => {

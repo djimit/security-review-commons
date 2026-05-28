@@ -1,0 +1,32 @@
+name: Publish npm Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Existing source release tag to publish, for example v0.2.0"
+        required: true
+      confirm_publish:
+        description: "Set to true to confirm npm publication"
+        required: true
+        default: "false"
+
+jobs:
+  publish:
+    if: ${{ inputs.confirm_publish == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run check
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

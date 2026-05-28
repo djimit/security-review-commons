@@ -164,6 +164,22 @@
       "expectedRuleIds": []
     },
     {
+      "id": "js-authz-disabled-tainted",
+      "description": "Disabling authorization in route config should be detected",
+      "fixture": "./tests/fixtures/js-authz-disabled-tainted.js",
+      "changedFiles": ["src/authz-disabled-tainted.js"],
+      "expectedRuleIds": [
+        "builtin-authz-check-disabled"
+      ]
+    },
+    {
+      "id": "js-authz-disabled-safe",
+      "description": "Enabled authorization in route config should remain clean",
+      "fixture": "./tests/fixtures/js-authz-disabled-safe.js",
+      "changedFiles": ["src/authz-disabled-safe.js"],
+      "expectedRuleIds": []
+    },
+    {
       "id": "js-idor-tainted",
       "description": "Direct object lookups from request identifiers should be detected",
       "fixture": "./tests/fixtures/js-idor-tainted.js",
@@ -180,6 +196,22 @@
       "expectedRuleIds": []
     },
     {
+      "id": "js-idor-helper-tainted",
+      "description": "Helper lookups by request identifier should be detected",
+      "fixture": "./tests/fixtures/js-idor-helper-tainted.js",
+      "changedFiles": ["src/idor-helper-tainted.js"],
+      "expectedRuleIds": [
+        "builtin-idor-direct-object-reference"
+      ]
+    },
+    {
+      "id": "js-idor-helper-safe",
+      "description": "Helper lookups from trusted scoped identifiers should remain clean",
+      "fixture": "./tests/fixtures/js-idor-helper-safe.js",
+      "changedFiles": ["src/idor-helper-safe.js"],
+      "expectedRuleIds": []
+    },
+    {
       "id": "js-template-render-tainted",
       "description": "Server-side template rendering from request input should be detected",
       "fixture": "./tests/fixtures/js-template-render-tainted.js",
@@ -193,6 +225,22 @@
       "description": "Trusted server-side template rendering should remain clean",
       "fixture": "./tests/fixtures/js-template-render-safe.js",
       "changedFiles": ["src/template-render-safe.js"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "js-template-render-string-tainted",
+      "description": "Template source strings from request input should be detected",
+      "fixture": "./tests/fixtures/js-template-render-string-tainted.js",
+      "changedFiles": ["src/template-render-string-tainted.js"],
+      "expectedRuleIds": [
+        "builtin-template-render-user-input"
+      ]
+    },
+    {
+      "id": "js-template-render-string-safe",
+      "description": "Trusted template source strings should remain clean",
+      "fixture": "./tests/fixtures/js-template-render-string-safe.js",
+      "changedFiles": ["src/template-render-string-safe.js"],
       "expectedRuleIds": []
     },
     {
@@ -289,6 +337,33 @@
       "changedFiles": ["src/subprocess-shell-dangerous.py"],
       "expectedRuleIds": [
         "builtin-python-subprocess-shell-true"
+      ]
+    },
+    {
+      "id": "py-os-system-dangerous",
+      "description": "Python os.system should be detected",
+      "fixture": "./tests/fixtures/py-os-system-dangerous.py",
+      "changedFiles": ["src/os-system-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-python-os-system"
+      ]
+    },
+    {
+      "id": "py-os-popen-dangerous",
+      "description": "Python os.popen should be detected",
+      "fixture": "./tests/fixtures/py-os-popen-dangerous.py",
+      "changedFiles": ["src/os-popen-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-python-os-popen"
+      ]
+    },
+    {
+      "id": "py-subprocess-getoutput-dangerous",
+      "description": "Python subprocess.getoutput should be detected",
+      "fixture": "./tests/fixtures/py-subprocess-getoutput-dangerous.py",
+      "changedFiles": ["src/subprocess-getoutput-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-python-subprocess-output-shell"
       ]
     },
     {

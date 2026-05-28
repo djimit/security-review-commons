@@ -4,7 +4,7 @@ Portable, auditable code-security review core with thin adapters for OpenCode an
 
 ## Status
 
-This repository now implements a substantial phase-3 foundation:
+This repository now implements a stronger phase-4 local foundation:
 
 - a shared finding schema and deterministic rule engine,
 - additive policy and reminder loading,
@@ -17,7 +17,7 @@ This repository now implements a substantial phase-3 foundation:
 - a runnable CLI,
 - OpenCode hook mapping with explicit payload normalizers for documented events,
 - explicit Codex edit, turn, and checkpoint entrypoints,
-- deterministic coverage for CI, containers, Terraform, dependency-governance drift, selected web sinks, and Python deserialization hazards,
+- deterministic coverage for CI, containers, Terraform, dependency-governance drift, selected web sinks, Python deserialization hazards, and broader high-signal Python command-execution sinks,
 - CI for lint and tests.
 
 It does not claim security guarantees. It is a review assistant with explicit trust boundaries.
@@ -117,19 +117,19 @@ node --test tests/plugin-hooks.test.js
 
 ## Current Limitations
 
-- OpenCode payload normalization is fixture-backed, but host runtime payload capture is still synthetic rather than collected from a live session.
-- Host plugin packaging now exists, including an opt-in `Stop` hook path for turn review, but replay tests are still synthetic rather than captured from a live session.
+- OpenCode payload normalization is fixture-backed for the declared support matrix, including `tool.execute.before` commit and push variants, but host runtime payload capture is still synthetic rather than collected from a live session.
+- Host plugin packaging now exists, including `git commit`, `git push`, and optional `Stop` hook replay coverage, but the checked-in fixtures are still synthetic rather than captured from a live session.
 - Guidance files are now loaded additively from user, project, and repo-local scopes with explicit precedence, but only additive guidance, patterns, and suppressions are supported in that path.
 - Codex still does not claim native background hook or native git interception parity.
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
 - Checkpoint review now expands one hop of local JS/TS imports plus bounded adjacent auth/config/router/middleware context, but it still does not attempt full inter-file taint tracking.
 - Command-based turn review depends on an external reviewer executable when enabled; no built-in provider client ships in this slice.
-- Comparative benchmark output is now generated locally, but external comparator results are still recorded as unresolved until verified against a live baseline run.
-- npm publish requires `NPM_TOKEN` to be configured in GitHub Actions.
+- Comparative benchmark output is now generated locally with an explicit comparator sidecar, but external comparator results are still recorded as unresolved until verified against a live baseline run.
+- Source releases are tag-driven, but npm publish now requires an explicit manual workflow dispatch plus `NPM_TOKEN`.
 
 ## Current Rule Coverage
 
-- application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets, open redirect, DOM HTML injection, auth-bypass flags, direct object lookups from request identifiers, server-side template rendering from untrusted input, Python `pickle`, `torch.load`, and `subprocess` with `shell=True`
+- application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets, open redirect, DOM HTML injection, auth-bypass flags and disabled authz config, direct object lookups from request identifiers and helper lookups by request ID, server-side template rendering from untrusted input, Python `pickle`, `torch.load`, `subprocess` with `shell=True`, `os.system`, `os.popen`, and `subprocess.getoutput` or `getstatusoutput`
 - parser-backed JS/TS semantic flow checks: request-derived values into `exec`, `eval`, `fetch`, redirect targets, and `path.join/resolve`
 - conservative sanitizer-aware suppression for explicit wrappers like `validateUrl`, `assertAllowedUrl`, and `sanitizeRelativePath`
 - CI and workflow drift: `pull_request_target`, `permissions: write-all`, `curl | sh`
@@ -141,7 +141,7 @@ node --test tests/plugin-hooks.test.js
 - `tests/corpus/basic.json` defines a baseline corpus of representative fixtures and expected rule IDs
 - `npm run corpus` validates that the published rule set still catches that baseline and fails on corpus mismatches
 - corpus reports now include benchmark-style pass summaries by review mode, layer, and expected rule coverage
-- `benchmarks/manifest.json` and `npm run benchmark` generate a comparative-ready baseline report with hits, misses, false positives, and unresolved external gaps
+- `benchmarks/manifest.json` and `npm run benchmark` generate a comparative-ready baseline report with hits, misses, false positives, and unresolved external gaps backed by a checked-in comparator sidecar
 - CI uploads SARIF, a Markdown summary, and a corpus report as build artifacts
 - `tests/config.test.js` verifies additive guidance-file precedence and explicit config merging
 
@@ -157,5 +157,7 @@ node --test tests/plugin-hooks.test.js
 ## Release
 
 - tag a release as `v<version>` to trigger `.github/workflows/release.yml`
-- the workflow runs checks, creates an npm tarball, publishes a GitHub release, and publishes to npm only when `NPM_TOKEN` is configured
+- the release workflow runs checks, creates an npm tarball, and publishes a GitHub source release with proof artifacts only
+- publish to npm separately through `.github/workflows/publish-npm.yml` after an explicit operator confirmation
+- see [docs/release-0.2.0.md](./docs/release-0.2.0.md) for the current release-truth snapshot and publication decision
 - see [docs/plugin-packaging.md](./docs/plugin-packaging.md) for the current plugin surface and debug notes

@@ -17,10 +17,10 @@
 
 ## Not Yet Done
 
-- OpenCode runtime fixture tests
+- checked-in live OpenCode or packaged-plugin runtime captures
 - model-backed deeper agentic review
 - AST or Semgrep integration
-- npm publish still depends on `NPM_TOKEN` being configured in repository secrets
+- npm publish still depends on `NPM_TOKEN` being configured in repository secrets, but it no longer runs from the tag-triggered source-release path
 
 ## Current Deterministic Coverage
 
@@ -38,10 +38,12 @@ The CI workflow now publishes:
 - a Markdown summary artifact
 - a corpus report artifact tied to the baseline fixture set
 - a benchmark baseline result artifact that records current local hits, misses, false positives, and unresolved comparative gaps
+- an external comparator sidecar artifact that records the explicit unresolved status for each benchmark case until a real baseline run is reviewed
 - a runtime fixture provenance artifact that records which replay payloads are still synthetic versus captured-live
 
 ## Release Workflow
 
 - `.github/workflows/release.yml` triggers on tags matching `v*`
-- it runs checks, refreshes the benchmark baseline, creates an npm tarball, attaches the tarball plus proof artifacts to a GitHub release, and publishes to npm only if `NPM_TOKEN` is present
-- this keeps release automation honest: the repo is release-ready, but secret setup remains an explicit operational step
+- it runs checks, refreshes the benchmark baseline, creates an npm tarball, and attaches the tarball plus proof artifacts to a GitHub release
+- `.github/workflows/publish-npm.yml` is a separate manual path that requires an explicit release tag and `confirm_publish=true`
+- this keeps release automation honest: a source tag alone cannot publish to npm

@@ -32,6 +32,21 @@
     },
     {
       "runtime": "claude-plugin",
+      "event": "PreToolUse.Bash.git-push",
+      "fixture": "./tests/fixtures/plugin/pre-tool-use-bash-git-push.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "cwd",
+        "hook_event_name",
+        "tool_input",
+        "tool_name"
+      ],
+      "notes": "Synthetic replay fixture for git push interception before checkpoint review."
+    },
+    {
+      "runtime": "claude-plugin",
       "event": "Stop",
       "fixture": "./tests/fixtures/plugin/stop.json",
       "source": "synthetic",
@@ -81,6 +96,21 @@
         "diff"
       ],
       "notes": "Synthetic normalization fixture for idle-triggered turn review."
+    },
+    {
+      "runtime": "opencode",
+      "event": "tool.execute.before.git-commit",
+      "fixture": "./tests/fixtures/opencode/tool-execute-before-commit.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "changedFiles",
+        "command",
+        "tool",
+        "workspace"
+      ],
+      "notes": "Synthetic normalization fixture for checkpoint review before git commit."
     },
     {
       "runtime": "opencode",

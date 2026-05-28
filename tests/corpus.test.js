@@ -19,8 +19,8 @@ test("corpus runner validates all baseline cases", () => {
       passedCases: 5
     },
     deterministic: {
-      totalCases: 36,
-      passedCases: 36
+      totalCases: 45,
+      passedCases: 45
     }
   });
   assert.deepEqual(report.benchmarkSummary.byLayer, {
@@ -29,8 +29,8 @@ test("corpus runner validates all baseline cases", () => {
       passedCases: 5
     },
     turn: {
-      totalCases: 36,
-      passedCases: 36
+      totalCases: 45,
+      passedCases: 45
     }
   });
   assert.deepEqual(
@@ -50,12 +50,26 @@ test("corpus runner validates all baseline cases", () => {
   assert.deepEqual(
     report.benchmarkSummary.byExpectedRuleId["builtin-template-render-user-input"],
     {
+      totalCases: 2,
+      passedCases: 2
+    }
+  );
+  assert.deepEqual(
+    report.benchmarkSummary.byExpectedRuleId["builtin-python-subprocess-shell-true"],
+    {
       totalCases: 1,
       passedCases: 1
     }
   );
   assert.deepEqual(
-    report.benchmarkSummary.byExpectedRuleId["builtin-python-subprocess-shell-true"],
+    report.benchmarkSummary.byExpectedRuleId["builtin-authz-check-disabled"],
+    {
+      totalCases: 1,
+      passedCases: 1
+    }
+  );
+  assert.deepEqual(
+    report.benchmarkSummary.byExpectedRuleId["builtin-python-os-system"],
     {
       totalCases: 1,
       passedCases: 1

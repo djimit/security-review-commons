@@ -76,6 +76,22 @@ test("OpenCode git command interception maps push review to checkpoint mode", ()
   assert.match(result.auditEvent, /"reviewMode":"checkpoint"/);
 });
 
+test("OpenCode git command interception maps commit review to checkpoint mode", () => {
+  const fixture = readJsonFixture(
+    "tests/fixtures/opencode/tool-execute-before-commit.json"
+  );
+  const result = onToolExecuteBefore({
+    ...fixture,
+    workspace: {
+      root: checkpointRepoRoot
+    }
+  });
+
+  assert.equal(result.findings.length, 1);
+  assert.equal(result.findings[0].source.layer, "commit");
+  assert.match(result.auditEvent, /"reviewMode":"checkpoint"/);
+});
+
 test("OpenCode payload normalizers preserve explicit supported fields", () => {
   const fileEdited = normalizeFileEditedEvent(
     readJsonFixture("tests/fixtures/opencode/file-edited.json")
@@ -90,12 +106,20 @@ test("OpenCode payload normalizers preserve explicit supported fields", () => {
     ...readJsonFixture("tests/fixtures/opencode/tool-execute-before-push.json"),
     repoRoot: checkpointRepoRoot
   });
+  const toolExecuteCommit = normalizeToolExecuteBeforeEvent({
+    ...readJsonFixture("tests/fixtures/opencode/tool-execute-before-commit.json"),
+    workspace: {
+      root: checkpointRepoRoot
+    }
+  });
 
   assert.deepEqual(fileEdited.changedFiles, ["src/auth/login.js"]);
   assert.deepEqual(sessionDiff.changedFiles, ["src/worker.js"]);
   assert.deepEqual(sessionIdle.changedFiles, ["src/session.js"]);
   assert.equal(toolExecute.action, "push");
   assert.equal(toolExecute.repoRoot, checkpointRepoRoot);
+  assert.equal(toolExecuteCommit.action, "commit");
+  assert.equal(toolExecuteCommit.repoRoot, checkpointRepoRoot);
 });
 
 test("Codex adapter exposes explicit edit, turn, and checkpoint entrypoints", () => {

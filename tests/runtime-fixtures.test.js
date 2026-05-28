@@ -25,9 +25,11 @@ test("runtime fixture manifest covers supported OpenCode and plugin replay paylo
     "./tests/fixtures/opencode/file-edited.json",
     "./tests/fixtures/opencode/session-diff.json",
     "./tests/fixtures/opencode/session-idle.json",
+    "./tests/fixtures/opencode/tool-execute-before-commit.json",
     "./tests/fixtures/opencode/tool-execute-before-push.json",
     "./tests/fixtures/plugin/post-tool-use-write.json",
     "./tests/fixtures/plugin/pre-tool-use-bash-git-commit.json",
+    "./tests/fixtures/plugin/pre-tool-use-bash-git-push.json",
     "./tests/fixtures/plugin/stop.json"
   ]);
   assert.equal(

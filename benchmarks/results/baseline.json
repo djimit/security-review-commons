@@ -1,12 +1,17 @@
 {
   "manifestName": "security-review-commons-baseline-benchmark",
-  "totalCases": 7,
-  "passedCases": 7,
+  "comparator": {
+    "name": "external-baseline-sidecar",
+    "reviewStatus": "deferred",
+    "notes": "Manual external comparator review is not yet recorded. Each case remains explicitly unresolved until a real baseline run is captured and reviewed."
+  },
+  "totalCases": 9,
+  "passedCases": 9,
   "failedCases": 0,
-  "hitCount": 8,
+  "hitCount": 10,
   "missCount": 0,
   "falsePositiveCount": 0,
-  "unresolvedComparativeCases": 7,
+  "unresolvedComparativeCases": 9,
   "cases": [
     {
       "id": "deterministic-app-sinks",
@@ -35,7 +40,7 @@
       },
       "comparative": {
         "status": "unresolved",
-        "notes": "This case exercises baseline deterministic coverage. No verified external comparator run is recorded."
+        "notes": "No verified external comparator run is recorded for this deterministic sink case."
       }
     },
     {
@@ -62,7 +67,7 @@
       },
       "comparative": {
         "status": "unresolved",
-        "notes": "Useful for future DOM-XSS comparisons once an external baseline run is captured."
+        "notes": "DOM-XSS comparison remains deferred until an external baseline run is captured."
       }
     },
     {
@@ -89,7 +94,61 @@
       },
       "comparative": {
         "status": "unresolved",
-        "notes": "Python unsafe-deserialization comparison remains unverified against an external baseline."
+        "notes": "Python unsafe-deserialization comparison remains deferred until an external baseline run is captured."
+      }
+    },
+    {
+      "id": "deterministic-authz-disabled",
+      "description": "Deterministic review should catch disabled authorization config",
+      "reviewMode": "deterministic",
+      "layer": "turn",
+      "pass": true,
+      "hitRuleIds": [
+        "builtin-authz-check-disabled"
+      ],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [
+        "builtin-authz-check-disabled"
+      ],
+      "expectedRuleIds": [
+        "builtin-authz-check-disabled"
+      ],
+      "findingsSummary": {
+        "totalFindings": 1,
+        "activeFindings": 1,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Authorization-config comparison remains deferred until an external baseline run is captured."
+      }
+    },
+    {
+      "id": "deterministic-python-os-system",
+      "description": "Deterministic review should catch Python os.system execution",
+      "reviewMode": "deterministic",
+      "layer": "turn",
+      "pass": true,
+      "hitRuleIds": [
+        "builtin-python-os-system"
+      ],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [
+        "builtin-python-os-system"
+      ],
+      "expectedRuleIds": [
+        "builtin-python-os-system"
+      ],
+      "findingsSummary": {
+        "totalFindings": 1,
+        "activeFindings": 1,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Python command-execution comparison remains deferred until an external baseline run is captured."
       }
     },
     {
@@ -119,7 +178,7 @@
       },
       "comparative": {
         "status": "unresolved",
-        "notes": "This exercises optional model-backed stop-review plumbing, not a live provider benchmark."
+        "notes": "This case exercises optional turn-review plumbing and has no verified external comparator run."
       }
     },
     {
@@ -146,7 +205,7 @@
       },
       "comparative": {
         "status": "unresolved",
-        "notes": "Multi-file checkpoint evidence is exercised here, but no verified external comparator output is recorded."
+        "notes": "Checkpoint context comparison remains deferred until a comparable external run is recorded."
       }
     },
     {
@@ -173,7 +232,7 @@
       },
       "comparative": {
         "status": "unresolved",
-        "notes": "This case demonstrates bounded adjacent evidence collection without claiming external parity."
+        "notes": "Adjacent auth-context comparison remains deferred until a comparable external run is recorded."
       }
     },
     {
@@ -194,7 +253,7 @@
       },
       "comparative": {
         "status": "unresolved",
-        "notes": "Negative case for false-positive measurement. External comparison still needs a recorded run."
+        "notes": "Negative-case false-positive comparison remains deferred until a comparable external run is recorded."
       }
     }
   ]
