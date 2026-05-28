@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { scrubRuntimeFixture } from "../src/adapters/runtime-fixtures.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 
@@ -81,4 +82,20 @@ test("runtime fixture capture script writes a scrubbed fixture and manifest entr
   assert.equal(manifest.entries.length, 1);
   assert.equal(manifest.entries[0].runtime, "claude-plugin");
   assert.equal(manifest.entries[0].source, "captured-live");
+});
+
+test("runtime fixture scrubbing removes obvious secrets and absolute paths", () => {
+  const scrubbed = scrubRuntimeFixture({
+    cwd: "/Users/example/project",
+    tool_input: {
+      file_path: "/Users/example/project/src/auth/login.js",
+      content: 'const token = "supersecret12345";'
+    },
+    authorization: "Bearer abc.def.ghi"
+  });
+
+  assert.equal(scrubbed.cwd, "<ABSOLUTE_PATH>");
+  assert.equal(scrubbed.tool_input.file_path, "<ABSOLUTE_PATH>");
+  assert.match(scrubbed.tool_input.content, /<REDACTED_SECRET>/);
+  assert.equal(scrubbed.authorization, "<REDACTED>");
 });

@@ -30,7 +30,12 @@ The docs confirm event names, loading, and logging, but they do not fully specif
 To capture a scrubbed live payload for review before checking it in:
 
 ```bash
-node ./scripts/capture-runtime-fixture.js --source opencode --event file.edited --output ./tests/fixtures/opencode/captured-file-edited.json < raw-payload.json
+node ./scripts/capture-runtime-fixture.js \
+  --runtime opencode \
+  --event file.edited \
+  --fixture ./tests/fixtures/opencode/captured-file-edited.json \
+  --manifest ./tests/fixtures/runtime-fixtures.json \
+  < raw-payload.json
 ```
 
 The capture helper preserves payload shape while redacting obvious secrets and absolute paths. Captured fixtures still need manual review before they should replace or supplement the synthetic fixtures in `tests/fixtures/opencode/`.

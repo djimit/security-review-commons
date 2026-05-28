@@ -5,7 +5,10 @@ import process from "node:process";
 import { scrubRuntimeFixture } from "../src/adapters/runtime-fixtures.js";
 
 function parseArgs(argv) {
-  const args = {};
+  const args = {
+    source: "captured-live",
+    notes: "Scrubbed live runtime payload captured for adapter or plugin parity review."
+  };
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
@@ -14,8 +17,11 @@ function parseArgs(argv) {
     if (token === "--base-dir") {
       args.baseDir = next;
       index += 1;
-    } else if (token === "--runtime" || token === "--source") {
+    } else if (token === "--runtime") {
       args.runtime = next;
+      index += 1;
+    } else if (token === "--source") {
+      args.source = next;
       index += 1;
     } else if (token === "--event") {
       args.event = next;
@@ -28,6 +34,9 @@ function parseArgs(argv) {
       index += 1;
     } else if (token === "--home-dir") {
       args.homeDir = next;
+      index += 1;
+    } else if (token === "--notes") {
+      args.notes = next;
       index += 1;
     } else if (token === "--redact-paths") {
       args.redactPaths = next
@@ -63,7 +72,10 @@ function main() {
     return;
   }
 
-  let manifest = { entries: [] };
+  let manifest = {
+    description: "Runtime fixture provenance for synthetic and captured payloads.",
+    entries: []
+  };
   if (args.manifest) {
     const manifestPath = path.resolve(baseDir, args.manifest);
     if (fs.existsSync(manifestPath)) {
@@ -77,11 +89,11 @@ function main() {
       runtime: args.runtime ?? "unknown",
       event: args.event ?? "unknown",
       fixture: args.fixture,
-      source: "captured-live",
+      source: args.source,
       scrubbed: true,
-      capturedAt: new Date().toISOString(),
+      capturedAt: args.source === "captured-live" ? new Date().toISOString() : null,
       supportedTopLevelFields: Object.keys(scrubbed).sort(),
-      notes: "Scrubbed live runtime payload captured for adapter or plugin parity review."
+      notes: args.notes
     });
     fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
     fs.writeFileSync(`${manifestPath}`, `${JSON.stringify(manifest, null, 2)}\n`);

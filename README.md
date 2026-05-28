@@ -4,7 +4,7 @@ Portable, auditable code-security review core with thin adapters for OpenCode an
 
 ## Status
 
-This repository implements the first vertical slice:
+This repository now implements a substantial phase-3 foundation:
 
 - a shared finding schema and deterministic rule engine,
 - additive policy and reminder loading,
