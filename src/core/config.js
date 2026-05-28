@@ -1,6 +1,28 @@
 import fs from "node:fs";
 import path from "node:path";
 
+
+import { validateJsonSchema } from "./schema-validator.js";
+
+const configSchema = JSON.parse(
+  fs.readFileSync(
+    new URL("../../schemas/security-review.config.schema.json", import.meta.url),
+    "utf8"
+  )
+);
+
+function createValidationError({ code, message, details = [] }) {
+  const error = new Error(`${code}: ${message}`);
+  error.code = code;
+  error.details = details;
+  return error;
+}
+
+function assertSchemaValid({ validator, value, code, message }) {
+  const result = validateJsonSchema(validator, value);
+  if (result.valid) return;
+  throw createValidationError({ code, message, details: result.errors });
+}
 const DEFAULT_CONFIG = {
   enabledLayers: ["edit", "turn", "commit", "push"],
   debug: false,
@@ -163,6 +185,12 @@ function validateCheckpointReview(checkpointReview) {
 }
 
 export function loadConfig(raw = {}) {
+  assertSchemaValid({
+    validator: configSchema,
+    value: raw,
+    code: "SRC_CFG_SCHEMA_INVALID",
+    message: "Config validation failed"
+  });
   const merged = {
     ...DEFAULT_CONFIG,
     ...raw,
