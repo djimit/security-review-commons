@@ -10,18 +10,20 @@ export function loadCorpus(manifestPath) {
 export function runCorpus({ manifestPath, baseDir = process.cwd(), config = {} }) {
   const manifest = loadCorpus(manifestPath);
   const executedCases = manifest.cases.map((testCase) => {
+    const reviewMode = testCase.reviewMode ?? "deterministic";
+    const layer = testCase.layer ?? (reviewMode === "checkpoint" ? "commit" : "turn");
     const review =
-      testCase.reviewMode === "checkpoint"
+      reviewMode === "checkpoint"
         ? runCheckpointReview({
             repoRoot: path.resolve(baseDir, testCase.repoRoot),
             changedFiles: testCase.changedFiles,
-            layer: testCase.layer ?? "commit",
+            layer,
             config
           })
         : runDeterministicReview({
             diff: fs.readFileSync(path.resolve(baseDir, testCase.fixture), "utf8"),
             changedFiles: testCase.changedFiles,
-            layer: testCase.layer ?? "turn",
+            layer,
             config
           });
     const actualRuleIds = review.findings.map((finding) => finding.source.ruleId).sort();
@@ -33,6 +35,8 @@ export function runCorpus({ manifestPath, baseDir = process.cwd(), config = {} }
     return {
       id: testCase.id,
       description: testCase.description,
+      reviewMode,
+      layer,
       pass,
       actualRuleIds,
       expectedRuleIds,
@@ -50,7 +54,8 @@ export function runCorpus({ manifestPath, baseDir = process.cwd(), config = {} }
     passedCases: cases.filter((testCase) => testCase.pass).length,
     failedCases: cases.filter((testCase) => !testCase.pass).length,
     cases,
-    findingsSummary: summarizeFindings(flattenedFindings)
+    findingsSummary: summarizeFindings(flattenedFindings),
+    benchmarkSummary: summarizeBenchmarkCases(cases)
   };
 }
 
@@ -60,6 +65,14 @@ export function corpusToMarkdown(report) {
     "",
     `Corpus: ${report.manifestName}`,
     `Cases: ${report.passedCases}/${report.totalCases} passed`,
+    "",
+    "## Benchmark Summary",
+    "",
+    ...benchmarkSectionLines("By Review Mode", report.benchmarkSummary.byReviewMode),
+    "",
+    ...benchmarkSectionLines("By Layer", report.benchmarkSummary.byLayer),
+    "",
+    ...benchmarkRuleCoverageLines(report.benchmarkSummary.byExpectedRuleId),
     ""
   ];
 
@@ -79,4 +92,70 @@ export function corpusToMarkdown(report) {
 
 export function corpusFailed(report) {
   return report.failedCases > 0;
+}
+
+function summarizeBenchmarkCases(cases) {
+  const byReviewMode = {};
+  const byLayer = {};
+  const byExpectedRuleId = {};
+
+  for (const testCase of cases) {
+    incrementBenchmarkBucket(byReviewMode, testCase.reviewMode, testCase.pass);
+    incrementBenchmarkBucket(byLayer, testCase.layer, testCase.pass);
+
+    for (const ruleId of testCase.expectedRuleIds) {
+      incrementBenchmarkBucket(byExpectedRuleId, ruleId, testCase.pass);
+    }
+  }
+
+  return {
+    byReviewMode,
+    byLayer,
+    byExpectedRuleId
+  };
+}
+
+function incrementBenchmarkBucket(buckets, key, pass) {
+  const bucket = buckets[key] ?? { totalCases: 0, passedCases: 0 };
+  bucket.totalCases += 1;
+  if (pass) {
+    bucket.passedCases += 1;
+  }
+  buckets[key] = bucket;
+}
+
+function benchmarkSectionLines(title, buckets) {
+  const lines = [`### ${title}`, ""];
+  const entries = Object.entries(buckets).sort((left, right) =>
+    left[0].localeCompare(right[0])
+  );
+
+  if (entries.length === 0) {
+    lines.push("- none");
+    return lines;
+  }
+
+  for (const [name, bucket] of entries) {
+    lines.push(`- ${name}: ${bucket.passedCases}/${bucket.totalCases} passed`);
+  }
+
+  return lines;
+}
+
+function benchmarkRuleCoverageLines(buckets) {
+  const lines = ["### By Expected Rule", ""];
+  const entries = Object.entries(buckets).sort((left, right) =>
+    left[0].localeCompare(right[0])
+  );
+
+  if (entries.length === 0) {
+    lines.push("- none");
+    return lines;
+  }
+
+  for (const [ruleId, bucket] of entries) {
+    lines.push(`- ${ruleId}: ${bucket.passedCases}/${bucket.totalCases} passed`);
+  }
+
+  return lines;
 }

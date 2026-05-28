@@ -133,6 +133,7 @@ node --test tests/plugin-hooks.test.js
 
 - `tests/corpus/basic.json` defines a baseline corpus of representative fixtures and expected rule IDs
 - `npm run corpus` validates that the published rule set still catches that baseline and fails on corpus mismatches
+- corpus reports now include benchmark-style pass summaries by review mode, layer, and expected rule coverage
 - CI uploads SARIF, a Markdown summary, and a corpus report as build artifacts
 - `tests/config.test.js` verifies additive guidance-file precedence and explicit config merging
 
