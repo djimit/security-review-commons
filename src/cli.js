@@ -14,6 +14,7 @@ import { findingsToSarif } from "./core/sarif.js";
 import { runCorpus, corpusFailed, corpusToMarkdown } from "./core/corpus.js";
 import { findingsMeetSeverityThreshold } from "./core/severity.js";
 import { summarizeFindings, summaryToMarkdown } from "./core/summary.js";
+import { normalizeSuppressions, validateSuppressionGovernance } from "./core/suppressions.js";
 
 function parseArgs(argv) {
   const args = {
@@ -70,6 +71,8 @@ function parseArgs(argv) {
       index += 1;
     } else if (token === "--debug") {
       args.debug = true;
+    } else if (token === "--fail-on-suppression-governance") {
+      args.failOnSuppressionGovernance = true;
     } else if (token === "--max-diff-bytes") {
       args.maxDiffBytes = Number.parseInt(next, 10);
       index += 1;
@@ -251,6 +254,17 @@ async function main() {
     );
   } else {
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  }
+
+
+  if (args.failOnSuppressionGovernance) {
+    const suppressionViolations = validateSuppressionGovernance(
+      normalizeSuppressions(resolvedConfig.suppressions)
+    );
+    if (suppressionViolations.length > 0) {
+      process.stderr.write(`${JSON.stringify({ kind: "suppression-governance", violations: suppressionViolations }, null, 2)}\n`);
+      process.exitCode = 1;
+    }
   }
 
   if (findingsMeetSeverityThreshold(result.findings, args.failOnSeverity)) {
