@@ -237,6 +237,16 @@ function expressionNeedsFinding(node, taintedIdentifiers, category) {
   );
 }
 
+export function getJsSemanticRuleMetadata() {
+  return JS_SEMANTIC_RULES.map((rule) => ({
+    ruleId: rule.id,
+    language: rule.language ?? "javascript",
+    framework: rule.framework ?? "generic",
+    precision: rule.precision ?? "medium",
+    recall_risk: rule.recall_risk ?? "medium"
+  }));
+}
+
 function expressionIsRecognizedSanitizerCall(node, taintedIdentifiers, category) {
   if (node?.type !== "CallExpression") {
     return false;

@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { runDeterministicReview, runCheckpointReview } from "./review.js";
 import { summarizeFindings } from "./summary.js";
+import { getBuiltinRuleMetadata } from "./rules.js";
+import { getJsSemanticRuleMetadata } from "./js-semantic.js";
 
 export function loadCorpus(manifestPath) {
   return JSON.parse(fs.readFileSync(path.resolve(manifestPath), "utf8"));
@@ -72,6 +74,14 @@ export function corpusToMarkdown(report) {
     "",
     ...benchmarkSectionLines("By Layer", report.benchmarkSummary.byLayer),
     "",
+    ...benchmarkSectionLines("By Language", report.benchmarkSummary.byLanguage),
+    "",
+    ...benchmarkSectionLines("By Framework", report.benchmarkSummary.byFramework),
+    "",
+    ...benchmarkSectionLines("By Precision", report.benchmarkSummary.byPrecision),
+    "",
+    ...benchmarkSectionLines("By Recall Risk", report.benchmarkSummary.byRecallRisk),
+    "",
     ...benchmarkRuleCoverageLines(report.benchmarkSummary.byExpectedRuleId),
     ""
   ];
@@ -98,6 +108,16 @@ function summarizeBenchmarkCases(cases) {
   const byReviewMode = {};
   const byLayer = {};
   const byExpectedRuleId = {};
+  const byLanguage = {};
+  const byFramework = {};
+  const byPrecision = {};
+  const byRecallRisk = {};
+  const ruleMetadata = new Map(
+    [...getBuiltinRuleMetadata(), ...getJsSemanticRuleMetadata()].map((entry) => [
+      entry.ruleId,
+      entry
+    ])
+  );
 
   for (const testCase of cases) {
     incrementBenchmarkBucket(byReviewMode, testCase.reviewMode, testCase.pass);
@@ -105,13 +125,25 @@ function summarizeBenchmarkCases(cases) {
 
     for (const ruleId of testCase.expectedRuleIds) {
       incrementBenchmarkBucket(byExpectedRuleId, ruleId, testCase.pass);
+      const metadata = ruleMetadata.get(ruleId);
+      if (!metadata) {
+        continue;
+      }
+      incrementBenchmarkBucket(byLanguage, metadata.language, testCase.pass);
+      incrementBenchmarkBucket(byFramework, metadata.framework, testCase.pass);
+      incrementBenchmarkBucket(byPrecision, metadata.precision, testCase.pass);
+      incrementBenchmarkBucket(byRecallRisk, metadata.recall_risk, testCase.pass);
     }
   }
 
   return {
     byReviewMode,
     byLayer,
-    byExpectedRuleId
+    byExpectedRuleId,
+    byLanguage,
+    byFramework,
+    byPrecision,
+    byRecallRisk
   };
 }
 
