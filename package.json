@@ -17,9 +17,13 @@
     "security-review-commons": "./src/cli.js"
   },
   "files": [
+    ".claude-plugin/",
+    "bin/",
+    "hooks/",
     "src/",
     "schemas/",
     "README.md",
+    "docs/",
     "LICENSE",
     "CHANGELOG.md"
   ],
@@ -36,7 +40,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "lint": "node --check src/index.js src/cli.js src/core/*.js src/adapters/opencode/*.js src/adapters/codex/*.js",
+    "lint": "node --check src/index.js src/cli.js src/core/*.js src/adapters/opencode/*.js src/adapters/codex/*.js src/plugin/*.js bin/*.js",
     "corpus": "node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus",
     "check": "npm run lint && npm test && npm run corpus",
     "pack:dry-run": "npm pack --dry-run"

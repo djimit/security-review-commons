@@ -1,0 +1,27 @@
+{
+  "description": "security-review-commons hooks for edit-time feedback and git checkpoint review.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/claude-security-hook.js\" post-edit"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/claude-security-hook.js\" pre-bash"
+          }
+        ]
+      }
+    ]
+  }
+}
