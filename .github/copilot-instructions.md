@@ -1,5 +1,7 @@
 # Copilot Instructions — security-review-commons
 
+> See root `.github/copilot-instructions.md` for global conventions.
+
 Portable, auditable code security review core with OpenCode and Codex adapters. Uses Acorn for JS/TS AST parsing and produces SARIF output.
 
 ## Commands
