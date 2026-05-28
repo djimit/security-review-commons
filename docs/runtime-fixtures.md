@@ -45,6 +45,8 @@ The script:
 - writes the scrubbed fixture file
 - upserts the runtime fixture manifest entry with source, supported top-level fields, and capture metadata
 
+For an event-by-event operator checklist and ready-to-run commands, see [docs/runtime-capture-runbook.md](./runtime-capture-runbook.md).
+
 ## Verification
 
 Runtime fixture verification currently proves:
