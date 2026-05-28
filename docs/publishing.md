@@ -37,11 +37,11 @@ The CI workflow now publishes:
 - a sample SARIF artifact
 - a Markdown summary artifact
 - a corpus report artifact tied to the baseline fixture set
-- a benchmark script and baseline result artifact that record current local hits, misses, false positives, and unresolved comparative gaps
-- runtime fixture provenance and capture tooling for synthetic versus scrubbed host payloads
+- a benchmark baseline result artifact that records current local hits, misses, false positives, and unresolved comparative gaps
+- a runtime fixture provenance artifact that records which replay payloads are still synthetic versus captured-live
 
 ## Release Workflow
 
 - `.github/workflows/release.yml` triggers on tags matching `v*`
-- it runs checks, creates an npm tarball, attaches it to a GitHub release, and publishes to npm only if `NPM_TOKEN` is present
+- it runs checks, refreshes the benchmark baseline, creates an npm tarball, attaches the tarball plus proof artifacts to a GitHub release, and publishes to npm only if `NPM_TOKEN` is present
 - this keeps release automation honest: the repo is release-ready, but secret setup remains an explicit operational step
