@@ -20,6 +20,20 @@ const JSImportExtensions = [
   ".mts",
   ".cts"
 ];
+const ADJACENT_CONTEXT_DIR_NAMES = [
+  "auth",
+  "config",
+  "guards",
+  "middleware",
+  "policies",
+  "policy",
+  "permissions",
+  "routes",
+  "router",
+  "security"
+];
+const ADJACENT_CONTEXT_FILE_REGEX =
+  /(^|\/)(auth|guard|guards|config|middleware|policy|policies|permission|permissions|route|routes|router|security)\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
 const TypeScriptParser = Parser.extend(tsPlugin());
 
 export function capReviewInput({ diff, changedFiles, config }) {
@@ -188,7 +202,8 @@ export function runCheckpointReview({
   const cappedFiles = changedFiles.slice(0, config.caps.maxChangedFiles);
   const reviewInputs = collectCheckpointInputs({
     repoRoot,
-    changedFiles: cappedFiles
+    changedFiles: cappedFiles,
+    config
   });
   const findings = reviewInputs.flatMap((input) =>
     reviewFileContent({
@@ -216,8 +231,10 @@ export function runCheckpointReview({
       reviewMode: "checkpoint",
       changedFileCount: cappedFiles.length,
       reviewedFileCount: reviewInputs.length,
-      contextFileCount: reviewInputs.filter((input) => input.kind === "context")
+      contextFileCount: reviewInputs.filter((input) => input.kind !== "changed")
         .length,
+      importContextFileCount: reviewInputs.filter((input) => input.kind === "import-context").length,
+      adjacentContextFileCount: reviewInputs.filter((input) => input.kind === "adjacent-context").length,
       skippedFileCount: cappedFiles.length - reviewInputs.filter((input) => input.kind === "changed").length,
       reviewedBytes: reviewInputs.reduce(
         (total, input) => total + input.content.length,
@@ -351,11 +368,12 @@ function slugifyRulePart(value) {
     .replaceAll(/^-+|-+$/g, "") || "default";
 }
 
-function collectCheckpointInputs({ repoRoot, changedFiles }) {
+function collectCheckpointInputs({ repoRoot, changedFiles, config }) {
   const resolvedRepoRoot = path.resolve(repoRoot);
   const reviewInputs = [];
   const seenFiles = new Set();
   const jsChangedFiles = [];
+  let contextBytes = 0;
 
   for (const file of changedFiles) {
     const resolvedFile = resolveWorkspaceFile(resolvedRepoRoot, file);
@@ -394,16 +412,80 @@ function collectCheckpointInputs({ repoRoot, changedFiles }) {
         continue;
       }
 
+      if (
+        !canAddContextInput({
+          config,
+          currentContextCount: reviewInputs.filter((input) => input.kind !== "changed").length,
+          currentContextBytes: contextBytes,
+          nextContentLength: content.length
+        })
+      ) {
+        continue;
+      }
+
       reviewInputs.push({
         file: relativePath,
         content,
-        kind: "context"
+        kind: "import-context"
       });
       seenFiles.add(relativePath);
+      contextBytes += content.length;
+    }
+  }
+
+  if (config.checkpointReview.enabledAdjacentContext) {
+    const adjacentFiles = collectAdjacentContextFiles({
+      repoRoot: resolvedRepoRoot,
+      changedFiles,
+      seenFiles,
+      maxDepth: config.checkpointReview.maxAdjacentSearchDepth
+    });
+
+    for (const adjacentFile of adjacentFiles) {
+      const content = readWorkspaceFile(adjacentFile.absolutePath);
+      if (content == null) {
+        continue;
+      }
+      if (
+        !canAddContextInput({
+          config,
+          currentContextCount: reviewInputs.filter((input) => input.kind !== "changed").length,
+          currentContextBytes: contextBytes,
+          nextContentLength: content.length
+        })
+      ) {
+        continue;
+      }
+
+      reviewInputs.push({
+        file: adjacentFile.relativePath,
+        content,
+        kind: "adjacent-context"
+      });
+      seenFiles.add(adjacentFile.relativePath);
+      contextBytes += content.length;
     }
   }
 
   return reviewInputs;
+}
+
+function canAddContextInput({
+  config,
+  currentContextCount,
+  currentContextBytes,
+  nextContentLength
+}) {
+  if (currentContextCount >= config.checkpointReview.maxContextFiles) {
+    return false;
+  }
+  if (
+    currentContextBytes + nextContentLength >
+    config.checkpointReview.maxContextBytes
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function resolveWorkspaceFile(repoRoot, filePath) {
@@ -476,6 +558,137 @@ function collectLocalImportContext({ repoRoot, absoluteFilePath, sourceText }) {
       resolveLocalImportFile({ repoRoot, absoluteFilePath, specifier })
     )
     .filter(Boolean);
+}
+
+function collectAdjacentContextFiles({
+  repoRoot,
+  changedFiles,
+  seenFiles,
+  maxDepth
+}) {
+  const searchDirs = collectAdjacentSearchDirs({
+    repoRoot,
+    changedFiles
+  });
+  const adjacentFiles = [];
+  const seenAdjacentFiles = new Set();
+  const seenDirs = new Set();
+
+  for (const searchDir of searchDirs) {
+    if (seenDirs.has(searchDir)) {
+      continue;
+    }
+    seenDirs.add(searchDir);
+
+    for (const adjacentFile of walkAdjacentContextDir({
+      repoRoot,
+      absoluteDir: searchDir,
+      depth: 0,
+      maxDepth,
+      seenFiles
+    })) {
+      if (seenAdjacentFiles.has(adjacentFile.relativePath)) {
+        continue;
+      }
+      seenAdjacentFiles.add(adjacentFile.relativePath);
+      adjacentFiles.push(adjacentFile);
+    }
+  }
+
+  return adjacentFiles;
+}
+
+function collectAdjacentSearchDirs({ repoRoot, changedFiles }) {
+  const dirs = new Set();
+
+  for (const changedFile of changedFiles) {
+    const absoluteFile = resolveWorkspaceFile(repoRoot, changedFile);
+    if (!absoluteFile) {
+      continue;
+    }
+
+    const fileDir = path.dirname(absoluteFile);
+    const parentDir = path.dirname(fileDir);
+    dirs.add(fileDir);
+    dirs.add(parentDir);
+
+    for (const baseDir of [fileDir, parentDir]) {
+      for (const dirName of ADJACENT_CONTEXT_DIR_NAMES) {
+        const candidate = path.join(baseDir, dirName);
+        if (isPathInsideRoot(repoRoot, candidate)) {
+          dirs.add(candidate);
+        }
+      }
+    }
+  }
+
+  return [...dirs].filter((candidate) => {
+    try {
+      return fs.statSync(candidate).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+}
+
+function walkAdjacentContextDir({
+  repoRoot,
+  absoluteDir,
+  depth,
+  maxDepth,
+  seenFiles
+}) {
+  if (depth > maxDepth) {
+    return [];
+  }
+
+  const entries = safeReadDir(absoluteDir);
+  const collected = [];
+
+  for (const entry of entries) {
+    const absolutePath = path.join(absoluteDir, entry.name);
+    const relativePath = path.relative(repoRoot, absolutePath);
+
+    if (entry.isDirectory()) {
+      if (depth < maxDepth) {
+        collected.push(
+          ...walkAdjacentContextDir({
+            repoRoot,
+            absoluteDir: absolutePath,
+            depth: depth + 1,
+            maxDepth,
+            seenFiles
+          })
+        );
+      }
+      continue;
+    }
+
+    if (
+      !entry.isFile() ||
+      seenFiles.has(relativePath) ||
+      !ADJACENT_CONTEXT_FILE_REGEX.test(relativePath)
+    ) {
+      continue;
+    }
+
+    collected.push({
+      relativePath,
+      absolutePath
+    });
+  }
+
+  return collected.sort((left, right) =>
+    left.relativePath.localeCompare(right.relativePath)
+  );
+}
+
+function safeReadDir(dirPath) {
+  try {
+    return fs.readdirSync(dirPath, { withFileTypes: true });
+  } catch {
+    return [];
+  }
 }
 
 function tryParseJsLike(sourceText) {

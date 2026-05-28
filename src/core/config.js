@@ -17,6 +17,12 @@ const DEFAULT_CONFIG = {
     timeoutMs: 30_000,
     command: null
   },
+  checkpointReview: {
+    enabledAdjacentContext: true,
+    maxContextFiles: 8,
+    maxContextBytes: 64 * 1024,
+    maxAdjacentSearchDepth: 2
+  },
   repoGuidance: [],
   customPatterns: [],
   suppressions: []
@@ -87,6 +93,30 @@ function validateTurnReview(turnReview) {
   }
 }
 
+function validateCheckpointReview(checkpointReview) {
+  if (typeof checkpointReview !== "object" || checkpointReview === null) {
+    throw new Error("checkpointReview must be an object");
+  }
+  if (typeof checkpointReview.enabledAdjacentContext !== "boolean") {
+    throw new Error("checkpointReview.enabledAdjacentContext must be a boolean");
+  }
+  assertInteger(
+    checkpointReview.maxContextFiles,
+    "checkpointReview.maxContextFiles",
+    0
+  );
+  assertInteger(
+    checkpointReview.maxContextBytes,
+    "checkpointReview.maxContextBytes",
+    1024
+  );
+  assertInteger(
+    checkpointReview.maxAdjacentSearchDepth,
+    "checkpointReview.maxAdjacentSearchDepth",
+    0
+  );
+}
+
 export function loadConfig(raw = {}) {
   const merged = {
     ...DEFAULT_CONFIG,
@@ -103,6 +133,10 @@ export function loadConfig(raw = {}) {
           ? DEFAULT_CONFIG.turnReview.command
           : raw.turnReview.command
     },
+    checkpointReview: {
+      ...DEFAULT_CONFIG.checkpointReview,
+      ...(raw.checkpointReview ?? {})
+    },
     repoGuidance: [...DEFAULT_CONFIG.repoGuidance, ...(raw.repoGuidance ?? [])],
     customPatterns: [...DEFAULT_CONFIG.customPatterns, ...(raw.customPatterns ?? [])],
     suppressions: [...DEFAULT_CONFIG.suppressions, ...(raw.suppressions ?? [])]
@@ -111,6 +145,7 @@ export function loadConfig(raw = {}) {
   assertStringArray(merged.enabledLayers, "enabledLayers");
   assertStringArray(merged.repoGuidance, "repoGuidance");
   validateTurnReview(merged.turnReview);
+  validateCheckpointReview(merged.checkpointReview);
 
   if (merged.customPatterns.length > merged.caps.maxCustomPatterns) {
     throw new Error("customPatterns exceeds maxCustomPatterns");

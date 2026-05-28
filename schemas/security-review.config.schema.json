@@ -51,6 +51,16 @@
         }
       }
     },
+    "checkpointReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabledAdjacentContext": { "type": "boolean" },
+        "maxContextFiles": { "type": "integer", "minimum": 0 },
+        "maxContextBytes": { "type": "integer", "minimum": 1024 },
+        "maxAdjacentSearchDepth": { "type": "integer", "minimum": 0 }
+      }
+    },
     "repoGuidance": {
       "type": "array",
       "items": { "type": "string" }

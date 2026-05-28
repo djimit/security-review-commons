@@ -24,6 +24,7 @@ The packaging stays thin. All review logic still routes through the shared core 
 - inspects bash commands before execution
 - intercepts `git commit` and `git push`
 - runs checkpoint review over the staged commit set or outgoing push diff when it can resolve the git context
+- includes bounded import and adjacent auth/config/router/middleware evidence collection
 - denies the tool call on `high` or `critical` findings
 - emits advisory context for lower-severity checkpoint findings
 
@@ -101,4 +102,4 @@ Current turn-review controls are environment-driven:
 
 - No captured live runtime fixtures yet; current replay tests use synthetic payloads
 - No built-in provider client ships in this slice; model-backed turn review depends on an external reviewer command
-- No bounded multi-file checkpoint collector beyond the existing checkpoint review core
+- Checkpoint evidence collection is still bounded by simple adjacency heuristics rather than a richer multi-file graph or inter-file taint engine

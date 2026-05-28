@@ -23,7 +23,9 @@ Build a portable security-review system that preserves a three-layer review mode
 - Triggered before `git commit` or `git push`.
 - Reads all changed files fully.
 - Expands one hop of local JS/TS import context.
+- Adds bounded adjacent auth, config, route, router, middleware, permission, and security context.
 - Continues when nearby context files cannot be parsed or read.
+- Enforces explicit context file, byte, and search-depth caps.
 
 ## Core Modules
 
@@ -34,7 +36,7 @@ Build a portable security-review system that preserves a three-layer review mode
 - `suppressions.js` applies owner- and expiry-bound suppressions.
 - `sarif.js` emits CI- and IDE-friendly result bundles.
 - `review.js` orchestrates capped review and audit logging.
-- `review.js` also owns checkpoint-mode file collection and one-hop import expansion.
+- `review.js` also owns checkpoint-mode file collection, bounded context expansion, and audit metadata.
 - `jsonl.js` emits metadata-only audit events.
 
 ## Adapter Strategy

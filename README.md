@@ -10,7 +10,7 @@ This repository implements the first vertical slice:
 - additive policy and reminder loading,
 - capped diff review,
 - async turn review with deterministic fallback and optional command-based model review,
-- checkpoint review over full changed-file contents with one-hop local JS/TS import context,
+- checkpoint review over full changed-file contents with bounded import and adjacent evidence context,
 - JSONL audit logging,
 - suppression governance with expiry and ownership,
 - SARIF emission,
@@ -115,7 +115,7 @@ node --test tests/plugin-hooks.test.js
 - Host plugin packaging now exists, including an opt-in `Stop` hook path for turn review, but replay tests are still synthetic rather than captured from a live session.
 - Codex still does not claim native background hook or native git interception parity.
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
-- Checkpoint review expands only one hop of local JS/TS import context and does not attempt full inter-file taint tracking.
+- Checkpoint review now expands one hop of local JS/TS imports plus bounded adjacent auth/config/router/middleware context, but it still does not attempt full inter-file taint tracking.
 - Command-based turn review depends on an external reviewer executable when enabled; no built-in provider client ships in this slice.
 - npm publish requires `NPM_TOKEN` to be configured in GitHub Actions.
 

@@ -179,6 +179,26 @@
       "changedFiles": ["src/feature.js"],
       "layer": "commit",
       "expectedRuleIds": []
+    },
+    {
+      "id": "checkpoint-adjacent-auth-context",
+      "description": "Checkpoint review should inspect bounded adjacent auth or config context",
+      "reviewMode": "checkpoint",
+      "repoRoot": "./tests/fixtures/checkpoint-adjacent-repo",
+      "changedFiles": ["src/routes/admin.js"],
+      "layer": "commit",
+      "expectedRuleIds": [
+        "builtin-hardcoded-secret-token"
+      ]
+    },
+    {
+      "id": "checkpoint-adjacent-safe-context",
+      "description": "Checkpoint review should ignore unrelated nearby generated files",
+      "reviewMode": "checkpoint",
+      "repoRoot": "./tests/fixtures/checkpoint-adjacent-safe-repo",
+      "changedFiles": ["src/routes/admin.js"],
+      "layer": "commit",
+      "expectedRuleIds": []
     }
   ]
 }

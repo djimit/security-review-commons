@@ -50,3 +50,45 @@ test("deterministic review remains diff-local for the same checkpoint fixture", 
 
   assert.equal(result.findings.length, 0);
 });
+
+test("checkpoint review inspects bounded adjacent auth or config context", () => {
+  const result = runCheckpointReview({
+    repoRoot: path.join(repoRoot, "tests/fixtures/checkpoint-adjacent-repo"),
+    changedFiles: ["src/routes/admin.js"],
+    layer: "commit"
+  });
+
+  assert.equal(result.findings.length, 1);
+  assert.equal(
+    result.findings[0].source.ruleId,
+    "builtin-hardcoded-secret-token"
+  );
+  assert.deepEqual(result.findings[0].files, ["src/auth/guard.js"]);
+  assert.match(result.auditEvent, /"adjacentContextFileCount":1/);
+});
+
+test("checkpoint review stays out of unrelated nearby trees", () => {
+  const result = runCheckpointReview({
+    repoRoot: path.join(repoRoot, "tests/fixtures/checkpoint-adjacent-safe-repo"),
+    changedFiles: ["src/routes/admin.js"],
+    layer: "commit"
+  });
+
+  assert.equal(result.findings.length, 0);
+});
+
+test("checkpoint review respects explicit context file caps", () => {
+  const result = runCheckpointReview({
+    repoRoot: path.join(repoRoot, "tests/fixtures/checkpoint-adjacent-repo"),
+    changedFiles: ["src/routes/admin.js"],
+    layer: "commit",
+    config: {
+      checkpointReview: {
+        maxContextFiles: 0
+      }
+    }
+  });
+
+  assert.equal(result.findings.length, 0);
+  assert.match(result.auditEvent, /"adjacentContextFileCount":0/);
+});
