@@ -48,7 +48,10 @@ test("loadConfig accepts suppression metadata", () => {
         ruleId: "builtin-path-join-user-input",
         owner: "security-team",
         justification: "Test suppression coverage",
-        expiresOn: "2027-01-31"
+        expiresOn: "2027-01-31",
+        approvedBy: "lead@example.com",
+        ticket: "SEC-123",
+        createdOn: "2026-05-01"
       }
     ]
   });
@@ -57,20 +60,22 @@ test("loadConfig accepts suppression metadata", () => {
 });
 
 test("loadConfig accepts turn review command metadata", () => {
+  const reviewerPath = process.execPath;
   const config = loadConfig({
     turnReview: {
       enabled: true,
       provider: "mock",
       model: "fixture",
+      commandAllowlist: [{ id: "node", executable: reviewerPath }],
       command: {
-        executable: "node",
+        id: "node",
         args: ["./tests/fixtures/mock-turn-reviewer.js"]
       }
     }
   });
 
   assert.equal(config.turnReview.enabled, true);
-  assert.equal(config.turnReview.command.executable, "node");
+  assert.equal(config.turnReview.command.id, "node");
 });
 
 test("loadConfig accepts checkpoint review budget metadata", () => {
@@ -205,4 +210,15 @@ test("runtime env overrides expose layer, debug, and checkpoint controls", () =>
   assert.equal(runtimeConfig.checkpointReview.maxContextFiles, 2);
   assert.equal(runtimeConfig.checkpointReview.maxContextBytes, 4096);
   assert.equal(runtimeConfig.checkpointReview.maxAdjacentSearchDepth, 1);
+});
+
+
+test("loadConfig rejects malformed config payloads with schema error code", () => {
+  assert.throws(
+    () =>
+      loadConfig({
+        enabledLayers: ["turn", "invalid-layer"]
+      }),
+    (error) => error?.code === "SRC_CFG_SCHEMA_INVALID"
+  );
 });
