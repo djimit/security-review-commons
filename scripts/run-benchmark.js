@@ -7,6 +7,7 @@ import {
   runDeterministicReview,
   runTurnReview
 } from "../src/core/review.js";
+import { loadResolvedConfig } from "../src/core/config.js";
 import { createCommandTurnReviewer } from "../src/plugin/command-turn-reviewer.js";
 
 function parseArgs(argv) {
@@ -122,18 +123,23 @@ async function runBenchmarkCase({
     });
   } else {
     const diff = fs.readFileSync(path.resolve(manifestDir, benchmarkCase.fixture), "utf8");
+    const repoRoot = benchmarkCase.repoRoot
+      ? path.resolve(manifestDir, benchmarkCase.repoRoot)
+      : manifestDir;
+    const resolvedConfig = loadResolvedConfig({
+      rawConfig,
+      repoRoot
+    });
     result =
       reviewMode === "turn"
         ? await runTurnReview({
             diff,
             changedFiles: benchmarkCase.changedFiles ?? [],
-            repoRoot: benchmarkCase.repoRoot
-              ? path.resolve(manifestDir, benchmarkCase.repoRoot)
-              : manifestDir,
+            repoRoot,
             layer,
             config: rawConfig,
             reviewer: createCommandTurnReviewer({
-              turnReview: rawConfig.turnReview
+              turnReview: resolvedConfig.turnReview
             })
           })
         : runDeterministicReview({

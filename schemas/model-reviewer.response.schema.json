@@ -4,7 +4,9 @@
   "title": "ModelReviewerResponse",
   "type": "object",
   "additionalProperties": false,
-  "required": ["findings"],
+  "required": [
+    "findings"
+  ],
   "properties": {
     "findings": {
       "type": "array",
@@ -12,24 +14,88 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "title": { "type": "string" },
-          "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
-          "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
-          "category": { "type": "string" },
-          "files": { "type": "array", "items": { "type": "string" } },
-          "explanation": { "type": "string" },
-          "reason": { "type": "string" },
-          "exploitScenario": { "type": "string" },
-          "proposedFix": { "type": "string" },
+          "title": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "exploitScenario": {
+            "type": "string"
+          },
+          "proposedFix": {
+            "type": "string"
+          },
           "location": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "file": { "type": "string" },
-              "line": { "type": "integer", "minimum": 1 },
-              "column": { "type": "integer", "minimum": 1 }
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "column": {
+                "type": "integer",
+                "minimum": 1
+              }
             }
           }
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "executablePath": {
+          "type": "string"
+        },
+        "commandId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exitStatus": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "parseFailure": {
+          "type": "boolean"
         }
       }
     }
