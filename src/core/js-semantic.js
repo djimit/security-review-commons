@@ -73,6 +73,22 @@ const JS_SEMANTIC_RULES = [
       "A value derived from request-controlled input appears to reach filesystem path construction.",
     proposedFix:
       "Normalize and bound the resulting path against a trusted root, or use an explicit allowlist."
+  },
+  {
+    id: "semantic-js-redirect-tainted-input",
+    title: "Tainted input reaches redirect target",
+    severity: "medium",
+    category: "open-redirect",
+    matchesSink(node) {
+      return (
+        isMemberCallOnIdentifiers(node, ["res", "reply", "response"], ["redirect"]) ||
+        isIdentifierCall(node, ["redirect"])
+      );
+    },
+    explanation:
+      "A value derived from request-controlled input appears to reach a redirect target.",
+    proposedFix:
+      "Redirect only to validated internal paths or an explicit allowlist of safe destinations."
   }
 ];
 
@@ -87,9 +103,6 @@ export function evaluateJsSemanticFindings({ diff, changedFiles, layer }) {
   }
 
   const taintedIdentifiers = collectTaintedIdentifiers(ast);
-  if (taintedIdentifiers.size === 0) {
-    return [];
-  }
 
   const findings = [];
   visitNodes(ast, (node) => {
@@ -287,6 +300,17 @@ function isMemberCall(node, objectName, propertyNames) {
     !node.callee.computed &&
     node.callee.object?.type === "Identifier" &&
     node.callee.object.name === objectName &&
+    node.callee.property?.type === "Identifier" &&
+    propertyNames.includes(node.callee.property.name)
+  );
+}
+
+function isMemberCallOnIdentifiers(node, objectNames, propertyNames) {
+  return (
+    node.callee?.type === "MemberExpression" &&
+    !node.callee.computed &&
+    node.callee.object?.type === "Identifier" &&
+    objectNames.includes(node.callee.object.name) &&
     node.callee.property?.type === "Identifier" &&
     propertyNames.includes(node.callee.property.name)
   );

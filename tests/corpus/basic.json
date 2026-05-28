@@ -108,10 +108,43 @@
       ]
     },
     {
+      "id": "js-open-redirect-tainted",
+      "description": "JS tainted request input into redirect should be detected",
+      "fixture": "./tests/fixtures/js-open-redirect-tainted.js",
+      "changedFiles": ["src/open-redirect-tainted.js"],
+      "expectedRuleIds": [
+        "builtin-open-redirect-from-user-input",
+        "semantic-js-redirect-tainted-input"
+      ]
+    },
+    {
       "id": "js-safe-flow",
       "description": "Non-request JS flow should remain clean",
       "fixture": "./tests/fixtures/js-safe-flow.js",
       "changedFiles": ["src/js-safe-flow.js"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "js-open-redirect-safe",
+      "description": "Static redirect targets should remain clean",
+      "fixture": "./tests/fixtures/js-open-redirect-safe.js",
+      "changedFiles": ["src/open-redirect-safe.js"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "js-dangerously-set-inner-html-tainted",
+      "description": "dangerouslySetInnerHTML with request-controlled HTML should be detected",
+      "fixture": "./tests/fixtures/js-dangerously-set-inner-html-tainted.jsx",
+      "changedFiles": ["src/render-danger.jsx"],
+      "expectedRuleIds": [
+        "builtin-dangerously-set-inner-html-user-input"
+      ]
+    },
+    {
+      "id": "js-dangerously-set-inner-html-safe",
+      "description": "Static dangerouslySetInnerHTML content should remain clean",
+      "fixture": "./tests/fixtures/js-dangerously-set-inner-html-safe.jsx",
+      "changedFiles": ["src/render-safe.jsx"],
       "expectedRuleIds": []
     },
     {
@@ -158,6 +191,31 @@
       "description": "Explicit TS URL sanitizer wrapper should suppress SSRF semantic finding",
       "fixture": "./tests/fixtures/ts-fetch-sanitized.ts",
       "changedFiles": ["src/ts-fetch-sanitized.ts"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "py-pickle-dangerous",
+      "description": "Python pickle deserialization should be detected",
+      "fixture": "./tests/fixtures/py-pickle-dangerous.py",
+      "changedFiles": ["src/pickle-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-python-pickle-load"
+      ]
+    },
+    {
+      "id": "py-torch-dangerous",
+      "description": "Python torch model deserialization should be detected",
+      "fixture": "./tests/fixtures/py-torch-dangerous.py",
+      "changedFiles": ["src/torch-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-python-torch-load"
+      ]
+    },
+    {
+      "id": "py-safe-json",
+      "description": "Safe Python JSON loading should remain clean",
+      "fixture": "./tests/fixtures/py-safe-json.py",
+      "changedFiles": ["src/py-safe-json.py"],
       "expectedRuleIds": []
     },
     {

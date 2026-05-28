@@ -139,6 +139,62 @@ test("dependency governance rule catches catch-all selectors", () => {
   );
 });
 
+test("web redirect and DOM HTML injection rules catch untrusted rendering patterns", () => {
+  const redirectResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-open-redirect-tainted.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/open-redirect-tainted.js"],
+    layer: "turn"
+  });
+  const htmlResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-dangerously-set-inner-html-tainted.jsx"),
+      "utf8"
+    ),
+    changedFiles: ["src/render-danger.jsx"],
+    layer: "turn"
+  });
+
+  assert.equal(
+    redirectResult.findings[0].source.ruleId,
+    "builtin-open-redirect-from-user-input"
+  );
+  assert.equal(
+    htmlResult.findings[0].source.ruleId,
+    "builtin-dangerously-set-inner-html-user-input"
+  );
+});
+
+test("python unsafe deserialization rules catch pickle and torch loads", () => {
+  const pickleResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "py-pickle-dangerous.py"),
+      "utf8"
+    ),
+    changedFiles: ["src/pickle-dangerous.py"],
+    layer: "turn"
+  });
+  const torchResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "py-torch-dangerous.py"),
+      "utf8"
+    ),
+    changedFiles: ["src/torch-dangerous.py"],
+    layer: "turn"
+  });
+
+  assert.equal(
+    pickleResult.findings[0].source.ruleId,
+    "builtin-python-pickle-load"
+  );
+  assert.equal(
+    torchResult.findings[0].source.ruleId,
+    "builtin-python-torch-load"
+  );
+});
+
 test("safe fixtures do not trigger current drift rules", () => {
   const workflowResult = runDeterministicReview({
     diff: fs.readFileSync(path.join(fixturesDir, "workflow-safe.yml"), "utf8"),
@@ -155,10 +211,34 @@ test("safe fixtures do not trigger current drift rules", () => {
     changedFiles: ["package.json"],
     layer: "turn"
   });
+  const redirectResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-open-redirect-safe.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/open-redirect-safe.js"],
+    layer: "turn"
+  });
+  const htmlResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-dangerously-set-inner-html-safe.jsx"),
+      "utf8"
+    ),
+    changedFiles: ["src/render-safe.jsx"],
+    layer: "turn"
+  });
+  const pythonResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "py-safe-json.py"), "utf8"),
+    changedFiles: ["src/py-safe-json.py"],
+    layer: "turn"
+  });
 
   assert.equal(workflowResult.findings.length, 0);
   assert.equal(dockerResult.findings.length, 0);
   assert.equal(packageResult.findings.length, 0);
+  assert.equal(redirectResult.findings.length, 0);
+  assert.equal(htmlResult.findings.length, 0);
+  assert.equal(pythonResult.findings.length, 0);
 });
 
 test("semantic JS analysis catches tainted flows into sinks", () => {
@@ -177,10 +257,23 @@ test("semantic JS analysis catches tainted flows into sinks", () => {
     changedFiles: ["src/path-tainted.js"],
     layer: "turn"
   });
+  const redirectResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-open-redirect-tainted.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/open-redirect-tainted.js"],
+    layer: "turn"
+  });
 
   assert.equal(execResult.findings[0].source.ruleId, "semantic-js-exec-tainted-input");
   assert.equal(fetchResult.findings[0].source.ruleId, "semantic-js-fetch-tainted-url");
   assert.equal(pathResult.findings[0].source.ruleId, "semantic-js-path-tainted-input");
+  assert.ok(
+    redirectResult.findings.some(
+      (finding) => finding.source.ruleId === "semantic-js-redirect-tainted-input"
+    )
+  );
   assert.deepEqual(execResult.findings[0].location, {
     file: "src/exec-tainted.js",
     line: 3,

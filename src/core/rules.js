@@ -66,6 +66,52 @@ export const BUILTIN_RULES = [
       "Validate schemes, hosts, ports, and destination allowlists before issuing outbound requests."
   },
   {
+    id: "builtin-open-redirect-from-user-input",
+    title: "Potential open redirect from attacker-controlled target",
+    severity: "medium",
+    category: "open-redirect",
+    regex: /\b(res|reply|response)\.redirect\s*\([^)]*(req\.|userInput|params\.|query\.)/i,
+    explanation:
+      "Redirect targets built from attacker-controlled input can enable phishing and token leakage.",
+    proposedFix:
+      "Redirect only to allowlisted internal paths or validated absolute destinations."
+  },
+  {
+    id: "builtin-dangerously-set-inner-html-user-input",
+    title: "Potential DOM XSS via dangerouslySetInnerHTML from untrusted input",
+    severity: "high",
+    category: "xss",
+    regex: /dangerouslySetInnerHTML\s*=\s*\{\s*\{\s*__html\s*:\s*[^}]*?(req\.|userInput|params\.|query\.)/i,
+    explanation:
+      "Passing request-controlled HTML into dangerouslySetInnerHTML can create a direct DOM XSS sink.",
+    proposedFix:
+      "Avoid raw HTML rendering for untrusted input or sanitize against a strict allowlist before rendering."
+  },
+  {
+    id: "builtin-python-pickle-load",
+    title: "Potential unsafe Python pickle deserialization",
+    severity: "high",
+    category: "unsafe-deserialization",
+    pathRegex: /(^|\/).+\.py$/i,
+    regex: /\bpickle\.(load|loads)\s*\(/i,
+    explanation:
+      "Python pickle deserialization can execute attacker-controlled code when input is not fully trusted.",
+    proposedFix:
+      "Avoid pickle on untrusted input or replace it with a safer serialization format and strict validation."
+  },
+  {
+    id: "builtin-python-torch-load",
+    title: "Potential unsafe torch model deserialization",
+    severity: "high",
+    category: "unsafe-deserialization",
+    pathRegex: /(^|\/).+\.py$/i,
+    regex: /\btorch\.load\s*\(/i,
+    explanation:
+      "torch.load may deserialize attacker-controlled pickled content and should not be used on untrusted artifacts.",
+    proposedFix:
+      "Load only trusted model artifacts, verify provenance, or use a safer format when possible."
+  },
+  {
     id: "builtin-github-actions-pull-request-target",
     title: "GitHub Actions workflow uses pull_request_target",
     severity: "high",
