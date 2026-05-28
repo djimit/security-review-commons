@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import path from "node:path";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
@@ -115,4 +115,75 @@ test("CLI turn mode uses the configured command reviewer when enabled", () => {
   const parsed = JSON.parse(output);
   assert.equal(parsed.modelReview.status, "completed");
   assert.equal(parsed.findings[0].source.ruleId, "model-turn-review-mock-fixture");
+});
+
+test("CLI debug mode emits metadata-only runtime control output", () => {
+  const result = spawnSync(
+    "node",
+    [
+      "./src/cli.js",
+      "--diff-file",
+      "./tests/fixtures/sample.diff",
+      "--changed-files",
+      "src/auth/login.js"
+    ],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        SECURITY_REVIEW_ENABLED_LAYERS: "edit,commit,push",
+        SECURITY_REVIEW_DEBUG: "true"
+      }
+    }
+  );
+
+  assert.equal(result.status, 0);
+  const parsed = JSON.parse(result.stdout);
+  assert.equal(parsed.findings.length, 0);
+  assert.match(result.stderr, /"kind":"debug"/);
+  assert.match(result.stderr, /"skipped":true/);
+});
+
+test("CLI skips disabled layers and reports the skip metadata", () => {
+  const output = execFileSync(
+    "node",
+    [
+      "./src/cli.js",
+      "--review-mode",
+      "turn",
+      "--diff-file",
+      "./tests/fixtures/sample.diff",
+      "--changed-files",
+      "src/auth/login.js",
+      "--enabled-layers",
+      "edit,commit,push"
+    ],
+    { cwd: repoRoot, encoding: "utf8" }
+  );
+
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.findings.length, 0);
+  assert.equal(parsed.modelReview.status, "disabled-by-layer");
+  assert.match(parsed.auditEvent, /"skipped":true/);
+});
+
+test("CLI enforces runtime caps from flags and surfaces truncation metadata", () => {
+  const output = execFileSync(
+    "node",
+    [
+      "./src/cli.js",
+      "--diff-file",
+      "./tests/fixtures/sample.diff",
+      "--changed-files",
+      "src/auth/login.js",
+      "--max-diff-bytes",
+      "32"
+    ],
+    { cwd: repoRoot, encoding: "utf8" }
+  );
+
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.findings.length, 0);
+  assert.match(parsed.auditEvent, /"budgetTruncated":true/);
 });

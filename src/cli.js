@@ -7,6 +7,8 @@ import {
   runTurnReview,
   runCheckpointReview
 } from "./core/review.js";
+import { loadResolvedConfig } from "./core/config.js";
+import { emitDebugEvent, parseAuditEvent } from "./core/debug.js";
 import { createCommandTurnReviewer } from "./plugin/command-turn-reviewer.js";
 import { findingsToSarif } from "./core/sarif.js";
 import { runCorpus, corpusFailed, corpusToMarkdown } from "./core/corpus.js";
@@ -60,6 +62,29 @@ function parseArgs(argv) {
     } else if (token === "--review-mode") {
       args.reviewMode = next;
       index += 1;
+    } else if (token === "--enabled-layers") {
+      args.enabledLayers = next
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      index += 1;
+    } else if (token === "--debug") {
+      args.debug = true;
+    } else if (token === "--max-diff-bytes") {
+      args.maxDiffBytes = Number.parseInt(next, 10);
+      index += 1;
+    } else if (token === "--max-changed-files") {
+      args.maxChangedFiles = Number.parseInt(next, 10);
+      index += 1;
+    } else if (token === "--checkpoint-max-context-files") {
+      args.maxContextFiles = Number.parseInt(next, 10);
+      index += 1;
+    } else if (token === "--checkpoint-max-context-bytes") {
+      args.maxContextBytes = Number.parseInt(next, 10);
+      index += 1;
+    } else if (token === "--checkpoint-max-adjacent-depth") {
+      args.maxAdjacentSearchDepth = Number.parseInt(next, 10);
+      index += 1;
     }
   }
 
@@ -94,9 +119,55 @@ function readChangedFiles(args) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const config = args.configFile ? readJsonFile(args.configFile) : {};
+  const baseConfig = args.configFile ? readJsonFile(args.configFile) : {};
+  const config = {
+    ...baseConfig,
+    ...(args.enabledLayers ? { enabledLayers: args.enabledLayers } : {}),
+    ...(args.debug !== undefined ? { debug: args.debug } : {}),
+    ...(
+      args.maxDiffBytes !== undefined ||
+      args.maxChangedFiles !== undefined
+        ? {
+            caps: {
+              ...(baseConfig.caps ?? {}),
+              ...(args.maxDiffBytes !== undefined
+                ? { maxDiffBytes: args.maxDiffBytes }
+                : {}),
+              ...(args.maxChangedFiles !== undefined
+                ? { maxChangedFiles: args.maxChangedFiles }
+                : {})
+            }
+          }
+        : {}
+    ),
+    ...(
+      args.maxContextFiles !== undefined ||
+      args.maxContextBytes !== undefined ||
+      args.maxAdjacentSearchDepth !== undefined
+        ? {
+            checkpointReview: {
+              ...(baseConfig.checkpointReview ?? {}),
+              ...(args.maxContextFiles !== undefined
+                ? { maxContextFiles: args.maxContextFiles }
+                : {}),
+              ...(args.maxContextBytes !== undefined
+                ? { maxContextBytes: args.maxContextBytes }
+                : {}),
+              ...(args.maxAdjacentSearchDepth !== undefined
+                ? { maxAdjacentSearchDepth: args.maxAdjacentSearchDepth }
+                : {})
+            }
+          }
+        : {}
+    )
+  };
   const changedFiles = readChangedFiles(args);
   const repoRoot = args.repoRoot ?? process.cwd();
+  const resolvedConfig = loadResolvedConfig({
+    rawConfig: config,
+    repoRoot,
+    env: process.env
+  });
 
   if (args.corpusFile) {
     const report = runCorpus({
@@ -110,6 +181,15 @@ async function main() {
     } else {
       process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     }
+    emitDebugEvent({
+      enabled: resolvedConfig.debug,
+      event: {
+        mode: "corpus",
+        manifestName: report.manifestName,
+        totalCases: report.totalCases,
+        failedCases: report.failedCases
+      }
+    });
     if (args.strictCorpus && corpusFailed(report)) {
       process.exitCode = 1;
     }
@@ -142,6 +222,14 @@ async function main() {
             config,
             repoRoot
           });
+
+  emitDebugEvent({
+    enabled: resolvedConfig.debug,
+    event: {
+      mode: args.reviewMode,
+      auditEvent: parseAuditEvent(result.auditEvent)
+    }
+  });
 
   if (args.format === "sarif") {
     process.stdout.write(

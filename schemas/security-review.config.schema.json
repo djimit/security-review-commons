@@ -12,6 +12,9 @@
         "enum": ["edit", "turn", "commit", "push"]
       }
     },
+    "debug": {
+      "type": "boolean"
+    },
     "caps": {
       "type": "object",
       "additionalProperties": false,

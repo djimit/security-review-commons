@@ -50,6 +50,37 @@ export function capReviewInput({ diff, changedFiles, config }) {
   return { cappedDiff, cappedFiles };
 }
 
+function layerEnabled(config, layer) {
+  return config.enabledLayers.includes(layer);
+}
+
+function createSkippedResult({
+  layer,
+  reviewMode = "deterministic",
+  reason,
+  config,
+  extra = {}
+}) {
+  return {
+    findings: [],
+    suppressedFindings: [],
+    summary: {
+      totalFindings: 0,
+      activeFindings: 0,
+      suppressedFindings: 0
+    },
+    ...extra,
+    auditEvent: toJsonlEvent({
+      layer,
+      reviewMode,
+      skipped: true,
+      skipReason: reason,
+      enabledLayerCount: config.enabledLayers.length,
+      repoGuidanceCount: config.repoGuidance.length
+    })
+  };
+}
+
 export function runDeterministicReview({
   diff,
   changedFiles,
@@ -63,6 +94,13 @@ export function runDeterministicReview({
     repoRoot,
     env
   });
+  if (!layerEnabled(config, layer)) {
+    return createSkippedResult({
+      layer,
+      reason: `Layer ${layer} is disabled by config`,
+      config
+    });
+  }
   const suppressions = normalizeSuppressions(config.suppressions);
   const { cappedDiff, cappedFiles } = capReviewInput({
     diff,
@@ -99,8 +137,11 @@ export function runDeterministicReview({
       layer,
       changedFileCount: cappedFiles.length,
       diffBytesReviewed: cappedDiff.length,
+      budgetTruncated:
+        cappedDiff.length !== diff.length || cappedFiles.length !== changedFiles.length,
       findingCount: activeFindings.length,
       suppressedFindingCount: suppressedFindings.length,
+      enabledLayerCount: config.enabledLayers.length,
       repoGuidanceCount: config.repoGuidance.length
     })
   };
@@ -119,6 +160,25 @@ export async function runTurnReview({
     repoRoot,
     env
   });
+  if (!layerEnabled(config, "turn")) {
+    return createSkippedResult({
+      layer: "turn",
+      reviewMode: "turn",
+      reason: "Layer turn is disabled by config",
+      config,
+      extra: {
+        modelReview: {
+          enabled: config.turnReview.enabled,
+          attempted: false,
+          status: "disabled-by-layer",
+          provider: config.turnReview.provider,
+          model: config.turnReview.model,
+          findingCount: 0
+        },
+        reviewContext: null
+      }
+    });
+  }
   const suppressions = normalizeSuppressions(config.suppressions);
   const { cappedDiff, cappedFiles } = capReviewInput({
     diff,
@@ -195,12 +255,15 @@ export async function runTurnReview({
       reviewMode: "turn",
       changedFileCount: cappedFiles.length,
       diffBytesReviewed: cappedDiff.length,
+      budgetTruncated:
+        cappedDiff.length !== diff.length || cappedFiles.length !== changedFiles.length,
       findingCount: activeFindings.length,
       suppressedFindingCount: suppressedFindings.length,
       modelReviewEnabled: modelReview.enabled,
       modelReviewAttempted: modelReview.attempted,
       modelReviewStatus: modelReview.status,
       modelFindingCount: modelReview.findingCount,
+      enabledLayerCount: config.enabledLayers.length,
       repoGuidanceCount: config.repoGuidance.length
     })
   };
@@ -222,6 +285,14 @@ export function runCheckpointReview({
     repoRoot,
     env
   });
+  if (!layerEnabled(config, layer)) {
+    return createSkippedResult({
+      layer,
+      reviewMode: "checkpoint",
+      reason: `Layer ${layer} is disabled by config`,
+      config
+    });
+  }
   const suppressions = normalizeSuppressions(config.suppressions);
   const cappedFiles = changedFiles.slice(0, config.caps.maxChangedFiles);
   const { reviewInputs, metadata } = collectCheckpointInputs({
@@ -265,9 +336,11 @@ export function runCheckpointReview({
         0
       ),
       contextBytesReviewed: metadata.contextBytesReviewed,
-      budgetTruncated: metadata.budgetTruncated,
+      budgetTruncated:
+        metadata.budgetTruncated || cappedFiles.length !== changedFiles.length,
       findingCount: activeFindings.length,
       suppressedFindingCount: suppressedFindings.length,
+      enabledLayerCount: config.enabledLayers.length,
       repoGuidanceCount: config.repoGuidance.length
     })
   };

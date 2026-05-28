@@ -42,6 +42,7 @@
     "test": "node --test",
     "lint": "node --check src/index.js src/cli.js src/core/*.js src/adapters/opencode/*.js src/adapters/codex/*.js src/plugin/*.js bin/*.js",
     "corpus": "node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus",
+    "benchmark": "node ./scripts/run-benchmark.js --manifest ./benchmarks/manifest.json --output ./benchmarks/results/baseline.json",
     "check": "npm run lint && npm test && npm run corpus",
     "pack:dry-run": "npm pack --dry-run"
   },

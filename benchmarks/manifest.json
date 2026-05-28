@@ -1,0 +1,104 @@
+{
+  "name": "security-review-commons-baseline-benchmark",
+  "cases": [
+    {
+      "id": "deterministic-app-sinks",
+      "description": "Diff-local deterministic review should catch shell execution and secrets",
+      "fixture": "../tests/fixtures/sample.diff",
+      "changedFiles": ["src/auth/login.js"],
+      "expectedRuleIds": [
+        "builtin-dangerous-child-process-shell-true",
+        "builtin-hardcoded-secret-token"
+      ],
+      "comparative": {
+        "status": "unresolved",
+        "notes": "This case exercises baseline deterministic coverage. No verified external comparator run is recorded."
+      }
+    },
+    {
+      "id": "deterministic-dom-xss",
+      "description": "Deterministic review should catch request-controlled dangerouslySetInnerHTML",
+      "fixture": "../tests/fixtures/js-dangerously-set-inner-html-tainted.jsx",
+      "changedFiles": ["src/render-danger.jsx"],
+      "expectedRuleIds": [
+        "builtin-dangerously-set-inner-html-user-input"
+      ],
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Useful for future DOM-XSS comparisons once an external baseline run is captured."
+      }
+    },
+    {
+      "id": "deterministic-python-deserialization",
+      "description": "Deterministic review should catch Python pickle deserialization",
+      "fixture": "../tests/fixtures/py-pickle-dangerous.py",
+      "changedFiles": ["src/pickle-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-python-pickle-load"
+      ],
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Python unsafe-deserialization comparison remains unverified against an external baseline."
+      }
+    },
+    {
+      "id": "turn-model-auth-bypass",
+      "description": "Turn review should merge findings from the configured reviewer command",
+      "reviewMode": "turn",
+      "fixture": "../tests/fixtures/turn-review.diff",
+      "changedFiles": ["src/auth/flow.js"],
+      "repoRoot": "..",
+      "configFile": "../tests/fixtures/turn-review.config.json",
+      "expectedRuleIds": [
+        "model-turn-review-mock-fixture"
+      ],
+      "comparative": {
+        "status": "unresolved",
+        "notes": "This exercises optional model-backed stop-review plumbing, not a live provider benchmark."
+      }
+    },
+    {
+      "id": "checkpoint-import-context",
+      "description": "Checkpoint review should inspect imported helper context",
+      "reviewMode": "checkpoint",
+      "repoRoot": "../tests/fixtures/checkpoint-repo",
+      "changedFiles": ["src/feature.js"],
+      "layer": "commit",
+      "expectedRuleIds": [
+        "builtin-dangerous-child-process-shell-true"
+      ],
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Multi-file checkpoint evidence is exercised here, but no verified external comparator output is recorded."
+      }
+    },
+    {
+      "id": "checkpoint-adjacent-auth-context",
+      "description": "Checkpoint review should inspect bounded adjacent auth context",
+      "reviewMode": "checkpoint",
+      "repoRoot": "../tests/fixtures/checkpoint-adjacent-repo",
+      "changedFiles": ["src/routes/admin.js"],
+      "layer": "commit",
+      "expectedRuleIds": [
+        "builtin-hardcoded-secret-token"
+      ],
+      "comparative": {
+        "status": "unresolved",
+        "notes": "This case demonstrates bounded adjacent evidence collection without claiming external parity."
+      }
+    },
+    {
+      "id": "checkpoint-safe-nearby-tree",
+      "description": "Checkpoint review should stay clean for unrelated nearby trees",
+      "reviewMode": "checkpoint",
+      "repoRoot": "../tests/fixtures/checkpoint-adjacent-safe-repo",
+      "changedFiles": ["src/routes/admin.js"],
+      "layer": "commit",
+      "expectedRuleIds": [],
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Negative case for false-positive measurement. External comparison still needs a recorded run."
+      }
+    }
+  ]
+}

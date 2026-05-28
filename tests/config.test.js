@@ -6,11 +6,13 @@ import path from "node:path";
 import {
   loadConfig,
   loadGuidanceFiles,
-  loadResolvedConfig
+  loadResolvedConfig,
+  loadRuntimeConfigFromEnv
 } from "../src/core/config.js";
 
 test("loadConfig merges defaults and compiles regexes", () => {
   const config = loadConfig({
+    debug: true,
     repoGuidance: ["Extra guidance"],
     customPatterns: [
       {
@@ -23,6 +25,7 @@ test("loadConfig merges defaults and compiles regexes", () => {
   });
 
   assert.equal(config.repoGuidance.length, 1);
+  assert.equal(config.debug, true);
   assert.ok(config.customPatterns[0].compiledRegex.test("danger"));
 });
 
@@ -180,4 +183,26 @@ test("resolved config preserves additive guidance and explicit caller config", (
     "explicit guidance"
   ]);
   assert.equal(config.customPatterns.length, 2);
+});
+
+test("runtime env overrides expose layer, debug, and checkpoint controls", () => {
+  const runtimeConfig = loadRuntimeConfigFromEnv({
+    SECURITY_REVIEW_ENABLED_LAYERS: "edit,commit",
+    SECURITY_REVIEW_DEBUG: "true",
+    SECURITY_REVIEW_MAX_DIFF_BYTES: "2048",
+    SECURITY_REVIEW_MAX_CHANGED_FILES: "3",
+    SECURITY_REVIEW_CHECKPOINT_ADJACENT_CONTEXT: "false",
+    SECURITY_REVIEW_CHECKPOINT_MAX_CONTEXT_FILES: "2",
+    SECURITY_REVIEW_CHECKPOINT_MAX_CONTEXT_BYTES: "4096",
+    SECURITY_REVIEW_CHECKPOINT_MAX_ADJACENT_DEPTH: "1"
+  });
+
+  assert.deepEqual(runtimeConfig.enabledLayers, ["edit", "commit"]);
+  assert.equal(runtimeConfig.debug, true);
+  assert.equal(runtimeConfig.caps.maxDiffBytes, 2048);
+  assert.equal(runtimeConfig.caps.maxChangedFiles, 3);
+  assert.equal(runtimeConfig.checkpointReview.enabledAdjacentContext, false);
+  assert.equal(runtimeConfig.checkpointReview.maxContextFiles, 2);
+  assert.equal(runtimeConfig.checkpointReview.maxContextBytes, 4096);
+  assert.equal(runtimeConfig.checkpointReview.maxAdjacentSearchDepth, 1);
 });

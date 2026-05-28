@@ -1,0 +1,199 @@
+{
+  "manifestName": "security-review-commons-baseline-benchmark",
+  "generatedAt": "2026-05-28T00:34:28.512Z",
+  "totalCases": 7,
+  "passedCases": 7,
+  "failedCases": 0,
+  "hitCount": 7,
+  "missCount": 0,
+  "falsePositiveCount": 0,
+  "unresolvedComparativeCases": 7,
+  "cases": [
+    {
+      "id": "deterministic-app-sinks",
+      "description": "Diff-local deterministic review should catch shell execution and secrets",
+      "reviewMode": "deterministic",
+      "layer": "turn",
+      "pass": true,
+      "hitRuleIds": [
+        "builtin-dangerous-child-process-shell-true",
+        "builtin-hardcoded-secret-token"
+      ],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [
+        "builtin-dangerous-child-process-shell-true",
+        "builtin-hardcoded-secret-token"
+      ],
+      "expectedRuleIds": [
+        "builtin-dangerous-child-process-shell-true",
+        "builtin-hardcoded-secret-token"
+      ],
+      "findingsSummary": {
+        "totalFindings": 2,
+        "activeFindings": 2,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "This case exercises baseline deterministic coverage. No verified external comparator run is recorded."
+      }
+    },
+    {
+      "id": "deterministic-dom-xss",
+      "description": "Deterministic review should catch request-controlled dangerouslySetInnerHTML",
+      "reviewMode": "deterministic",
+      "layer": "turn",
+      "pass": true,
+      "hitRuleIds": [
+        "builtin-dangerously-set-inner-html-user-input"
+      ],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [
+        "builtin-dangerously-set-inner-html-user-input"
+      ],
+      "expectedRuleIds": [
+        "builtin-dangerously-set-inner-html-user-input"
+      ],
+      "findingsSummary": {
+        "totalFindings": 1,
+        "activeFindings": 1,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Useful for future DOM-XSS comparisons once an external baseline run is captured."
+      }
+    },
+    {
+      "id": "deterministic-python-deserialization",
+      "description": "Deterministic review should catch Python pickle deserialization",
+      "reviewMode": "deterministic",
+      "layer": "turn",
+      "pass": true,
+      "hitRuleIds": [
+        "builtin-python-pickle-load"
+      ],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [
+        "builtin-python-pickle-load"
+      ],
+      "expectedRuleIds": [
+        "builtin-python-pickle-load"
+      ],
+      "findingsSummary": {
+        "totalFindings": 1,
+        "activeFindings": 1,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Python unsafe-deserialization comparison remains unverified against an external baseline."
+      }
+    },
+    {
+      "id": "turn-model-auth-bypass",
+      "description": "Turn review should merge findings from the configured reviewer command",
+      "reviewMode": "turn",
+      "layer": "turn",
+      "pass": true,
+      "hitRuleIds": [
+        "model-turn-review-mock-fixture"
+      ],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [
+        "model-turn-review-mock-fixture"
+      ],
+      "expectedRuleIds": [
+        "model-turn-review-mock-fixture"
+      ],
+      "findingsSummary": {
+        "totalFindings": 1,
+        "activeFindings": 1,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "This exercises optional model-backed stop-review plumbing, not a live provider benchmark."
+      }
+    },
+    {
+      "id": "checkpoint-import-context",
+      "description": "Checkpoint review should inspect imported helper context",
+      "reviewMode": "checkpoint",
+      "layer": "commit",
+      "pass": true,
+      "hitRuleIds": [
+        "builtin-dangerous-child-process-shell-true"
+      ],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [
+        "builtin-dangerous-child-process-shell-true"
+      ],
+      "expectedRuleIds": [
+        "builtin-dangerous-child-process-shell-true"
+      ],
+      "findingsSummary": {
+        "totalFindings": 1,
+        "activeFindings": 1,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Multi-file checkpoint evidence is exercised here, but no verified external comparator output is recorded."
+      }
+    },
+    {
+      "id": "checkpoint-adjacent-auth-context",
+      "description": "Checkpoint review should inspect bounded adjacent auth context",
+      "reviewMode": "checkpoint",
+      "layer": "commit",
+      "pass": true,
+      "hitRuleIds": [
+        "builtin-hardcoded-secret-token"
+      ],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [
+        "builtin-hardcoded-secret-token"
+      ],
+      "expectedRuleIds": [
+        "builtin-hardcoded-secret-token"
+      ],
+      "findingsSummary": {
+        "totalFindings": 1,
+        "activeFindings": 1,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "This case demonstrates bounded adjacent evidence collection without claiming external parity."
+      }
+    },
+    {
+      "id": "checkpoint-safe-nearby-tree",
+      "description": "Checkpoint review should stay clean for unrelated nearby trees",
+      "reviewMode": "checkpoint",
+      "layer": "commit",
+      "pass": true,
+      "hitRuleIds": [],
+      "missingRuleIds": [],
+      "unexpectedRuleIds": [],
+      "actualRuleIds": [],
+      "expectedRuleIds": [],
+      "findingsSummary": {
+        "totalFindings": 0,
+        "activeFindings": 0,
+        "suppressedFindings": 0
+      },
+      "comparative": {
+        "status": "unresolved",
+        "notes": "Negative case for false-positive measurement. External comparison still needs a recorded run."
+      }
+    }
+  ]
+}

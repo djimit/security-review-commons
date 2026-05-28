@@ -3,6 +3,7 @@ import path from "node:path";
 
 const DEFAULT_CONFIG = {
   enabledLayers: ["edit", "turn", "commit", "push"],
+  debug: false,
   caps: {
     maxDiffBytes: 64 * 1024,
     maxChangedFiles: 25,
@@ -30,6 +31,7 @@ const DEFAULT_CONFIG = {
   customPatterns: [],
   suppressions: []
 };
+const ALLOWED_LAYERS = new Set(["edit", "turn", "commit", "push"]);
 
 function assertStringArray(value, field) {
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
@@ -146,6 +148,12 @@ export function loadConfig(raw = {}) {
   };
 
   assertStringArray(merged.enabledLayers, "enabledLayers");
+  if (merged.enabledLayers.some((layer) => !ALLOWED_LAYERS.has(layer))) {
+    throw new Error("enabledLayers contains an unknown layer");
+  }
+  if (typeof merged.debug !== "boolean") {
+    throw new Error("debug must be a boolean");
+  }
   assertStringArray(merged.repoGuidance, "repoGuidance");
   validateTurnReview(merged.turnReview);
   validateCheckpointReview(merged.checkpointReview);
@@ -182,7 +190,13 @@ export function loadResolvedConfig({
   env = process.env
 } = {}) {
   const guidanceConfig = loadGuidanceFiles({ repoRoot, env });
-  return loadConfig(mergeAdditiveConfig(guidanceConfig.config, rawConfig));
+  const runtimeConfig = loadRuntimeConfigFromEnv(env);
+  return loadConfig(
+    mergeAdditiveConfig(
+      mergeAdditiveConfig(guidanceConfig.config, runtimeConfig),
+      rawConfig
+    )
+  );
 }
 
 export function loadGuidanceFiles({ repoRoot = null, env = process.env } = {}) {
@@ -302,6 +316,97 @@ function readGuidanceFile(filePath) {
   } catch {
     return null;
   }
+}
+
+export function loadRuntimeConfigFromEnv(env = process.env) {
+  const runtimeConfig = {};
+  const enabledLayers = parseLayerList(env.SECURITY_REVIEW_ENABLED_LAYERS);
+  const debug = parseBooleanEnv(env.SECURITY_REVIEW_DEBUG);
+  const maxDiffBytes = parseIntegerEnv(env.SECURITY_REVIEW_MAX_DIFF_BYTES);
+  const maxChangedFiles = parseIntegerEnv(env.SECURITY_REVIEW_MAX_CHANGED_FILES);
+  const checkpointEnabledAdjacentContext = parseBooleanEnv(
+    env.SECURITY_REVIEW_CHECKPOINT_ADJACENT_CONTEXT
+  );
+  const checkpointMaxContextFiles = parseIntegerEnv(
+    env.SECURITY_REVIEW_CHECKPOINT_MAX_CONTEXT_FILES
+  );
+  const checkpointMaxContextBytes = parseIntegerEnv(
+    env.SECURITY_REVIEW_CHECKPOINT_MAX_CONTEXT_BYTES
+  );
+  const checkpointMaxAdjacentSearchDepth = parseIntegerEnv(
+    env.SECURITY_REVIEW_CHECKPOINT_MAX_ADJACENT_DEPTH
+  );
+
+  if (enabledLayers) {
+    runtimeConfig.enabledLayers = enabledLayers;
+  }
+  if (debug !== null) {
+    runtimeConfig.debug = debug;
+  }
+  if (maxDiffBytes !== null || maxChangedFiles !== null) {
+    runtimeConfig.caps = {};
+    if (maxDiffBytes !== null) {
+      runtimeConfig.caps.maxDiffBytes = maxDiffBytes;
+    }
+    if (maxChangedFiles !== null) {
+      runtimeConfig.caps.maxChangedFiles = maxChangedFiles;
+    }
+  }
+  if (
+    checkpointEnabledAdjacentContext !== null ||
+    checkpointMaxContextFiles !== null ||
+    checkpointMaxContextBytes !== null ||
+    checkpointMaxAdjacentSearchDepth !== null
+  ) {
+    runtimeConfig.checkpointReview = {};
+    if (checkpointEnabledAdjacentContext !== null) {
+      runtimeConfig.checkpointReview.enabledAdjacentContext =
+        checkpointEnabledAdjacentContext;
+    }
+    if (checkpointMaxContextFiles !== null) {
+      runtimeConfig.checkpointReview.maxContextFiles = checkpointMaxContextFiles;
+    }
+    if (checkpointMaxContextBytes !== null) {
+      runtimeConfig.checkpointReview.maxContextBytes = checkpointMaxContextBytes;
+    }
+    if (checkpointMaxAdjacentSearchDepth !== null) {
+      runtimeConfig.checkpointReview.maxAdjacentSearchDepth =
+        checkpointMaxAdjacentSearchDepth;
+    }
+  }
+
+  return runtimeConfig;
+}
+
+function parseBooleanEnv(value) {
+  if (value === undefined) {
+    return null;
+  }
+  if (value === "true") {
+    return true;
+  }
+  if (value === "false") {
+    return false;
+  }
+  return null;
+}
+
+function parseIntegerEnv(value) {
+  if (value === undefined) {
+    return null;
+  }
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) ? parsed : null;
+}
+
+function parseLayerList(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 }
 
 export { DEFAULT_CONFIG };

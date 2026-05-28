@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { loadRuntimeConfigFromEnv } from "../core/config.js";
+import { emitDebugEvent, parseAuditEvent } from "../core/debug.js";
 import {
   runDeterministicReview,
   runTurnReview,
@@ -38,13 +40,22 @@ export function handlePostEditHook({ input, env = process.env }) {
   if (!reviewText) {
     return { continue: true };
   }
+  const runtimeConfig = loadRuntimeConfigFromEnv(env);
 
   const result = runDeterministicReview({
     diff: reviewText,
     changedFiles: [relativePath],
     layer: "edit",
+    config: runtimeConfig,
     repoRoot,
     env
+  });
+  emitDebugLog(env, {
+    hookMode: "post-edit",
+    repoRoot,
+    changedFileCount: 1,
+    findingCount: result.findings.length,
+    auditEvent: parseAuditEvent(result.auditEvent)
   });
 
   if (result.findings.length === 0) {
@@ -93,12 +104,22 @@ export function handlePreBashHook({ input, env = process.env }) {
   if (changedFiles.length === 0) {
     return { continue: true };
   }
+  const runtimeConfig = loadRuntimeConfigFromEnv(env);
 
   const result = runCheckpointReview({
     repoRoot,
     changedFiles,
     layer: action,
+    config: runtimeConfig,
     env
+  });
+  emitDebugLog(env, {
+    hookMode: "pre-bash",
+    layer: action,
+    repoRoot,
+    changedFileCount: changedFiles.length,
+    findingCount: result.findings.length,
+    auditEvent: parseAuditEvent(result.auditEvent)
   });
   if (result.findings.length === 0) {
     return { continue: true };
@@ -131,6 +152,8 @@ export function handlePreBashHook({ input, env = process.env }) {
 
 export async function handleStopTurnHook({ input, env = process.env }) {
   const turnReviewConfig = loadTurnReviewConfigFromEnv(env);
+  const runtimeConfig = loadRuntimeConfigFromEnv(env);
+  runtimeConfig.turnReview = turnReviewConfig;
   if (!turnReviewConfig.enabled) {
     return { continue: true };
   }
@@ -153,9 +176,7 @@ export async function handleStopTurnHook({ input, env = process.env }) {
     diff,
     changedFiles,
     repoRoot,
-    config: {
-      turnReview: turnReviewConfig
-    },
+    config: runtimeConfig,
     reviewer: createCommandTurnReviewer({
       turnReview: turnReviewConfig,
       env
@@ -166,8 +187,25 @@ export async function handleStopTurnHook({ input, env = process.env }) {
     result.findings,
     turnReviewConfig.minSeverityToBlock
   )) {
+    emitDebugLog(env, {
+      hookMode: "stop-turn",
+      repoRoot,
+      changedFileCount: changedFiles.length,
+      findingCount: result.findings.length,
+      decision: "allow",
+      auditEvent: parseAuditEvent(result.auditEvent)
+    });
     return { continue: true };
   }
+
+  emitDebugLog(env, {
+    hookMode: "stop-turn",
+    repoRoot,
+    changedFileCount: changedFiles.length,
+    findingCount: result.findings.length,
+    decision: "block",
+    auditEvent: parseAuditEvent(result.auditEvent)
+  });
 
   return {
     continue: true,
@@ -187,6 +225,13 @@ export function classifyGitCheckpoint(command) {
     return "commit";
   }
   return null;
+}
+
+function emitDebugLog(env, payload) {
+  emitDebugEvent({
+    enabled: env.SECURITY_REVIEW_DEBUG === "true",
+    event: payload
+  });
 }
 
 function extractEditedFilePath(input) {

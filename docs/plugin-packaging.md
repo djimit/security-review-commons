@@ -81,6 +81,10 @@ Those environment variable names are host-defined and remain unchanged here.
 
 Current turn-review controls are environment-driven:
 
+- `SECURITY_REVIEW_ENABLED_LAYERS=edit,turn,commit,push`
+- `SECURITY_REVIEW_DEBUG=true`
+- `SECURITY_REVIEW_MAX_DIFF_BYTES=<bytes>`
+- `SECURITY_REVIEW_MAX_CHANGED_FILES=<count>`
 - `SECURITY_REVIEW_TURN_REVIEW_ENABLED=true`
 - `SECURITY_REVIEW_TURN_REVIEW_PROVIDER=<name>`
 - `SECURITY_REVIEW_TURN_REVIEW_MODEL=<name>`
@@ -91,7 +95,13 @@ Current turn-review controls are environment-driven:
 - `SECURITY_REVIEW_TURN_REVIEW_MAX_DIFF_BYTES=<bytes>`
 - `SECURITY_REVIEW_TURN_REVIEW_MAX_PROMPT_CHARS=<chars>`
 - `SECURITY_REVIEW_TURN_REVIEW_MAX_FINDINGS=<count>`
+- `SECURITY_REVIEW_CHECKPOINT_ADJACENT_CONTEXT=true|false`
+- `SECURITY_REVIEW_CHECKPOINT_MAX_CONTEXT_FILES=<count>`
+- `SECURITY_REVIEW_CHECKPOINT_MAX_CONTEXT_BYTES=<bytes>`
+- `SECURITY_REVIEW_CHECKPOINT_MAX_ADJACENT_DEPTH=<depth>`
 - `SECURITY_REVIEW_USER_GUIDANCE_FILE=<absolute-path>`
+
+`SECURITY_REVIEW_ENABLED_LAYERS` is the top-level kill switch surface for edit, turn, commit, and push review. Disabled layers short-circuit cleanly and record a skipped audit event instead of silently pretending review ran.
 
 ## Guidance Precedence
 
@@ -112,6 +122,7 @@ Lower-precedence guidance does not remove or override higher-precedence guidance
 ## Debug Notes
 
 - Hook commands read JSON input from stdin and print only a JSON object on stdout.
+- `SECURITY_REVIEW_DEBUG=true` writes metadata-only debug JSON to stderr.
 - Audit output stays metadata-only; hook responses summarize findings rather than echoing file contents.
 - If a `git push` hook cannot resolve an upstream branch, it currently falls back to allowing the command instead of guessing the outbound diff.
 

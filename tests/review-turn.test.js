@@ -59,3 +59,43 @@ test("turn review records skipped model review when enabled without a reviewer",
   assert.equal(result.modelReview.status, "skipped");
   assert.equal(result.modelReview.reason, "No turn reviewer was configured");
 });
+
+test("turn review skips entirely when the turn layer is disabled", async () => {
+  const result = await runTurnReview({
+    diff: 'const token = "supersecret12345";',
+    changedFiles: ["src/auth/login.js"],
+    config: {
+      enabledLayers: ["edit", "commit", "push"],
+      turnReview: {
+        enabled: true,
+        provider: "mock",
+        model: "fixture"
+      }
+    }
+  });
+
+  assert.equal(result.findings.length, 0);
+  assert.equal(result.modelReview.status, "disabled-by-layer");
+  assert.equal(result.reviewContext, null);
+  assert.match(result.auditEvent, /"skipped":true/);
+});
+
+test("turn review skips entirely when the turn layer is disabled", async () => {
+  const result = await runTurnReview({
+    diff: 'const token = "supersecret12345";',
+    changedFiles: ["src/auth/login.js"],
+    config: {
+      enabledLayers: ["edit", "commit", "push"],
+      turnReview: {
+        enabled: true,
+        provider: "mock",
+        model: "fixture"
+      }
+    }
+  });
+
+  assert.equal(result.findings.length, 0);
+  assert.equal(result.modelReview.status, "disabled-by-layer");
+  assert.equal(result.reviewContext, null);
+  assert.match(result.auditEvent, /"skipped":true/);
+});

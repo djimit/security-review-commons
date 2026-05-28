@@ -121,3 +121,33 @@ test("checkpoint review respects explicit import depth caps", () => {
 
   assert.equal(result.findings.length, 0);
 });
+
+test("checkpoint review skips when the commit layer is disabled", () => {
+  const result = runCheckpointReview({
+    repoRoot: path.join(repoRoot, "tests/fixtures/checkpoint-repo"),
+    changedFiles: ["src/feature.js"],
+    layer: "commit",
+    config: {
+      enabledLayers: ["edit", "turn", "push"]
+    }
+  });
+
+  assert.equal(result.findings.length, 0);
+  assert.match(result.auditEvent, /"skipped":true/);
+  assert.match(result.auditEvent, /"skipReason":"Layer commit is disabled by config"/);
+});
+
+test("checkpoint review skips disabled layers and records the reason", () => {
+  const result = runCheckpointReview({
+    repoRoot: path.join(repoRoot, "tests/fixtures/checkpoint-repo"),
+    changedFiles: ["src/feature.js"],
+    layer: "commit",
+    config: {
+      enabledLayers: ["edit", "turn", "push"]
+    }
+  });
+
+  assert.equal(result.findings.length, 0);
+  assert.match(result.auditEvent, /"skipped":true/);
+  assert.match(result.auditEvent, /Layer commit is disabled by config/);
+});

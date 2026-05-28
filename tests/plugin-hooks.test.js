@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 
@@ -167,4 +167,87 @@ test("Plugin stop-turn hook blocks on configured turn-review findings", () => {
   const parsed = JSON.parse(output);
   assert.equal(parsed.decision, "block");
   assert.match(parsed.reason, /authorization bypass/i);
+});
+
+test("Plugin pre-bash hook honors layer kill switches from the runtime environment", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-plugin-hook-skip-"));
+  const filePath = path.join(tempDir, "src/auth/login.js");
+
+  execFileSync("git", ["init"], { cwd: tempDir, encoding: "utf8" });
+  execFileSync("git", ["config", "user.name", "Test User"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+  execFileSync("git", ["config", "user.email", "test@example.com"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, 'const token = "supersecret12345";\n');
+  execFileSync("git", ["add", "."], { cwd: tempDir, encoding: "utf8" });
+
+  const output = execFileSync(
+    "node",
+    ["./bin/plugin-security-hook.js", "pre-bash"],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        CLAUDE_PROJECT_DIR: tempDir,
+        CLAUDE_PLUGIN_ROOT: repoRoot,
+        SECURITY_REVIEW_ENABLED_LAYERS: "edit,turn,push"
+      },
+      input: JSON.stringify({
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        cwd: tempDir,
+        tool_input: {
+          command: 'git commit -m "test commit"'
+        }
+      })
+    }
+  );
+
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.continue, true);
+  assert.equal(parsed.hookSpecificOutput, undefined);
+});
+
+test("Plugin debug mode emits metadata-only stderr without leaking file contents", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-plugin-hook-debug-"));
+  const filePath = path.join(tempDir, "src/auth/login.js");
+  const secretLine = 'const token = "supersecret12345";\n';
+
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, secretLine);
+
+  const result = spawnSync(
+    "node",
+    ["./bin/plugin-security-hook.js", "post-edit"],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        CLAUDE_PROJECT_DIR: tempDir,
+        CLAUDE_PLUGIN_ROOT: repoRoot,
+        SECURITY_REVIEW_DEBUG: "true"
+      },
+      input: JSON.stringify({
+        hook_event_name: "PostToolUse",
+        tool_name: "Write",
+        tool_input: {
+          file_path: filePath,
+          content: secretLine
+        }
+      })
+    }
+  );
+
+  assert.equal(result.status, 0);
+  assert.match(result.stderr, /"source":"security-review-commons"/);
+  assert.match(result.stderr, /"hookMode":"post-edit"/);
+  assert.doesNotMatch(result.stderr, /supersecret12345/);
 });
