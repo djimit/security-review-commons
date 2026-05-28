@@ -129,7 +129,7 @@ node --test tests/plugin-hooks.test.js
 
 ## Current Rule Coverage
 
-- application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets, open redirect, DOM HTML injection, Python `pickle`, and `torch.load`
+- application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets, open redirect, DOM HTML injection, auth-bypass flags, direct object lookups from request identifiers, server-side template rendering from untrusted input, Python `pickle`, `torch.load`, and `subprocess` with `shell=True`
 - parser-backed JS/TS semantic flow checks: request-derived values into `exec`, `eval`, `fetch`, redirect targets, and `path.join/resolve`
 - conservative sanitizer-aware suppression for explicit wrappers like `validateUrl`, `assertAllowedUrl`, and `sanitizeRelativePath`
 - CI and workflow drift: `pull_request_target`, `permissions: write-all`, `curl | sh`

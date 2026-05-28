@@ -50,6 +50,7 @@
       "repoRoot": "..",
       "configFile": "../tests/fixtures/turn-review.config.json",
       "expectedRuleIds": [
+        "builtin-auth-bypass-flag",
         "model-turn-review-mock-fixture"
       ],
       "comparative": {

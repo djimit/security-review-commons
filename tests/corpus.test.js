@@ -19,8 +19,8 @@ test("corpus runner validates all baseline cases", () => {
       passedCases: 5
     },
     deterministic: {
-      totalCases: 26,
-      passedCases: 26
+      totalCases: 36,
+      passedCases: 36
     }
   });
   assert.deepEqual(report.benchmarkSummary.byLayer, {
@@ -29,8 +29,8 @@ test("corpus runner validates all baseline cases", () => {
       passedCases: 5
     },
     turn: {
-      totalCases: 26,
-      passedCases: 26
+      totalCases: 36,
+      passedCases: 36
     }
   });
   assert.deepEqual(
@@ -42,6 +42,20 @@ test("corpus runner validates all baseline cases", () => {
   );
   assert.deepEqual(
     report.benchmarkSummary.byExpectedRuleId["semantic-js-redirect-tainted-input"],
+    {
+      totalCases: 1,
+      passedCases: 1
+    }
+  );
+  assert.deepEqual(
+    report.benchmarkSummary.byExpectedRuleId["builtin-template-render-user-input"],
+    {
+      totalCases: 1,
+      passedCases: 1
+    }
+  );
+  assert.deepEqual(
+    report.benchmarkSummary.byExpectedRuleId["builtin-python-subprocess-shell-true"],
     {
       totalCases: 1,
       passedCases: 1

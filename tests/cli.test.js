@@ -114,7 +114,11 @@ test("CLI turn mode uses the configured command reviewer when enabled", () => {
 
   const parsed = JSON.parse(output);
   assert.equal(parsed.modelReview.status, "completed");
-  assert.equal(parsed.findings[0].source.ruleId, "model-turn-review-mock-fixture");
+  assert.ok(
+    parsed.findings.some(
+      (finding) => finding.source.ruleId === "model-turn-review-mock-fixture"
+    )
+  );
 });
 
 test("CLI debug mode emits metadata-only runtime control output", () => {

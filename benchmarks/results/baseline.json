@@ -3,7 +3,7 @@
   "totalCases": 7,
   "passedCases": 7,
   "failedCases": 0,
-  "hitCount": 7,
+  "hitCount": 8,
   "missCount": 0,
   "falsePositiveCount": 0,
   "unresolvedComparativeCases": 7,
@@ -99,19 +99,22 @@
       "layer": "turn",
       "pass": true,
       "hitRuleIds": [
+        "builtin-auth-bypass-flag",
         "model-turn-review-mock-fixture"
       ],
       "missingRuleIds": [],
       "unexpectedRuleIds": [],
       "actualRuleIds": [
+        "builtin-auth-bypass-flag",
         "model-turn-review-mock-fixture"
       ],
       "expectedRuleIds": [
+        "builtin-auth-bypass-flag",
         "model-turn-review-mock-fixture"
       ],
       "findingsSummary": {
-        "totalFindings": 1,
-        "activeFindings": 1,
+        "totalFindings": 2,
+        "activeFindings": 2,
         "suppressedFindings": 0
       },
       "comparative": {

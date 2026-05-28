@@ -148,6 +148,54 @@
       "expectedRuleIds": []
     },
     {
+      "id": "js-auth-bypass-tainted",
+      "description": "Auth bypass flags that short-circuit authorization should be detected",
+      "fixture": "./tests/fixtures/js-auth-bypass-tainted.js",
+      "changedFiles": ["src/auth-bypass-tainted.js"],
+      "expectedRuleIds": [
+        "builtin-auth-bypass-flag"
+      ]
+    },
+    {
+      "id": "js-auth-bypass-safe",
+      "description": "Ordinary admin checks should remain clean",
+      "fixture": "./tests/fixtures/js-auth-bypass-safe.js",
+      "changedFiles": ["src/auth-bypass-safe.js"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "js-idor-tainted",
+      "description": "Direct object lookups from request identifiers should be detected",
+      "fixture": "./tests/fixtures/js-idor-tainted.js",
+      "changedFiles": ["src/idor-tainted.js"],
+      "expectedRuleIds": [
+        "builtin-idor-direct-object-reference"
+      ]
+    },
+    {
+      "id": "js-idor-safe",
+      "description": "Lookups from trusted scoped identifiers should remain clean",
+      "fixture": "./tests/fixtures/js-idor-safe.js",
+      "changedFiles": ["src/idor-safe.js"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "js-template-render-tainted",
+      "description": "Server-side template rendering from request input should be detected",
+      "fixture": "./tests/fixtures/js-template-render-tainted.js",
+      "changedFiles": ["src/template-render-tainted.js"],
+      "expectedRuleIds": [
+        "builtin-template-render-user-input"
+      ]
+    },
+    {
+      "id": "js-template-render-safe",
+      "description": "Trusted server-side template rendering should remain clean",
+      "fixture": "./tests/fixtures/js-template-render-safe.js",
+      "changedFiles": ["src/template-render-safe.js"],
+      "expectedRuleIds": []
+    },
+    {
       "id": "js-fetch-sanitized",
       "description": "Explicit URL sanitizer wrapper should suppress SSRF semantic finding",
       "fixture": "./tests/fixtures/js-fetch-sanitized.js",
@@ -216,6 +264,38 @@
       "description": "Safe Python JSON loading should remain clean",
       "fixture": "./tests/fixtures/py-safe-json.py",
       "changedFiles": ["src/py-safe-json.py"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "py-yaml-dangerous",
+      "description": "Python yaml.load should be detected",
+      "fixture": "./tests/fixtures/py-yaml-dangerous.py",
+      "changedFiles": ["src/yaml-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-unsafe-yaml-load"
+      ]
+    },
+    {
+      "id": "py-yaml-safe",
+      "description": "Python yaml.safe_load should remain clean",
+      "fixture": "./tests/fixtures/py-yaml-safe.py",
+      "changedFiles": ["src/py-yaml-safe.py"],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "py-subprocess-shell-dangerous",
+      "description": "Python subprocess with shell=True should be detected",
+      "fixture": "./tests/fixtures/py-subprocess-shell-dangerous.py",
+      "changedFiles": ["src/subprocess-shell-dangerous.py"],
+      "expectedRuleIds": [
+        "builtin-python-subprocess-shell-true"
+      ]
+    },
+    {
+      "id": "py-subprocess-safe",
+      "description": "Python subprocess without shell=True should remain clean",
+      "fixture": "./tests/fixtures/py-subprocess-safe.py",
+      "changedFiles": ["src/py-subprocess-safe.py"],
       "expectedRuleIds": []
     },
     {

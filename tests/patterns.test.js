@@ -167,6 +167,46 @@ test("web redirect and DOM HTML injection rules catch untrusted rendering patter
   );
 });
 
+test("auth, idor, and template-injection rules catch untrusted application flow patterns", () => {
+  const authResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-auth-bypass-tainted.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/auth-bypass-tainted.js"],
+    layer: "turn"
+  });
+  const idorResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-idor-tainted.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/idor-tainted.js"],
+    layer: "turn"
+  });
+  const templateResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-template-render-tainted.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/template-render-tainted.js"],
+    layer: "turn"
+  });
+
+  assert.equal(
+    authResult.findings[0].source.ruleId,
+    "builtin-auth-bypass-flag"
+  );
+  assert.equal(
+    idorResult.findings[0].source.ruleId,
+    "builtin-idor-direct-object-reference"
+  );
+  assert.equal(
+    templateResult.findings[0].source.ruleId,
+    "builtin-template-render-user-input"
+  );
+});
+
 test("python unsafe deserialization rules catch pickle and torch loads", () => {
   const pickleResult = runDeterministicReview({
     diff: fs.readFileSync(
@@ -192,6 +232,34 @@ test("python unsafe deserialization rules catch pickle and torch loads", () => {
   assert.equal(
     torchResult.findings[0].source.ruleId,
     "builtin-python-torch-load"
+  );
+});
+
+test("python yaml and subprocess shell rules catch unsafe execution patterns", () => {
+  const yamlResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "py-yaml-dangerous.py"),
+      "utf8"
+    ),
+    changedFiles: ["src/yaml-dangerous.py"],
+    layer: "turn"
+  });
+  const subprocessResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "py-subprocess-shell-dangerous.py"),
+      "utf8"
+    ),
+    changedFiles: ["src/subprocess-shell-dangerous.py"],
+    layer: "turn"
+  });
+
+  assert.equal(
+    yamlResult.findings[0].source.ruleId,
+    "builtin-unsafe-yaml-load"
+  );
+  assert.equal(
+    subprocessResult.findings[0].source.ruleId,
+    "builtin-python-subprocess-shell-true"
   );
 });
 
@@ -232,6 +300,43 @@ test("safe fixtures do not trigger current drift rules", () => {
     changedFiles: ["src/py-safe-json.py"],
     layer: "turn"
   });
+  const authResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-auth-bypass-safe.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/auth-bypass-safe.js"],
+    layer: "turn"
+  });
+  const idorResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-idor-safe.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/idor-safe.js"],
+    layer: "turn"
+  });
+  const templateResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "js-template-render-safe.js"),
+      "utf8"
+    ),
+    changedFiles: ["src/template-render-safe.js"],
+    layer: "turn"
+  });
+  const subprocessResult = runDeterministicReview({
+    diff: fs.readFileSync(
+      path.join(fixturesDir, "py-subprocess-safe.py"),
+      "utf8"
+    ),
+    changedFiles: ["src/py-subprocess-safe.py"],
+    layer: "turn"
+  });
+  const yamlResult = runDeterministicReview({
+    diff: fs.readFileSync(path.join(fixturesDir, "py-yaml-safe.py"), "utf8"),
+    changedFiles: ["src/py-yaml-safe.py"],
+    layer: "turn"
+  });
 
   assert.equal(workflowResult.findings.length, 0);
   assert.equal(dockerResult.findings.length, 0);
@@ -239,6 +344,11 @@ test("safe fixtures do not trigger current drift rules", () => {
   assert.equal(redirectResult.findings.length, 0);
   assert.equal(htmlResult.findings.length, 0);
   assert.equal(pythonResult.findings.length, 0);
+  assert.equal(authResult.findings.length, 0);
+  assert.equal(idorResult.findings.length, 0);
+  assert.equal(templateResult.findings.length, 0);
+  assert.equal(subprocessResult.findings.length, 0);
+  assert.equal(yamlResult.findings.length, 0);
 });
 
 test("semantic JS analysis catches tainted flows into sinks", () => {

@@ -77,6 +77,28 @@ export const BUILTIN_RULES = [
       "Redirect only to allowlisted internal paths or validated absolute destinations."
   },
   {
+    id: "builtin-auth-bypass-flag",
+    title: "Potential authorization bypass behind a flag",
+    severity: "high",
+    category: "auth-bypass",
+    regex: /\bif\s*\(\s*(bypassAuth|skipAuth|disableAuth)\s*\)\s*\{[\s\S]{0,160}?\b(return\s+true|return\s+\w+|next\s*\()/i,
+    explanation:
+      "A bypass flag that short-circuits authorization logic can create a direct privilege-escalation path.",
+    proposedFix:
+      "Remove bypass flags from request or runtime flow, or gate them behind a trusted operator-only boundary with explicit auditing."
+  },
+  {
+    id: "builtin-idor-direct-object-reference",
+    title: "Potential insecure direct object reference from request identifier",
+    severity: "high",
+    category: "idor",
+    regex: /\b(findByPk|findOne|findUnique|get|load)\s*\([^)]*(req\.(params|query)\.(id|[A-Za-z0-9_]*Id)|params\.(id|[A-Za-z0-9_]*Id)|query\.(id|[A-Za-z0-9_]*Id))/i,
+    explanation:
+      "Direct lookups of sensitive records from request identifiers can create IDOR risk when authorization is missing or deferred.",
+    proposedFix:
+      "Authorize access to the requested object before lookup or scope the query to the authenticated principal."
+  },
+  {
     id: "builtin-dangerously-set-inner-html-user-input",
     title: "Potential DOM XSS via dangerouslySetInnerHTML from untrusted input",
     severity: "high",
@@ -86,6 +108,17 @@ export const BUILTIN_RULES = [
       "Passing request-controlled HTML into dangerouslySetInnerHTML can create a direct DOM XSS sink.",
     proposedFix:
       "Avoid raw HTML rendering for untrusted input or sanitize against a strict allowlist before rendering."
+  },
+  {
+    id: "builtin-template-render-user-input",
+    title: "Potential server-side template injection from untrusted input",
+    severity: "high",
+    category: "template-injection",
+    regex: /\b(ejs\.render|handlebars\.compile|mustache\.render|pug\.render)\s*\([^)]*(req\.|userInput|params\.|query\.)/i,
+    explanation:
+      "Passing request-controlled strings into server-side template compilation or rendering can create template-injection risk.",
+    proposedFix:
+      "Avoid compiling templates from untrusted input and treat template source as trusted application code only."
   },
   {
     id: "builtin-python-pickle-load",
@@ -110,6 +143,18 @@ export const BUILTIN_RULES = [
       "torch.load may deserialize attacker-controlled pickled content and should not be used on untrusted artifacts.",
     proposedFix:
       "Load only trusted model artifacts, verify provenance, or use a safer format when possible."
+  },
+  {
+    id: "builtin-python-subprocess-shell-true",
+    title: "Potential unsafe Python subprocess shell execution",
+    severity: "high",
+    category: "command-injection",
+    pathRegex: /(^|\/).+\.py$/i,
+    regex: /\bsubprocess\.(run|Popen|call|check_call|check_output)\s*\([^)]*shell\s*=\s*True/i,
+    explanation:
+      "Python subprocess calls with shell=True expand command-injection risk when any argument can be attacker-controlled.",
+    proposedFix:
+      "Prefer argv-style subprocess execution without a shell and validate untrusted inputs before process execution."
   },
   {
     id: "builtin-github-actions-pull-request-target",
