@@ -1,0 +1,100 @@
+{
+  "description": "Runtime fixture provenance for synthetic and captured payloads.",
+  "entries": [
+    {
+      "runtime": "claude-plugin",
+      "event": "PostToolUse.Write",
+      "fixture": "./tests/fixtures/plugin/post-tool-use-write.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "hook_event_name",
+        "tool_input",
+        "tool_name"
+      ],
+      "notes": "Synthetic replay fixture matching the packaged plugin post-edit hook contract."
+    },
+    {
+      "runtime": "claude-plugin",
+      "event": "PreToolUse.Bash.git-commit",
+      "fixture": "./tests/fixtures/plugin/pre-tool-use-bash-git-commit.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "cwd",
+        "hook_event_name",
+        "tool_input",
+        "tool_name"
+      ],
+      "notes": "Synthetic replay fixture for git commit interception before checkpoint review."
+    },
+    {
+      "runtime": "claude-plugin",
+      "event": "Stop",
+      "fixture": "./tests/fixtures/plugin/stop.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "cwd",
+        "hook_event_name"
+      ],
+      "notes": "Synthetic replay fixture for the optional stop-turn hook entrypoint."
+    },
+    {
+      "runtime": "opencode",
+      "event": "file.edited",
+      "fixture": "./tests/fixtures/opencode/file-edited.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "changedFiles",
+        "diff"
+      ],
+      "notes": "Synthetic normalization fixture for edit-time OpenCode review."
+    },
+    {
+      "runtime": "opencode",
+      "event": "session.diff",
+      "fixture": "./tests/fixtures/opencode/session-diff.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "changedFiles",
+        "diff"
+      ],
+      "notes": "Synthetic normalization fixture for turn-review diff events."
+    },
+    {
+      "runtime": "opencode",
+      "event": "session.idle",
+      "fixture": "./tests/fixtures/opencode/session-idle.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "changedFiles",
+        "diff"
+      ],
+      "notes": "Synthetic normalization fixture for idle-triggered turn review."
+    },
+    {
+      "runtime": "opencode",
+      "event": "tool.execute.before.git-push",
+      "fixture": "./tests/fixtures/opencode/tool-execute-before-push.json",
+      "source": "synthetic",
+      "scrubbed": true,
+      "capturedAt": null,
+      "supportedTopLevelFields": [
+        "args",
+        "changedFiles",
+        "tool"
+      ],
+      "notes": "Synthetic normalization fixture for checkpoint review before git push."
+    }
+  ]
+}

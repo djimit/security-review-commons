@@ -13,7 +13,8 @@ function parseArgs(argv) {
   const args = {
     manifest: "./benchmarks/manifest.json",
     baseDir: process.cwd(),
-    format: "json"
+    format: "json",
+    includeGeneratedAt: false
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -32,6 +33,8 @@ function parseArgs(argv) {
     } else if (token === "--format") {
       args.format = next;
       index += 1;
+    } else if (token === "--include-generated-at") {
+      args.includeGeneratedAt = true;
     }
   }
 
@@ -51,7 +54,6 @@ async function main() {
 
   const report = {
     manifestName: manifest.name ?? "security-review-benchmark",
-    generatedAt: new Date().toISOString(),
     totalCases: cases.length,
     passedCases: cases.filter((entry) => entry.pass).length,
     failedCases: cases.filter((entry) => !entry.pass).length,
@@ -66,6 +68,9 @@ async function main() {
     ).length,
     cases
   };
+  if (args.includeGeneratedAt) {
+    report.generatedAt = new Date().toISOString();
+  }
 
   const output =
     args.format === "markdown" ? reportToMarkdown(report) : JSON.stringify(report, null, 2);
@@ -168,7 +173,7 @@ function reportToMarkdown(report) {
   const lines = [
     `# ${report.manifestName}`,
     "",
-    `- Generated: ${report.generatedAt}`,
+    ...(report.generatedAt ? [`- Generated: ${report.generatedAt}`] : []),
     `- Cases: ${report.totalCases}`,
     `- Passed: ${report.passedCases}`,
     `- Failed: ${report.failedCases}`,

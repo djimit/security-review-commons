@@ -38,6 +38,7 @@ The CI workflow now publishes:
 - a Markdown summary artifact
 - a corpus report artifact tied to the baseline fixture set
 - a benchmark script and baseline result artifact that record current local hits, misses, false positives, and unresolved comparative gaps
+- runtime fixture provenance and capture tooling for synthetic versus scrubbed host payloads
 
 ## Release Workflow
 

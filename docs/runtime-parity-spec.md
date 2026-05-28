@@ -35,8 +35,8 @@ These constraints still create the main host-runtime drift risks:
 1. Diff review is implemented in the shared core and exposed in both adapters.
 2. Turn review is implemented as an async core contract with deterministic fallback and optional command-based model review.
 3. Checkpoint review reads working tree files plus bounded local import and adjacent auth/config/router/middleware context.
-4. OpenCode event names are documented and payload normalization is fixture-backed, but live host payload capture is still pending.
-5. Host plugin packaging exists, including an opt-in Stop-hook path, but replay tests remain synthetic rather than captured from a live session.
+4. OpenCode event names are documented and payload normalization is fixture-backed with explicit provenance metadata, but live host payload capture is still pending.
+5. Host plugin packaging exists, including an opt-in Stop-hook path, and replay fixtures now use explicit runtime-fixture manifests, but the listed fixtures remain synthetic rather than captured from a live session.
 6. Codex integration remains explicit-entrypoint based. Native background lifecycle parity is still not claimed.
 7. Guidance files load in user, project, and local order when present and merge additively into the shared config.
 8. Runtime layer kill switches, debug mode, and review caps are verified through CLI and plugin replay tests, with debug output constrained to metadata-only stderr events.

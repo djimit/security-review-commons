@@ -128,6 +128,6 @@ Lower-precedence guidance does not remove or override higher-precedence guidance
 
 ## Known Gaps
 
-- No captured live runtime fixtures yet; current replay tests use synthetic payloads
+- No captured live runtime fixtures are checked in yet; current replay tests use synthetic payloads, and the new capture helper still requires a real host session plus manual review
 - No built-in provider client ships in this slice; model-backed turn review depends on an external reviewer command
 - Checkpoint evidence collection is still bounded by simple adjacency heuristics rather than a richer multi-file graph or inter-file taint engine

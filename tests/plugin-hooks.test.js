@@ -7,6 +7,12 @@ import { execFileSync, spawnSync } from "node:child_process";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 
+function readJsonFixture(relativePath) {
+  return JSON.parse(
+    fs.readFileSync(path.join(repoRoot, relativePath), "utf8")
+  );
+}
+
 test("Plugin manifest and hooks config exist and reference the packaged entrypoint", () => {
   const manifest = JSON.parse(
     fs.readFileSync(
@@ -49,11 +55,11 @@ test("Plugin post-edit hook replays deterministic edit feedback through the pack
         CLAUDE_PLUGIN_ROOT: repoRoot
       },
       input: JSON.stringify({
-        hook_event_name: "PostToolUse",
-        tool_name: "Write",
+        ...readJsonFixture("tests/fixtures/plugin/post-tool-use-write.json"),
         tool_input: {
-          file_path: filePath,
-          content: 'const token = "supersecret12345";\n'
+          ...readJsonFixture("tests/fixtures/plugin/post-tool-use-write.json")
+            .tool_input,
+          file_path: filePath
         }
       })
     }
@@ -96,12 +102,8 @@ test("Plugin pre-bash hook blocks staged high-severity checkpoint findings", () 
         CLAUDE_PLUGIN_ROOT: repoRoot
       },
       input: JSON.stringify({
-        hook_event_name: "PreToolUse",
-        tool_name: "Bash",
-        cwd: tempDir,
-        tool_input: {
-          command: 'git commit -m "test commit"'
-        }
+        ...readJsonFixture("tests/fixtures/plugin/pre-tool-use-bash-git-commit.json"),
+        cwd: tempDir
       })
     }
   );
@@ -158,7 +160,7 @@ test("Plugin stop-turn hook blocks on configured turn-review findings", () => {
           JSON.stringify(["./tests/fixtures/mock-turn-reviewer.js"])
       },
       input: JSON.stringify({
-        hook_event_name: "Stop",
+        ...readJsonFixture("tests/fixtures/plugin/stop.json"),
         cwd: tempDir
       })
     }
@@ -200,12 +202,8 @@ test("Plugin pre-bash hook honors layer kill switches from the runtime environme
         SECURITY_REVIEW_ENABLED_LAYERS: "edit,turn,push"
       },
       input: JSON.stringify({
-        hook_event_name: "PreToolUse",
-        tool_name: "Bash",
-        cwd: tempDir,
-        tool_input: {
-          command: 'git commit -m "test commit"'
-        }
+        ...readJsonFixture("tests/fixtures/plugin/pre-tool-use-bash-git-commit.json"),
+        cwd: tempDir
       })
     }
   );
@@ -236,9 +234,10 @@ test("Plugin debug mode emits metadata-only stderr without leaking file contents
         SECURITY_REVIEW_DEBUG: "true"
       },
       input: JSON.stringify({
-        hook_event_name: "PostToolUse",
-        tool_name: "Write",
+        ...readJsonFixture("tests/fixtures/plugin/post-tool-use-write.json"),
         tool_input: {
+          ...readJsonFixture("tests/fixtures/plugin/post-tool-use-write.json")
+            .tool_input,
           file_path: filePath,
           content: secretLine
         }

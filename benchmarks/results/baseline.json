@@ -1,6 +1,5 @@
 {
   "manifestName": "security-review-commons-baseline-benchmark",
-  "generatedAt": "2026-05-28T00:36:16.701Z",
   "totalCases": 7,
   "passedCases": 7,
   "failedCases": 0,
