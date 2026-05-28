@@ -57,20 +57,22 @@ test("loadConfig accepts suppression metadata", () => {
 });
 
 test("loadConfig accepts turn review command metadata", () => {
+  const reviewerPath = process.execPath;
   const config = loadConfig({
     turnReview: {
       enabled: true,
       provider: "mock",
       model: "fixture",
+      commandAllowlist: [{ id: "node", executable: reviewerPath }],
       command: {
-        executable: "node",
+        id: "node",
         args: ["./tests/fixtures/mock-turn-reviewer.js"]
       }
     }
   });
 
   assert.equal(config.turnReview.enabled, true);
-  assert.equal(config.turnReview.command.executable, "node");
+  assert.equal(config.turnReview.command.id, "node");
 });
 
 test("loadConfig accepts checkpoint review budget metadata", () => {
