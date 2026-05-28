@@ -1,0 +1,10 @@
+{
+  "suppressions": [
+    {
+      "ruleId": "builtin-hardcoded-secret-token",
+      "owner": "security-team",
+      "justification": "temporary acceptance",
+      "expiresOn": "2024-01-01"
+    }
+  ]
+}

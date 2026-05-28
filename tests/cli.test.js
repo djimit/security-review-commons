@@ -10,6 +10,8 @@ test("CLI emits SARIF", () => {
     "node",
     [
       "./src/cli.js",
+      "--config",
+      "./tests/fixtures/suppression-governance.config.json",
       "--diff-file",
       "./tests/fixtures/sample.diff",
       "--changed-files",
@@ -126,6 +128,8 @@ test("CLI debug mode emits metadata-only runtime control output", () => {
     "node",
     [
       "./src/cli.js",
+      "--config",
+      "./tests/fixtures/suppression-governance.config.json",
       "--diff-file",
       "./tests/fixtures/sample.diff",
       "--changed-files",
@@ -156,6 +160,8 @@ test("CLI skips disabled layers and reports the skip metadata", () => {
       "./src/cli.js",
       "--review-mode",
       "turn",
+      "--config",
+      "./tests/fixtures/suppression-governance.config.json",
       "--diff-file",
       "./tests/fixtures/sample.diff",
       "--changed-files",
@@ -177,6 +183,8 @@ test("CLI enforces runtime caps from flags and surfaces truncation metadata", ()
     "node",
     [
       "./src/cli.js",
+      "--config",
+      "./tests/fixtures/suppression-governance.config.json",
       "--diff-file",
       "./tests/fixtures/sample.diff",
       "--changed-files",
@@ -190,4 +198,29 @@ test("CLI enforces runtime caps from flags and surfaces truncation metadata", ()
   const parsed = JSON.parse(output);
   assert.equal(parsed.findings.length, 0);
   assert.match(parsed.auditEvent, /"budgetTruncated":true/);
+});
+
+test("CLI suppression governance mode fails on expired and invalid suppression metadata", () => {
+  const result = spawnSync(
+    "node",
+    [
+      "./src/cli.js",
+      "--config",
+      "./tests/fixtures/suppression-governance.config.json",
+      "--diff-file",
+      "./tests/fixtures/sample.diff",
+      "--changed-files",
+      "src/auth/login.js",
+      "--fail-on-suppression-governance"
+    ],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      input: "",
+      env: process.env
+    }
+  );
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /suppression-governance/);
 });

@@ -1,6 +1,28 @@
 import fs from "node:fs";
 import path from "node:path";
 
+
+import { validateJsonSchema } from "./schema-validator.js";
+
+const configSchema = JSON.parse(
+  fs.readFileSync(
+    new URL("../../schemas/security-review.config.schema.json", import.meta.url),
+    "utf8"
+  )
+);
+
+function createValidationError({ code, message, details = [] }) {
+  const error = new Error(`${code}: ${message}`);
+  error.code = code;
+  error.details = details;
+  return error;
+}
+
+function assertSchemaValid({ validator, value, code, message }) {
+  const result = validateJsonSchema(validator, value);
+  if (result.valid) return;
+  throw createValidationError({ code, message, details: result.errors });
+}
 const DEFAULT_CONFIG = {
   enabledLayers: ["edit", "turn", "commit", "push"],
   debug: false,
@@ -19,7 +41,8 @@ const DEFAULT_CONFIG = {
     maxPromptChars: 12 * 1024,
     maxModelFindings: 5,
     timeoutMs: 30_000,
-    command: null
+    command: null,
+    commandAllowlist: []
   },
   checkpointReview: {
     enabledAdjacentContext: true,
@@ -78,6 +101,27 @@ function validateTurnReview(turnReview) {
   assertInteger(turnReview.maxPromptChars, "turnReview.maxPromptChars", 1024);
   assertInteger(turnReview.maxModelFindings, "turnReview.maxModelFindings", 1);
   assertInteger(turnReview.timeoutMs, "turnReview.timeoutMs", 1000);
+  if (
+    !Array.isArray(turnReview.commandAllowlist) ||
+    turnReview.commandAllowlist.some(
+      (entry) =>
+        !entry ||
+        typeof entry !== "object" ||
+        typeof entry.id !== "string" ||
+        entry.id.length === 0 ||
+        typeof entry.executable !== "string" ||
+        entry.executable.length === 0 ||
+        !path.isAbsolute(entry.executable)
+    )
+  ) {
+    throw new Error(
+      "turnReview.commandAllowlist must be an array of { id, executable } with absolute executable paths"
+    );
+  }
+  const allowlistIds = new Set(turnReview.commandAllowlist.map((entry) => entry.id));
+  if (allowlistIds.size !== turnReview.commandAllowlist.length) {
+    throw new Error("turnReview.commandAllowlist contains duplicate ids");
+  }
 
   if (turnReview.command === null) {
     return;
@@ -86,8 +130,26 @@ function validateTurnReview(turnReview) {
   if (typeof turnReview.command !== "object") {
     throw new Error("turnReview.command must be an object or null");
   }
-  if (typeof turnReview.command.executable !== "string" || turnReview.command.executable.length === 0) {
-    throw new Error("turnReview.command.executable must be a non-empty string");
+  const hasId = typeof turnReview.command.id === "string" && turnReview.command.id.length > 0;
+  const hasExecutable =
+    typeof turnReview.command.executable === "string" &&
+    turnReview.command.executable.length > 0;
+  if (!hasId && !hasExecutable) {
+    throw new Error("turnReview.command must define either id or executable");
+  }
+  if (hasExecutable && !path.isAbsolute(turnReview.command.executable)) {
+    throw new Error("turnReview.command.executable must be an absolute path");
+  }
+  if (hasId && !allowlistIds.has(turnReview.command.id)) {
+    throw new Error("turnReview.command.id must reference an allowlisted command id");
+  }
+  if (hasExecutable) {
+    const matched = turnReview.commandAllowlist.some(
+      (entry) => entry.executable === turnReview.command.executable
+    );
+    if (!matched) {
+      throw new Error("turnReview.command.executable must be in turnReview.commandAllowlist");
+    }
   }
   if (
     turnReview.command.args !== undefined &&
@@ -123,6 +185,12 @@ function validateCheckpointReview(checkpointReview) {
 }
 
 export function loadConfig(raw = {}) {
+  assertSchemaValid({
+    validator: configSchema,
+    value: raw,
+    code: "SRC_CFG_SCHEMA_INVALID",
+    message: "Config validation failed"
+  });
   const merged = {
     ...DEFAULT_CONFIG,
     ...raw,

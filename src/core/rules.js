@@ -1,5 +1,20 @@
 export const BUILTIN_RULES = [
   {
+    id: "builtin-express-authz-bypass-query-flag",
+    title: "Potential Express authorization bypass from request flag",
+    severity: "high",
+    category: "auth-bypass",
+    regex: /\b(skipAuth|bypassAuth|disableAuth)\s*=\s*req\.(query|body|params)\.[A-Za-z0-9_]+\b[\s\S]{0,160}\bif\s*\(\s*\1\s*\)\s*\{[\s\S]{0,160}\breturn\s+res\.(json|send|end)\s*\(/i,
+    language: "javascript",
+    framework: "express",
+    precision: "medium",
+    recall_risk: "medium",
+    explanation:
+      "Request-derived flags that short-circuit Express authorization checks can create direct privilege escalation paths.",
+    proposedFix:
+      "Do not trust request flags for authorization bypass; enforce server-side policy checks for protected routes."
+  },
+  {
     id: "builtin-dangerous-child-process-shell-true",
     title: "Shell execution with shell:true",
     severity: "high",
@@ -130,6 +145,38 @@ export const BUILTIN_RULES = [
       "Passing request-controlled strings into server-side template compilation or rendering can create template-injection risk.",
     proposedFix:
       "Avoid compiling templates from untrusted input and treat template source as trusted application code only."
+  },
+  {
+    id: "builtin-fastapi-ssrf-request-url",
+    title: "Potential FastAPI SSRF via request-derived URL",
+    severity: "high",
+    category: "ssrf",
+    pathRegex: /(^|\/).+\.py$/i,
+    regex: /\b(requests\.(get|post|request)|httpx\.(get|post|request)|urllib\.request\.urlopen)\s*\([^)]*(request\.(query_params|get)|req\.(query_params|get)|\btarget\b|\burl\b)/i,
+    language: "python",
+    framework: "fastapi",
+    precision: "medium",
+    recall_risk: "medium",
+    explanation:
+      "FastAPI request-derived URL targets in outbound network calls can enable SSRF toward internal services.",
+    proposedFix:
+      "Validate protocol/host against strict allowlists before making outbound requests."
+  },
+  {
+    id: "builtin-django-template-from-string-request",
+    title: "Potential Django template injection via request-derived template source",
+    severity: "high",
+    category: "template-injection",
+    pathRegex: /(^|\/).+\.py$/i,
+    regex: /\b(from_string|Template)\s*\([^)]*(request\.(GET|POST|get)|req\.(GET|POST|get)|\btpl\b|\btemplate_source\b)/i,
+    language: "python",
+    framework: "django",
+    precision: "medium",
+    recall_risk: "high",
+    explanation:
+      "Compiling Django templates from request-controlled strings can create server-side template injection risk.",
+    proposedFix:
+      "Treat template source as trusted code and never compile templates directly from request input."
   },
   {
     id: "builtin-python-pickle-load",
@@ -303,3 +350,20 @@ export const BUILTIN_RULES = [
       "Use explicit versions or a narrow reviewed range and update intentionally."
   }
 ];
+
+export function getBuiltinRuleMetadata() {
+  return BUILTIN_RULES.map((rule) => ({
+    ruleId: rule.id,
+    language: rule.language ?? inferLanguage(rule),
+    framework: rule.framework ?? "generic",
+    precision: rule.precision ?? "medium",
+    recall_risk: rule.recall_risk ?? "medium"
+  }));
+}
+
+function inferLanguage(rule) {
+  if (rule.pathRegex?.toString().includes("\\.py")) {
+    return "python";
+  }
+  return "javascript";
+}
