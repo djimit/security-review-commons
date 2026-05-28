@@ -215,7 +215,7 @@ async function main() {
             repoRoot,
             config,
             reviewer: createCommandTurnReviewer({
-              turnReview: config.turnReview
+              turnReview: resolvedConfig.turnReview
             })
           })
         : runDeterministicReview({

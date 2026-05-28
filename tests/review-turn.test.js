@@ -83,6 +83,37 @@ test("turn review skips entirely when the turn layer is disabled", async () => {
 
 test("turn review does not call reviewer when turnReview is enabled but turn layer is disabled", async () => {
   let reviewerCalled = false;
+  const result = await runTurnReview({
+    diff: "if (bypassAuth) return user;",
+    changedFiles: ["src/auth/flow.js"],
+    config: {
+      enabledLayers: ["edit", "commit", "push"],
+      turnReview: {
+        enabled: true,
+        provider: "mock",
+        model: "fixture"
+      }
+    },
+    reviewer: async () => {
+      reviewerCalled = true;
+      return {
+        findings: [
+          {
+            title: "Should not be used",
+            severity: "medium",
+            category: "test"
+          }
+        ]
+      };
+    }
+  });
+
+  assert.equal(reviewerCalled, false);
+  assert.equal(result.findings.length, 0);
+  assert.equal(result.modelReview.status, "disabled-by-layer");
+  assert.equal(result.reviewContext, null);
+  assert.match(result.auditEvent, /"skipped":true/);
+});
 
 test("command reviewer rejects relative executable paths", async () => {
   assert.throws(
@@ -139,39 +170,6 @@ test("command reviewer enforces timeout floor and captures timeout failures", as
     }),
     /execution failed/
   );
-});
-
-test("turn review skips entirely when the turn layer is disabled", async () => {
-  const result = await runTurnReview({
-    diff: "if (bypassAuth) return user;",
-    changedFiles: ["src/auth/flow.js"],
-    config: {
-      enabledLayers: ["edit", "commit", "push"],
-      turnReview: {
-        enabled: true,
-        provider: "mock",
-        model: "fixture"
-      }
-    },
-    reviewer: async () => {
-      reviewerCalled = true;
-      return {
-        findings: [
-          {
-            title: "Should not be used",
-            severity: "medium",
-            category: "test"
-          }
-        ]
-      };
-    }
-  });
-
-  assert.equal(reviewerCalled, false);
-  assert.equal(result.findings.length, 0);
-  assert.equal(result.modelReview.status, "disabled-by-layer");
-  assert.equal(result.reviewContext, null);
-  assert.match(result.auditEvent, /"skipped":true/);
 });
 
 

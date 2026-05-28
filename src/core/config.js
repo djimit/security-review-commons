@@ -55,6 +55,43 @@ const DEFAULT_CONFIG = {
   suppressions: []
 };
 const ALLOWED_LAYERS = new Set(["edit", "turn", "commit", "push"]);
+const NODE_EXECUTABLE_PLACEHOLDERS = new Set([
+  "$NODE_EXEC_PATH",
+  "${NODE_EXEC_PATH}",
+  "node"
+]);
+
+function expandExecutablePath(value) {
+  if (NODE_EXECUTABLE_PLACEHOLDERS.has(value)) {
+    return process.execPath;
+  }
+  return value;
+}
+
+function normalizeTurnReviewCommandConfig(turnReview) {
+  if (!turnReview || typeof turnReview !== "object") {
+    return turnReview;
+  }
+
+  return {
+    ...turnReview,
+    commandAllowlist: Array.isArray(turnReview.commandAllowlist)
+      ? turnReview.commandAllowlist.map((entry) => ({
+          ...entry,
+          executable: expandExecutablePath(entry.executable)
+        }))
+      : turnReview.commandAllowlist,
+    command:
+      turnReview.command && typeof turnReview.command === "object"
+        ? {
+            ...turnReview.command,
+            ...(typeof turnReview.command.executable === "string"
+              ? { executable: expandExecutablePath(turnReview.command.executable) }
+              : {})
+          }
+        : turnReview.command
+  };
+}
 
 function assertStringArray(value, field) {
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
@@ -215,6 +252,8 @@ export function loadConfig(raw = {}) {
     suppressions: [...DEFAULT_CONFIG.suppressions, ...(raw.suppressions ?? [])]
   };
 
+  merged.turnReview = normalizeTurnReviewCommandConfig(merged.turnReview);
+
   assertStringArray(merged.enabledLayers, "enabledLayers");
   if (merged.enabledLayers.some((layer) => !ALLOWED_LAYERS.has(layer))) {
     throw new Error("enabledLayers contains an unknown layer");
@@ -316,7 +355,11 @@ export function mergeAdditiveConfig(baseConfig = {}, extraConfig = {}) {
       command:
         extraConfig.turnReview?.command === undefined
           ? baseConfig.turnReview?.command
-          : extraConfig.turnReview.command
+          : extraConfig.turnReview.command,
+      commandAllowlist: [
+        ...(baseConfig.turnReview?.commandAllowlist ?? []),
+        ...(extraConfig.turnReview?.commandAllowlist ?? [])
+      ]
     },
     checkpointReview: {
       ...(baseConfig.checkpointReview ?? {}),

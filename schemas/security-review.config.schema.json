@@ -26,7 +26,7 @@
       "properties": {
         "maxDiffBytes": {
           "type": "integer",
-          "minimum": 1024
+          "minimum": 1
         },
         "maxChangedFiles": {
           "type": "integer",
@@ -92,16 +92,39 @@
             "null"
           ],
           "additionalProperties": false,
-          "required": [
-            "executable"
-          ],
           "properties": {
+            "id": {
+              "type": "string"
+            },
             "executable": {
               "type": "string"
             },
             "args": {
               "type": "array",
               "items": {
+                "type": "string"
+              }
+            },
+            "maxOutputBytes": {
+              "type": "integer",
+              "minimum": 1024
+            }
+          }
+        },
+        "commandAllowlist": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "executable"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "executable": {
                 "type": "string"
               }
             }
