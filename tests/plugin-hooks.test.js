@@ -220,9 +220,10 @@ test("Plugin stop-turn hook blocks on configured turn-review findings", () => {
         SECURITY_REVIEW_TURN_REVIEW_ENABLED: "true",
         SECURITY_REVIEW_TURN_REVIEW_PROVIDER: "mock",
         SECURITY_REVIEW_TURN_REVIEW_MODEL: "fixture",
-        SECURITY_REVIEW_TURN_REVIEW_COMMAND: "node",
-        SECURITY_REVIEW_TURN_REVIEW_ARGS:
-          JSON.stringify(["./tests/fixtures/mock-turn-reviewer.js"])
+        SECURITY_REVIEW_TURN_REVIEW_COMMAND: process.execPath,
+        SECURITY_REVIEW_TURN_REVIEW_ARGS: JSON.stringify([
+          path.join(repoRoot, "tests/fixtures/mock-turn-reviewer.js")
+        ])
       },
       input: JSON.stringify({
         ...readJsonFixture("tests/fixtures/plugin/stop.json"),
