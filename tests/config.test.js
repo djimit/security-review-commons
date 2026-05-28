@@ -211,3 +211,14 @@ test("runtime env overrides expose layer, debug, and checkpoint controls", () =>
   assert.equal(runtimeConfig.checkpointReview.maxContextBytes, 4096);
   assert.equal(runtimeConfig.checkpointReview.maxAdjacentSearchDepth, 1);
 });
+
+
+test("loadConfig rejects malformed config payloads with schema error code", () => {
+  assert.throws(
+    () =>
+      loadConfig({
+        enabledLayers: ["turn", "invalid-layer"]
+      }),
+    (error) => error?.code === "SRC_CFG_SCHEMA_INVALID"
+  );
+});

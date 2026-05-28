@@ -9,6 +9,22 @@ import { toJsonlEvent } from "./jsonl.js";
 import { normalizeSuppressions, applySuppressions } from "./suppressions.js";
 import { evaluateJsSemanticFindings } from "./js-semantic.js";
 
+
+import { validateJsonSchema } from "./schema-validator.js";
+
+const modelReviewerResponseSchema = JSON.parse(
+  fs.readFileSync(
+    new URL("../../schemas/model-reviewer.response.schema.json", import.meta.url),
+    "utf8"
+  )
+);
+
+function createValidationError({ code, message, details = [] }) {
+  const error = new Error(`${code}: ${message}`);
+  error.code = code;
+  error.details = details;
+  return error;
+}
 const JS_PATH_REGEX = /(^|\/).+\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
 const JSImportExtensions = [
   ".js",
@@ -405,7 +421,15 @@ function normalizeModelFindings({
   model,
   maxFindings
 }) {
-  const rawFindings = Array.isArray(response?.findings) ? response.findings : [];
+  const schemaResult = validateJsonSchema(modelReviewerResponseSchema, response);
+  if (!schemaResult.valid) {
+    throw createValidationError({
+      code: "SRC_MODEL_RESPONSE_SCHEMA_INVALID",
+      message: "Model reviewer response failed schema validation",
+      details: schemaResult.errors
+    });
+  }
+  const rawFindings = response.findings;
   return rawFindings.slice(0, maxFindings).map((finding, index) =>
     makeFinding({
       title: String(finding?.title ?? `Model review finding ${index + 1}`),

@@ -157,3 +157,29 @@ test("turn review skips entirely when the turn layer is disabled", async () => {
   assert.equal(result.reviewContext, null);
   assert.match(result.auditEvent, /"skipped":true/);
 });
+
+
+test("turn review fails with schema error code for malformed model response", async () => {
+  const result = await runTurnReview({
+    diff: "const ok = true;",
+    changedFiles: ["src/ok.js"],
+    config: {
+      turnReview: {
+        enabled: true,
+        provider: "mock",
+        model: "fixture"
+      }
+    },
+    reviewer: async () => ({
+      findings: [
+        {
+          title: "bad finding",
+          files: [123]
+        }
+      ]
+    })
+  });
+
+  assert.equal(result.modelReview.status, "failed");
+  assert.match(result.modelReview.error, /SRC_MODEL_RESPONSE_SCHEMA_INVALID/);
+});
