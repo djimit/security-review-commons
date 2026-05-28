@@ -12,6 +12,8 @@ function readWorkflow(relativePath) {
 test("CI workflow publishes the documented proof artifacts", () => {
   const ci = readWorkflow(".github/workflows/ci.yml");
 
+  assert.match(ci, /actions\/checkout@v5/);
+  assert.match(ci, /actions\/setup-node@v5/);
   assert.match(ci, /npm run benchmark/);
   assert.match(ci, /artifacts\/sample\.sarif/);
   assert.match(ci, /artifacts\/sample-summary\.md/);
@@ -24,6 +26,9 @@ test("CI workflow publishes the documented proof artifacts", () => {
 test("release workflow attaches tarball plus benchmark comparator and runtime-proof artifacts", () => {
   const release = readWorkflow(".github/workflows/release.yml");
 
+  assert.match(release, /actions\/checkout@v5/);
+  assert.match(release, /actions\/setup-node@v5/);
+  assert.match(release, /softprops\/action-gh-release@v3/);
   assert.match(release, /push:\s*\n\s*tags:\s*\n\s*-\s+"v\*"/);
   assert.match(release, /npm run check/);
   assert.match(release, /npm run benchmark/);
@@ -37,6 +42,8 @@ test("release workflow attaches tarball plus benchmark comparator and runtime-pr
 test("npm publication requires explicit workflow dispatch confirmation", () => {
   const publish = readWorkflow(".github/workflows/publish-npm.yml");
 
+  assert.match(publish, /actions\/checkout@v5/);
+  assert.match(publish, /actions\/setup-node@v5/);
   assert.match(publish, /workflow_dispatch/);
   assert.match(publish, /confirm_publish/);
   assert.match(publish, /release_tag/);
