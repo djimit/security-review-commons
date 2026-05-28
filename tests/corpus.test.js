@@ -19,8 +19,8 @@ test("corpus runner validates all baseline cases", () => {
       passedCases: 5
     },
     deterministic: {
-      totalCases: 45,
-      passedCases: 45
+      totalCases: 51,
+      passedCases: 51
     }
   });
   assert.deepEqual(report.benchmarkSummary.byLayer, {
@@ -29,9 +29,21 @@ test("corpus runner validates all baseline cases", () => {
       passedCases: 5
     },
     turn: {
-      totalCases: 45,
-      passedCases: 45
+      totalCases: 51,
+      passedCases: 51
     }
+  });
+  assert.deepEqual(report.benchmarkSummary.byFramework.express, {
+    totalCases: 1,
+    passedCases: 1
+  });
+  assert.deepEqual(report.benchmarkSummary.byFramework.fastapi, {
+    totalCases: 1,
+    passedCases: 1
+  });
+  assert.deepEqual(report.benchmarkSummary.byFramework.django, {
+    totalCases: 1,
+    passedCases: 1
   });
   assert.deepEqual(
     report.benchmarkSummary.byExpectedRuleId["builtin-python-pickle-load"],

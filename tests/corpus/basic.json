@@ -5,7 +5,9 @@
       "id": "app-sinks-sample",
       "description": "Sample diff catches shell execution and hardcoded credentials",
       "fixture": "./tests/fixtures/sample.diff",
-      "changedFiles": ["src/auth/login.js"],
+      "changedFiles": [
+        "src/auth/login.js"
+      ],
       "expectedRuleIds": [
         "builtin-dangerous-child-process-shell-true",
         "builtin-hardcoded-secret-token"
@@ -15,7 +17,9 @@
       "id": "workflow-dangerous",
       "description": "Workflow fixture catches trust-boundary and supply-chain drift",
       "fixture": "./tests/fixtures/workflow-dangerous.yml",
-      "changedFiles": [".github/workflows/dangerous.yml"],
+      "changedFiles": [
+        ".github/workflows/dangerous.yml"
+      ],
       "expectedRuleIds": [
         "builtin-github-actions-curl-pipe-shell",
         "builtin-github-actions-pull-request-target",
@@ -26,7 +30,9 @@
       "id": "docker-root-runtime",
       "description": "Dockerfile fixture catches missing non-root runtime user",
       "fixture": "./tests/fixtures/Dockerfile.root",
-      "changedFiles": ["Dockerfile"],
+      "changedFiles": [
+        "Dockerfile"
+      ],
       "expectedRuleIds": [
         "builtin-dockerfile-missing-user"
       ]
@@ -35,7 +41,9 @@
       "id": "kubernetes-privileged",
       "description": "Kubernetes fixture catches privileged/root execution",
       "fixture": "./tests/fixtures/k8s-privileged.yaml",
-      "changedFiles": ["deploy/k8s-privileged.yaml"],
+      "changedFiles": [
+        "deploy/k8s-privileged.yaml"
+      ],
       "expectedRuleIds": [
         "builtin-kubernetes-privileged-container",
         "builtin-kubernetes-runas-root"
@@ -45,7 +53,9 @@
       "id": "terraform-public-ssh",
       "description": "Terraform fixture catches public SSH ingress",
       "fixture": "./tests/fixtures/public-ssh.tf",
-      "changedFiles": ["infra/public-ssh.tf"],
+      "changedFiles": [
+        "infra/public-ssh.tf"
+      ],
       "expectedRuleIds": [
         "builtin-terraform-public-ssh-ingress"
       ]
@@ -54,7 +64,9 @@
       "id": "package-unpinned",
       "description": "package.json fixture catches unpinned selectors",
       "fixture": "./tests/fixtures/package-unpinned.json",
-      "changedFiles": ["package.json"],
+      "changedFiles": [
+        "package.json"
+      ],
       "expectedRuleIds": [
         "builtin-package-json-unpinned-version"
       ]
@@ -63,28 +75,36 @@
       "id": "workflow-safe",
       "description": "Safe workflow fixture should remain clean",
       "fixture": "./tests/fixtures/workflow-safe.yml",
-      "changedFiles": [".github/workflows/safe.yml"],
+      "changedFiles": [
+        ".github/workflows/safe.yml"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "docker-safe-runtime",
       "description": "Safe Dockerfile fixture should remain clean",
       "fixture": "./tests/fixtures/Dockerfile.safe",
-      "changedFiles": ["Dockerfile"],
+      "changedFiles": [
+        "Dockerfile"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "package-pinned",
       "description": "Pinned package selectors should remain clean",
       "fixture": "./tests/fixtures/package-pinned.json",
-      "changedFiles": ["package.json"],
+      "changedFiles": [
+        "package.json"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-exec-tainted",
       "description": "JS tainted request input into exec should be detected",
       "fixture": "./tests/fixtures/js-exec-tainted.js",
-      "changedFiles": ["src/exec-tainted.js"],
+      "changedFiles": [
+        "src/exec-tainted.js"
+      ],
       "expectedRuleIds": [
         "semantic-js-exec-tainted-input"
       ]
@@ -93,7 +113,9 @@
       "id": "js-fetch-tainted",
       "description": "JS tainted request input into fetch should be detected",
       "fixture": "./tests/fixtures/js-fetch-tainted.js",
-      "changedFiles": ["src/fetch-tainted.js"],
+      "changedFiles": [
+        "src/fetch-tainted.js"
+      ],
       "expectedRuleIds": [
         "semantic-js-fetch-tainted-url"
       ]
@@ -102,7 +124,9 @@
       "id": "js-path-tainted",
       "description": "JS tainted request input into path.join should be detected",
       "fixture": "./tests/fixtures/js-path-tainted.js",
-      "changedFiles": ["src/path-tainted.js"],
+      "changedFiles": [
+        "src/path-tainted.js"
+      ],
       "expectedRuleIds": [
         "semantic-js-path-tainted-input"
       ]
@@ -111,7 +135,9 @@
       "id": "js-open-redirect-tainted",
       "description": "JS tainted request input into redirect should be detected",
       "fixture": "./tests/fixtures/js-open-redirect-tainted.js",
-      "changedFiles": ["src/open-redirect-tainted.js"],
+      "changedFiles": [
+        "src/open-redirect-tainted.js"
+      ],
       "expectedRuleIds": [
         "builtin-open-redirect-from-user-input",
         "semantic-js-redirect-tainted-input"
@@ -121,21 +147,27 @@
       "id": "js-safe-flow",
       "description": "Non-request JS flow should remain clean",
       "fixture": "./tests/fixtures/js-safe-flow.js",
-      "changedFiles": ["src/js-safe-flow.js"],
+      "changedFiles": [
+        "src/js-safe-flow.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-open-redirect-safe",
       "description": "Static redirect targets should remain clean",
       "fixture": "./tests/fixtures/js-open-redirect-safe.js",
-      "changedFiles": ["src/open-redirect-safe.js"],
+      "changedFiles": [
+        "src/open-redirect-safe.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-dangerously-set-inner-html-tainted",
       "description": "dangerouslySetInnerHTML with request-controlled HTML should be detected",
       "fixture": "./tests/fixtures/js-dangerously-set-inner-html-tainted.jsx",
-      "changedFiles": ["src/render-danger.jsx"],
+      "changedFiles": [
+        "src/render-danger.jsx"
+      ],
       "expectedRuleIds": [
         "builtin-dangerously-set-inner-html-user-input"
       ]
@@ -144,14 +176,18 @@
       "id": "js-dangerously-set-inner-html-safe",
       "description": "Static dangerouslySetInnerHTML content should remain clean",
       "fixture": "./tests/fixtures/js-dangerously-set-inner-html-safe.jsx",
-      "changedFiles": ["src/render-safe.jsx"],
+      "changedFiles": [
+        "src/render-safe.jsx"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-auth-bypass-tainted",
       "description": "Auth bypass flags that short-circuit authorization should be detected",
       "fixture": "./tests/fixtures/js-auth-bypass-tainted.js",
-      "changedFiles": ["src/auth-bypass-tainted.js"],
+      "changedFiles": [
+        "src/auth-bypass-tainted.js"
+      ],
       "expectedRuleIds": [
         "builtin-auth-bypass-flag"
       ]
@@ -160,14 +196,18 @@
       "id": "js-auth-bypass-safe",
       "description": "Ordinary admin checks should remain clean",
       "fixture": "./tests/fixtures/js-auth-bypass-safe.js",
-      "changedFiles": ["src/auth-bypass-safe.js"],
+      "changedFiles": [
+        "src/auth-bypass-safe.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-authz-disabled-tainted",
       "description": "Disabling authorization in route config should be detected",
       "fixture": "./tests/fixtures/js-authz-disabled-tainted.js",
-      "changedFiles": ["src/authz-disabled-tainted.js"],
+      "changedFiles": [
+        "src/authz-disabled-tainted.js"
+      ],
       "expectedRuleIds": [
         "builtin-authz-check-disabled"
       ]
@@ -176,14 +216,18 @@
       "id": "js-authz-disabled-safe",
       "description": "Enabled authorization in route config should remain clean",
       "fixture": "./tests/fixtures/js-authz-disabled-safe.js",
-      "changedFiles": ["src/authz-disabled-safe.js"],
+      "changedFiles": [
+        "src/authz-disabled-safe.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-idor-tainted",
       "description": "Direct object lookups from request identifiers should be detected",
       "fixture": "./tests/fixtures/js-idor-tainted.js",
-      "changedFiles": ["src/idor-tainted.js"],
+      "changedFiles": [
+        "src/idor-tainted.js"
+      ],
       "expectedRuleIds": [
         "builtin-idor-direct-object-reference"
       ]
@@ -192,14 +236,18 @@
       "id": "js-idor-safe",
       "description": "Lookups from trusted scoped identifiers should remain clean",
       "fixture": "./tests/fixtures/js-idor-safe.js",
-      "changedFiles": ["src/idor-safe.js"],
+      "changedFiles": [
+        "src/idor-safe.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-idor-helper-tainted",
       "description": "Helper lookups by request identifier should be detected",
       "fixture": "./tests/fixtures/js-idor-helper-tainted.js",
-      "changedFiles": ["src/idor-helper-tainted.js"],
+      "changedFiles": [
+        "src/idor-helper-tainted.js"
+      ],
       "expectedRuleIds": [
         "builtin-idor-direct-object-reference"
       ]
@@ -208,14 +256,18 @@
       "id": "js-idor-helper-safe",
       "description": "Helper lookups from trusted scoped identifiers should remain clean",
       "fixture": "./tests/fixtures/js-idor-helper-safe.js",
-      "changedFiles": ["src/idor-helper-safe.js"],
+      "changedFiles": [
+        "src/idor-helper-safe.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-template-render-tainted",
       "description": "Server-side template rendering from request input should be detected",
       "fixture": "./tests/fixtures/js-template-render-tainted.js",
-      "changedFiles": ["src/template-render-tainted.js"],
+      "changedFiles": [
+        "src/template-render-tainted.js"
+      ],
       "expectedRuleIds": [
         "builtin-template-render-user-input"
       ]
@@ -224,14 +276,18 @@
       "id": "js-template-render-safe",
       "description": "Trusted server-side template rendering should remain clean",
       "fixture": "./tests/fixtures/js-template-render-safe.js",
-      "changedFiles": ["src/template-render-safe.js"],
+      "changedFiles": [
+        "src/template-render-safe.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-template-render-string-tainted",
       "description": "Template source strings from request input should be detected",
       "fixture": "./tests/fixtures/js-template-render-string-tainted.js",
-      "changedFiles": ["src/template-render-string-tainted.js"],
+      "changedFiles": [
+        "src/template-render-string-tainted.js"
+      ],
       "expectedRuleIds": [
         "builtin-template-render-user-input"
       ]
@@ -240,28 +296,36 @@
       "id": "js-template-render-string-safe",
       "description": "Trusted template source strings should remain clean",
       "fixture": "./tests/fixtures/js-template-render-string-safe.js",
-      "changedFiles": ["src/template-render-string-safe.js"],
+      "changedFiles": [
+        "src/template-render-string-safe.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-fetch-sanitized",
       "description": "Explicit URL sanitizer wrapper should suppress SSRF semantic finding",
       "fixture": "./tests/fixtures/js-fetch-sanitized.js",
-      "changedFiles": ["src/js-fetch-sanitized.js"],
+      "changedFiles": [
+        "src/js-fetch-sanitized.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "js-path-sanitized",
       "description": "Explicit relative path sanitizer wrapper should suppress path semantic finding",
       "fixture": "./tests/fixtures/js-path-sanitized.js",
-      "changedFiles": ["src/js-path-sanitized.js"],
+      "changedFiles": [
+        "src/js-path-sanitized.js"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "ts-exec-tainted",
       "description": "TS tainted request input into exec should be detected",
       "fixture": "./tests/fixtures/ts-exec-tainted.ts",
-      "changedFiles": ["src/ts-exec-tainted.ts"],
+      "changedFiles": [
+        "src/ts-exec-tainted.ts"
+      ],
       "expectedRuleIds": [
         "semantic-js-exec-tainted-input"
       ]
@@ -270,7 +334,9 @@
       "id": "ts-fetch-tainted",
       "description": "TS tainted request input into fetch should be detected",
       "fixture": "./tests/fixtures/ts-fetch-tainted.ts",
-      "changedFiles": ["src/ts-fetch-tainted.ts"],
+      "changedFiles": [
+        "src/ts-fetch-tainted.ts"
+      ],
       "expectedRuleIds": [
         "semantic-js-fetch-tainted-url"
       ]
@@ -279,21 +345,27 @@
       "id": "ts-safe-flow",
       "description": "Non-request TS flow should remain clean",
       "fixture": "./tests/fixtures/ts-safe-flow.ts",
-      "changedFiles": ["src/ts-safe-flow.ts"],
+      "changedFiles": [
+        "src/ts-safe-flow.ts"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "ts-fetch-sanitized",
       "description": "Explicit TS URL sanitizer wrapper should suppress SSRF semantic finding",
       "fixture": "./tests/fixtures/ts-fetch-sanitized.ts",
-      "changedFiles": ["src/ts-fetch-sanitized.ts"],
+      "changedFiles": [
+        "src/ts-fetch-sanitized.ts"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "py-pickle-dangerous",
       "description": "Python pickle deserialization should be detected",
       "fixture": "./tests/fixtures/py-pickle-dangerous.py",
-      "changedFiles": ["src/pickle-dangerous.py"],
+      "changedFiles": [
+        "src/pickle-dangerous.py"
+      ],
       "expectedRuleIds": [
         "builtin-python-pickle-load"
       ]
@@ -302,7 +374,9 @@
       "id": "py-torch-dangerous",
       "description": "Python torch model deserialization should be detected",
       "fixture": "./tests/fixtures/py-torch-dangerous.py",
-      "changedFiles": ["src/torch-dangerous.py"],
+      "changedFiles": [
+        "src/torch-dangerous.py"
+      ],
       "expectedRuleIds": [
         "builtin-python-torch-load"
       ]
@@ -311,14 +385,18 @@
       "id": "py-safe-json",
       "description": "Safe Python JSON loading should remain clean",
       "fixture": "./tests/fixtures/py-safe-json.py",
-      "changedFiles": ["src/py-safe-json.py"],
+      "changedFiles": [
+        "src/py-safe-json.py"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "py-yaml-dangerous",
       "description": "Python yaml.load should be detected",
       "fixture": "./tests/fixtures/py-yaml-dangerous.py",
-      "changedFiles": ["src/yaml-dangerous.py"],
+      "changedFiles": [
+        "src/yaml-dangerous.py"
+      ],
       "expectedRuleIds": [
         "builtin-unsafe-yaml-load"
       ]
@@ -327,14 +405,18 @@
       "id": "py-yaml-safe",
       "description": "Python yaml.safe_load should remain clean",
       "fixture": "./tests/fixtures/py-yaml-safe.py",
-      "changedFiles": ["src/py-yaml-safe.py"],
+      "changedFiles": [
+        "src/py-yaml-safe.py"
+      ],
       "expectedRuleIds": []
     },
     {
       "id": "py-subprocess-shell-dangerous",
       "description": "Python subprocess with shell=True should be detected",
       "fixture": "./tests/fixtures/py-subprocess-shell-dangerous.py",
-      "changedFiles": ["src/subprocess-shell-dangerous.py"],
+      "changedFiles": [
+        "src/subprocess-shell-dangerous.py"
+      ],
       "expectedRuleIds": [
         "builtin-python-subprocess-shell-true"
       ]
@@ -343,7 +425,9 @@
       "id": "py-os-system-dangerous",
       "description": "Python os.system should be detected",
       "fixture": "./tests/fixtures/py-os-system-dangerous.py",
-      "changedFiles": ["src/os-system-dangerous.py"],
+      "changedFiles": [
+        "src/os-system-dangerous.py"
+      ],
       "expectedRuleIds": [
         "builtin-python-os-system"
       ]
@@ -352,7 +436,9 @@
       "id": "py-os-popen-dangerous",
       "description": "Python os.popen should be detected",
       "fixture": "./tests/fixtures/py-os-popen-dangerous.py",
-      "changedFiles": ["src/os-popen-dangerous.py"],
+      "changedFiles": [
+        "src/os-popen-dangerous.py"
+      ],
       "expectedRuleIds": [
         "builtin-python-os-popen"
       ]
@@ -361,7 +447,9 @@
       "id": "py-subprocess-getoutput-dangerous",
       "description": "Python subprocess.getoutput should be detected",
       "fixture": "./tests/fixtures/py-subprocess-getoutput-dangerous.py",
-      "changedFiles": ["src/subprocess-getoutput-dangerous.py"],
+      "changedFiles": [
+        "src/subprocess-getoutput-dangerous.py"
+      ],
       "expectedRuleIds": [
         "builtin-python-subprocess-output-shell"
       ]
@@ -370,7 +458,9 @@
       "id": "py-subprocess-safe",
       "description": "Python subprocess without shell=True should remain clean",
       "fixture": "./tests/fixtures/py-subprocess-safe.py",
-      "changedFiles": ["src/py-subprocess-safe.py"],
+      "changedFiles": [
+        "src/py-subprocess-safe.py"
+      ],
       "expectedRuleIds": []
     },
     {
@@ -378,7 +468,9 @@
       "description": "Checkpoint review should inspect a one-hop imported local helper",
       "reviewMode": "checkpoint",
       "repoRoot": "./tests/fixtures/checkpoint-repo",
-      "changedFiles": ["src/feature.js"],
+      "changedFiles": [
+        "src/feature.js"
+      ],
       "layer": "commit",
       "expectedRuleIds": [
         "builtin-dangerous-child-process-shell-true"
@@ -389,7 +481,9 @@
       "description": "Safe imported local helper should remain clean during checkpoint review",
       "reviewMode": "checkpoint",
       "repoRoot": "./tests/fixtures/checkpoint-safe-repo",
-      "changedFiles": ["src/feature.js"],
+      "changedFiles": [
+        "src/feature.js"
+      ],
       "layer": "commit",
       "expectedRuleIds": []
     },
@@ -398,7 +492,9 @@
       "description": "Checkpoint review should inspect bounded adjacent auth or config context",
       "reviewMode": "checkpoint",
       "repoRoot": "./tests/fixtures/checkpoint-adjacent-repo",
-      "changedFiles": ["src/routes/admin.js"],
+      "changedFiles": [
+        "src/routes/admin.js"
+      ],
       "layer": "commit",
       "expectedRuleIds": [
         "builtin-hardcoded-secret-token"
@@ -409,7 +505,9 @@
       "description": "Checkpoint review should ignore unrelated nearby generated files",
       "reviewMode": "checkpoint",
       "repoRoot": "./tests/fixtures/checkpoint-adjacent-safe-repo",
-      "changedFiles": ["src/routes/admin.js"],
+      "changedFiles": [
+        "src/routes/admin.js"
+      ],
       "layer": "commit",
       "expectedRuleIds": []
     },
@@ -418,11 +516,74 @@
       "description": "Checkpoint review should follow imports beyond one hop within the configured depth budget",
       "reviewMode": "checkpoint",
       "repoRoot": "./tests/fixtures/checkpoint-deep-repo",
-      "changedFiles": ["src/feature.js"],
+      "changedFiles": [
+        "src/feature.js"
+      ],
       "layer": "commit",
       "expectedRuleIds": [
         "builtin-eval-detected"
       ]
+    },
+    {
+      "id": "js-express-authz-tainted",
+      "description": "Express bypass from request flag should be detected",
+      "fixture": "./tests/fixtures/js-express-authz-tainted.js",
+      "changedFiles": [
+        "src/express-authz-tainted.js"
+      ],
+      "expectedRuleIds": [
+        "builtin-auth-bypass-flag",
+        "builtin-express-authz-bypass-query-flag"
+      ]
+    },
+    {
+      "id": "js-express-authz-safe",
+      "description": "Express authz checks without bypass should remain clean",
+      "fixture": "./tests/fixtures/js-express-authz-safe.js",
+      "changedFiles": [
+        "src/express-authz-safe.js"
+      ],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "py-fastapi-ssrf-tainted",
+      "description": "FastAPI request-derived outbound URL should be detected",
+      "fixture": "./tests/fixtures/py-fastapi-ssrf-tainted.py",
+      "changedFiles": [
+        "src/py-fastapi-ssrf-tainted.py"
+      ],
+      "expectedRuleIds": [
+        "builtin-fastapi-ssrf-request-url"
+      ]
+    },
+    {
+      "id": "py-fastapi-ssrf-safe",
+      "description": "FastAPI fixed outbound URL should remain clean",
+      "fixture": "./tests/fixtures/py-fastapi-ssrf-safe.py",
+      "changedFiles": [
+        "src/py-fastapi-ssrf-safe.py"
+      ],
+      "expectedRuleIds": []
+    },
+    {
+      "id": "py-django-template-tainted",
+      "description": "Django from_string with request input should be detected",
+      "fixture": "./tests/fixtures/py-django-template-tainted.py",
+      "changedFiles": [
+        "src/py-django-template-tainted.py"
+      ],
+      "expectedRuleIds": [
+        "builtin-django-template-from-string-request"
+      ]
+    },
+    {
+      "id": "py-django-template-safe",
+      "description": "Django loader with static template should remain clean",
+      "fixture": "./tests/fixtures/py-django-template-safe.py",
+      "changedFiles": [
+        "src/py-django-template-safe.py"
+      ],
+      "expectedRuleIds": []
     }
   ]
 }
