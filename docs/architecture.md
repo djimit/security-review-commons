@@ -9,7 +9,7 @@ Build a portable security-review system that preserves a three-layer review mode
 ### Layer 1: Deterministic Edit Warning
 
 - Triggered by file edit or write-adjacent events.
-- Uses only deterministic pattern rules.
+- Uses deterministic pattern rules plus lightweight JS/TS semantic sink checks.
 - Must be cheap, fast, and additive.
 
 ### Layer 2: Turn Diff Review
@@ -33,6 +33,7 @@ Build a portable security-review system that preserves a three-layer review mode
 - `findings.js` creates stable finding objects.
 - `rules.js` defines built-in deterministic rules.
 - `patterns.js` evaluates deterministic rules over diffs and file paths.
+- `js-semantic.js` adds lightweight JS/TS taint-to-sink checks for changed files.
 - `suppressions.js` applies owner- and expiry-bound suppressions.
 - `sarif.js` emits CI- and IDE-friendly result bundles.
 - `review.js` orchestrates capped review and audit logging.

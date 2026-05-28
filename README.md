@@ -17,7 +17,7 @@ This repository implements the first vertical slice:
 - a runnable CLI,
 - OpenCode hook mapping with explicit payload normalizers for documented events,
 - explicit Codex edit, turn, and checkpoint entrypoints,
-- deterministic coverage for CI, containers, Terraform, and dependency-governance drift,
+- deterministic coverage for CI, containers, Terraform, dependency-governance drift, selected web sinks, and Python deserialization hazards,
 - CI for lint and tests.
 
 It does not claim security guarantees. It is a review assistant with explicit trust boundaries.
