@@ -1,6 +1,6 @@
 {
   "name": "security-review-commons",
-  "description": "Portable security review hooks for Claude Code, backed by deterministic review, checkpoint review, and auditable findings.",
+  "description": "Portable security review hooks backed by deterministic review, checkpoint review, and auditable findings.",
   "version": "0.1.0",
   "homepage": "https://github.com/djimit/security-review-commons",
   "repository": "https://github.com/djimit/security-review-commons",

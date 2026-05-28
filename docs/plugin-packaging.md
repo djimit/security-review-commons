@@ -1,14 +1,14 @@
-# Claude Plugin Packaging
+# Plugin Packaging
 
 ## Status
 
-`security-review-commons` now ships a first-class Claude-compatible plugin wrapper around the shared review core:
+`security-review-commons` now ships a host plugin wrapper around the shared review core:
 
 - plugin manifest at `.claude-plugin/plugin.json`
 - hook config at `hooks/hooks.json`
-- hook command entrypoint at `bin/claude-security-hook.js`
+- hook command entrypoint at `bin/plugin-security-hook.js`
 
-The plugin packaging stays thin. All review logic still routes through the shared core in `src/core/`.
+The packaging stays thin. All review logic still routes through the shared core in `src/core/`.
 
 ## Current Hook Surface
 
@@ -32,7 +32,7 @@ The plugin packaging stays thin. All review logic still routes through the share
 Validate the packaged hook entrypoints with the local replay tests:
 
 ```bash
-node --test tests/claude-plugin.test.js
+node --test tests/plugin-hooks.test.js
 ```
 
 Run the full repository gate:
@@ -49,17 +49,19 @@ npm run pack:dry-run
 
 ## Install Notes
 
-For a local Claude Code install, point Claude Code at the repository root as the plugin root so the default paths resolve:
+For a local plugin install, point the host runtime at the repository root so the default paths resolve:
 
 - `.claude-plugin/plugin.json`
 - `hooks/hooks.json`
-- `bin/claude-security-hook.js`
+- `bin/plugin-security-hook.js`
 
-The plugin expects:
+The current host plugin contract expects:
 
 - `node` to be available on `PATH`
 - `CLAUDE_PLUGIN_ROOT` to point at the plugin root
-- `CLAUDE_PROJECT_DIR` to point at the active project when Claude Code provides it
+- `CLAUDE_PROJECT_DIR` to point at the active project when the host provides it
+
+Those environment variable names are host-defined and remain unchanged here.
 
 ## Debug Notes
 
@@ -70,5 +72,5 @@ The plugin expects:
 ## Known Gaps
 
 - No model-backed `Stop` review yet
-- No captured live Claude runtime fixtures yet; current replay tests use synthetic payloads
+- No captured live runtime fixtures yet; current replay tests use synthetic payloads
 - No bounded multi-file checkpoint collector beyond the existing checkpoint review core

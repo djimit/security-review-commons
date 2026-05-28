@@ -23,7 +23,7 @@ It does not claim security guarantees. It is a review assistant with explicit tr
 
 ## Design Goals
 
-- Match the public Anthropic `security-guidance` architecture:
+- Preserve a three-layer review model:
   - deterministic per-edit warnings,
   - background end-of-turn diff review,
   - deeper commit and push review.
@@ -37,7 +37,7 @@ It does not claim security guarantees. It is a review assistant with explicit tr
 - `src/core/` shared review logic
 - `src/adapters/opencode/` OpenCode integration scaffold
 - `src/adapters/codex/` Codex integration scaffold
-- `.claude-plugin/`, `hooks/`, `bin/` Claude-compatible plugin packaging
+- `.claude-plugin/`, `hooks/`, `bin/` host plugin packaging
 - `.github/workflows/` CI
 - `schemas/` JSON Schemas
 - `examples/` sample additive policy and custom patterns
@@ -88,10 +88,10 @@ Run the baseline corpus:
 npm run corpus
 ```
 
-Run the packaged Claude hook replay tests:
+Run the packaged plugin hook replay tests:
 
 ```bash
-node --test tests/claude-plugin.test.js
+node --test tests/plugin-hooks.test.js
 ```
 
 ## Trust Boundaries
@@ -105,7 +105,7 @@ node --test tests/claude-plugin.test.js
 ## Current Limitations
 
 - OpenCode payload normalization is fixture-backed, but host runtime payload capture is still synthetic rather than collected from a live session.
-- Claude-compatible plugin packaging now exists, but replay tests are still synthetic rather than captured from a live Claude Code session.
+- Host plugin packaging now exists, but replay tests are still synthetic rather than captured from a live session.
 - Codex still does not claim native background hook or native git interception parity.
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
 - Checkpoint review expands only one hop of local JS/TS import context and does not attempt full inter-file taint tracking.
@@ -137,4 +137,4 @@ node --test tests/claude-plugin.test.js
 
 - tag a release as `v<version>` to trigger `.github/workflows/release.yml`
 - the workflow runs checks, creates an npm tarball, publishes a GitHub release, and publishes to npm only when `NPM_TOKEN` is configured
-- see [docs/claude-plugin.md](./docs/claude-plugin.md) for the current Claude-compatible plugin surface and debug notes
+- see [docs/plugin-packaging.md](./docs/plugin-packaging.md) for the current plugin surface and debug notes

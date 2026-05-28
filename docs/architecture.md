@@ -2,7 +2,7 @@
 
 ## Problem
 
-Build a portable security-review system that preserves Anthropic's three-layer review model without binding the core logic to a single coding agent runtime.
+Build a portable security-review system that preserves a three-layer review model without binding the core logic to a single coding agent runtime.
 
 ## Layers
 
