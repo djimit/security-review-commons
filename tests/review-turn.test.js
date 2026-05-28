@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { runTurnReview } from "../src/core/review.js";
+import { createCommandTurnReviewer } from "../src/plugin/command-turn-reviewer.js";
 
 test("turn review falls back to deterministic findings when model review is disabled", async () => {
   const result = await runTurnReview({
@@ -78,6 +79,63 @@ test("turn review skips entirely when the turn layer is disabled", async () => {
   assert.equal(result.modelReview.status, "disabled-by-layer");
   assert.equal(result.reviewContext, null);
   assert.match(result.auditEvent, /"skipped":true/);
+});
+
+test("command reviewer rejects relative executable paths", async () => {
+  assert.throws(
+    () =>
+      createCommandTurnReviewer({
+        turnReview: {
+          enabled: true,
+          timeoutMs: 5_000,
+          commandAllowlist: [],
+          command: { executable: "./mock-reviewer.js", args: [] }
+        }
+      }),
+    /absolute path/i
+  );
+});
+
+test("command reviewer fails safely on invalid JSON output", async () => {
+  const reviewer = createCommandTurnReviewer({
+    turnReview: {
+      enabled: true,
+      timeoutMs: 5_000,
+      commandAllowlist: [{ id: "node", executable: process.execPath }],
+      command: {
+        id: "node",
+        args: ["-e", "process.stdout.write('not-json')"]
+      }
+    }
+  });
+
+  await assert.rejects(
+    reviewer({
+      context: { prompt: "p", diff: "d", changedFiles: [] }
+    }),
+    /parse failed/
+  );
+});
+
+test("command reviewer enforces timeout floor and captures timeout failures", async () => {
+  const reviewer = createCommandTurnReviewer({
+    turnReview: {
+      enabled: true,
+      timeoutMs: 1,
+      commandAllowlist: [{ id: "node", executable: process.execPath }],
+      command: {
+        id: "node",
+        args: ["-e", "setTimeout(() => process.stdout.write('{\"findings\":[]}'), 1500)"]
+      }
+    }
+  });
+
+  await assert.rejects(
+    reviewer({
+      context: { prompt: "p", diff: "d", changedFiles: [] }
+    }),
+    /execution failed/
+  );
 });
 
 test("turn review skips entirely when the turn layer is disabled", async () => {
