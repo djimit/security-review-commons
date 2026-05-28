@@ -39,3 +39,4 @@ These constraints still create the main host-runtime drift risks:
 5. Host plugin packaging exists, including an opt-in Stop-hook path, but replay tests remain synthetic rather than captured from a live session.
 6. Codex integration remains explicit-entrypoint based. Native background lifecycle parity is still not claimed.
 7. Guidance files load in user, project, and local order when present and merge additively into the shared config.
+8. Runtime layer kill switches, debug mode, and review caps are verified through CLI and plugin replay tests, with debug output constrained to metadata-only stderr events.

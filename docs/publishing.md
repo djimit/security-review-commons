@@ -37,6 +37,7 @@ The CI workflow now publishes:
 - a sample SARIF artifact
 - a Markdown summary artifact
 - a corpus report artifact tied to the baseline fixture set
+- a benchmark script and baseline result artifact that record current local hits, misses, false positives, and unresolved comparative gaps
 
 ## Release Workflow
 

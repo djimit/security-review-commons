@@ -95,6 +95,12 @@ Run the baseline corpus:
 npm run corpus
 ```
 
+Run the comparative baseline benchmark harness:
+
+```bash
+npm run benchmark
+```
+
 Run the packaged plugin hook replay tests:
 
 ```bash
@@ -118,12 +124,13 @@ node --test tests/plugin-hooks.test.js
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
 - Checkpoint review now expands one hop of local JS/TS imports plus bounded adjacent auth/config/router/middleware context, but it still does not attempt full inter-file taint tracking.
 - Command-based turn review depends on an external reviewer executable when enabled; no built-in provider client ships in this slice.
+- Comparative benchmark output is now generated locally, but external comparator results are still recorded as unresolved until verified against a live baseline run.
 - npm publish requires `NPM_TOKEN` to be configured in GitHub Actions.
 
 ## Current Rule Coverage
 
-- application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets
-- parser-backed JS/TS semantic flow checks: request-derived values into `exec`, `eval`, `fetch`, and `path.join/resolve`
+- application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets, open redirect, DOM HTML injection, Python `pickle`, and `torch.load`
+- parser-backed JS/TS semantic flow checks: request-derived values into `exec`, `eval`, `fetch`, redirect targets, and `path.join/resolve`
 - conservative sanitizer-aware suppression for explicit wrappers like `validateUrl`, `assertAllowedUrl`, and `sanitizeRelativePath`
 - CI and workflow drift: `pull_request_target`, `permissions: write-all`, `curl | sh`
 - container and IaC drift: Docker root runtime, Kubernetes privileged/root execution, Terraform public SSH ingress
@@ -134,6 +141,7 @@ node --test tests/plugin-hooks.test.js
 - `tests/corpus/basic.json` defines a baseline corpus of representative fixtures and expected rule IDs
 - `npm run corpus` validates that the published rule set still catches that baseline and fails on corpus mismatches
 - corpus reports now include benchmark-style pass summaries by review mode, layer, and expected rule coverage
+- `benchmarks/manifest.json` and `npm run benchmark` generate a comparative-ready baseline report with hits, misses, false positives, and unresolved external gaps
 - CI uploads SARIF, a Markdown summary, and a corpus report as build artifacts
 - `tests/config.test.js` verifies additive guidance-file precedence and explicit config merging
 
@@ -143,6 +151,8 @@ node --test tests/plugin-hooks.test.js
   exits non-zero when a finding at or above `high` is present
 - `node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus`
   exits non-zero when any corpus case deviates from expected findings
+- `node ./src/cli.js --debug --enabled-layers edit,commit,push --diff-file <file> --changed-files <paths>`
+  emits metadata-only debug output on stderr and surfaces skipped-layer audit metadata when a layer is disabled
 
 ## Release
 
