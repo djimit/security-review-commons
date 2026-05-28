@@ -11,7 +11,7 @@
 
 ## What Is Still Not Proven Complete
 
-These remaining gaps are outside the current local repository state or require an external state change:
+These remaining gaps are outside the current repository state or require an additional external state change:
 
 1. Live host-captured runtime fixtures
    - Current checked-in runtime fixtures are still synthetic.
@@ -22,17 +22,18 @@ These remaining gaps are outside the current local repository state or require a
    - Comparator sidecar entries remain explicitly unresolved until a real external baseline run is captured and reviewed.
 
 3. Tagged source release execution
-   - The release workflow is present and verified textually.
-   - No `v*` tag has been cut in the current local state, so no actual GitHub release run is proven here.
+   - Source tag `v0.2.0` has been cut and the GitHub `Release` workflow completed successfully.
+   - The published release includes the tarball plus benchmark, comparator, and runtime-fixture artifacts.
+   - npm publication was not performed from that source-release path.
 
 4. npm publication
    - Publication is intentionally gated on `NPM_TOKEN` and explicit manual workflow dispatch confirmation.
    - No live publish is proven in the current local state.
 
-5. Parent-repo OpenSpec commit
-   - The matching `openspec` task-status file has been updated locally.
-   - The parent `/Users/dlandman` git repo failed creating `.git/index.lock`, so that status update is not yet committed.
+5. Parent-repo OpenSpec synchronization
+   - The parent OpenSpec change has been pushed to the separate governance remote.
+   - Further task-state updates may still be needed as runtime capture and comparator work complete.
 
 ## Current End-State Assessment
 
-The repository is internally consistent and locally verified for the implemented phase-4 local scope. The remaining blockers are operational proof and external-state execution, not missing local code paths.
+The repository is internally consistent, the `v0.2.0` source release path has been proven, and the remaining blockers are live runtime proof, comparator resolution, and any future npm publication decision.
