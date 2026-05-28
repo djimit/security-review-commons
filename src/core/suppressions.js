@@ -1,3 +1,8 @@
+import { BUILTIN_RULES } from "./rules.js";
+
+const SEVERITY_ORDER = { low: 0, medium: 1, high: 2, critical: 3 };
+const RULE_SEVERITY_BY_ID = new Map(BUILTIN_RULES.map((rule) => [rule.id, rule.severity]));
+
 function isIsoDateString(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
@@ -10,6 +15,14 @@ function isExpired(expiresOn) {
   return Number.isNaN(expiry.getTime()) ? false : Date.now() > expiry.getTime();
 }
 
+function suppressionSeverity(ruleId) {
+  return RULE_SEVERITY_BY_ID.get(ruleId) ?? "low";
+}
+
+function isHighOrCritical(severity) {
+  return (SEVERITY_ORDER[severity] ?? 0) >= SEVERITY_ORDER.high;
+}
+
 export function normalizeSuppressions(rawSuppressions = []) {
   if (!Array.isArray(rawSuppressions)) {
     throw new Error("suppressions must be an array");
@@ -19,7 +32,16 @@ export function normalizeSuppressions(rawSuppressions = []) {
     if (typeof entry !== "object" || entry === null) {
       throw new Error(`suppressions[${index}] must be an object`);
     }
-    const { ruleId, pathRegex, expiresOn, owner, justification } = entry;
+    const {
+      ruleId,
+      pathRegex,
+      expiresOn,
+      owner,
+      justification,
+      approvedBy,
+      ticket,
+      createdOn
+    } = entry;
     if (typeof ruleId !== "string" || ruleId.length === 0) {
       throw new Error(`suppressions[${index}].ruleId must be a non-empty string`);
     }
@@ -36,15 +58,71 @@ export function normalizeSuppressions(rawSuppressions = []) {
         `suppressions[${index}].expiresOn must use YYYY-MM-DD format`
       );
     }
+    if (createdOn && !isIsoDateString(createdOn)) {
+      throw new Error(
+        `suppressions[${index}].createdOn must use YYYY-MM-DD format`
+      );
+    }
 
     return {
       ruleId,
       owner,
       justification,
+      approvedBy: approvedBy ?? null,
+      ticket: ticket ?? null,
+      createdOn: createdOn ?? null,
       expiresOn: expiresOn ?? null,
+      severity: suppressionSeverity(ruleId),
       compiledPathRegex: pathRegex ? new RegExp(pathRegex, "i") : null
     };
   });
+}
+
+export function validateSuppressionGovernance(suppressions) {
+  const violations = [];
+
+  suppressions.forEach((suppression, index) => {
+    if (isExpired(suppression.expiresOn)) {
+      violations.push({
+        index,
+        ruleId: suppression.ruleId,
+        kind: "expired",
+        message: `suppressions[${index}] is expired`
+      });
+    }
+
+    if (isHighOrCritical(suppression.severity) && !suppression.expiresOn) {
+      violations.push({
+        index,
+        ruleId: suppression.ruleId,
+        kind: "missing-expiresOn",
+        message:
+          `suppressions[${index}].expiresOn is required for high/critical suppressions`
+      });
+    }
+
+    if (!suppression.approvedBy || !suppression.ticket || !suppression.createdOn) {
+      violations.push({
+        index,
+        ruleId: suppression.ruleId,
+        kind: "missing-metadata",
+        message:
+          `suppressions[${index}] must include approvedBy, ticket, and createdOn`
+      });
+    }
+
+    if (suppression.severity === "critical" && !/@/.test(suppression.owner)) {
+      violations.push({
+        index,
+        ruleId: suppression.ruleId,
+        kind: "missing-owner-domain-policy",
+        message:
+          `suppressions[${index}] on critical rules must use an owner with domain policy (example: team@example.com)`
+      });
+    }
+  });
+
+  return violations;
 }
 
 export function applySuppressions(findings, suppressions) {
@@ -71,6 +149,9 @@ export function applySuppressions(findings, suppressions) {
         suppression: {
           owner: matchedSuppression.owner,
           justification: matchedSuppression.justification,
+          approvedBy: matchedSuppression.approvedBy,
+          ticket: matchedSuppression.ticket,
+          createdOn: matchedSuppression.createdOn,
           expiresOn: matchedSuppression.expiresOn
         }
       });
@@ -82,4 +163,3 @@ export function applySuppressions(findings, suppressions) {
 
   return { activeFindings, suppressedFindings };
 }
-

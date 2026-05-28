@@ -48,7 +48,10 @@ test("loadConfig accepts suppression metadata", () => {
         ruleId: "builtin-path-join-user-input",
         owner: "security-team",
         justification: "Test suppression coverage",
-        expiresOn: "2027-01-31"
+        expiresOn: "2027-01-31",
+        approvedBy: "lead@example.com",
+        ticket: "SEC-123",
+        createdOn: "2026-05-01"
       }
     ]
   });
