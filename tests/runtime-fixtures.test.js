@@ -86,6 +86,38 @@ test("runtime fixture capture script writes a scrubbed fixture and manifest entr
   assert.equal(manifest.entries[0].source, "captured-live");
 });
 
+test("runtime capture batch script prepares a worksheet and intake directories", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-runtime-batch-"));
+  const output = execFileSync(
+    "node",
+    [
+      "./scripts/create-runtime-capture-batch.js",
+      "--base-dir",
+      repoRoot,
+      "--output-dir",
+      tempDir
+    ],
+    {
+      cwd: repoRoot,
+      encoding: "utf8"
+    }
+  );
+
+  const summary = JSON.parse(output);
+  const worksheetPath = path.join(tempDir, "runtime-capture-worksheet.md");
+
+  assert.equal(summary.outputDir, tempDir);
+  assert.equal(fs.existsSync(path.join(tempDir, "raw")), true);
+  assert.equal(fs.existsSync(path.join(tempDir, "accepted")), true);
+  assert.equal(fs.existsSync(path.join(tempDir, "rejected")), true);
+  assert.equal(fs.existsSync(worksheetPath), true);
+  assert.match(fs.readFileSync(worksheetPath, "utf8"), /Created:/);
+  assert.match(
+    fs.readFileSync(worksheetPath, "utf8"),
+    /# Runtime Capture Worksheet/
+  );
+});
+
 test("runtime fixture scrubbing removes obvious secrets and absolute paths", () => {
   const scrubbed = scrubRuntimeFixture({
     cwd: "/Users/example/project",

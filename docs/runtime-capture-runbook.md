@@ -42,6 +42,19 @@ The goal is to replace or supplement the current synthetic fixtures with scrubbe
 
 ## Capture Checklist
 
+Before the first event in a session, create a batch workspace:
+
+```bash
+npm run capture:batch -- --output-dir /tmp/runtime-capture-2026-05-29
+```
+
+This creates:
+
+- `raw/` for unsanitized payloads that should stay outside the repo
+- `accepted/` for notes about fixtures you intend to check in
+- `rejected/` for payloads or attempts you decided not to keep
+- a copy of the worksheet for that capture batch
+
 For each event:
 
 1. Trigger the real runtime event once with a representative but non-sensitive test case.
