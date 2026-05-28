@@ -9,6 +9,7 @@ This repository implements the first vertical slice:
 - a shared finding schema and deterministic rule engine,
 - additive policy and reminder loading,
 - capped diff review,
+- async turn review with deterministic fallback and optional command-based model review,
 - checkpoint review over full changed-file contents with one-hop local JS/TS import context,
 - JSONL audit logging,
 - suppression governance with expiry and ownership,
@@ -82,6 +83,12 @@ Run checkpoint review against working tree files:
 node ./src/cli.js --review-mode checkpoint --repo-root ./tests/fixtures/checkpoint-repo --changed-files-file ./tests/fixtures/checkpoint-changed-files.txt --layer commit
 ```
 
+Run turn review with an optional configured reviewer:
+
+```bash
+node ./src/cli.js --review-mode turn --config ./tests/fixtures/turn-review.config.json --diff-file ./tests/fixtures/turn-review.diff --changed-files src/auth/flow.js --repo-root .
+```
+
 Run the baseline corpus:
 
 ```bash
@@ -105,10 +112,11 @@ node --test tests/plugin-hooks.test.js
 ## Current Limitations
 
 - OpenCode payload normalization is fixture-backed, but host runtime payload capture is still synthetic rather than collected from a live session.
-- Host plugin packaging now exists, but replay tests are still synthetic rather than captured from a live session.
+- Host plugin packaging now exists, including an opt-in `Stop` hook path for turn review, but replay tests are still synthetic rather than captured from a live session.
 - Codex still does not claim native background hook or native git interception parity.
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
 - Checkpoint review expands only one hop of local JS/TS import context and does not attempt full inter-file taint tracking.
+- Command-based turn review depends on an external reviewer executable when enabled; no built-in provider client ships in this slice.
 - npm publish requires `NPM_TOKEN` to be configured in GitHub Actions.
 
 ## Current Rule Coverage

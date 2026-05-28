@@ -92,3 +92,27 @@ test("CLI checkpoint mode reads working tree files from repoRoot", () => {
   assert.equal(parsed.findings.length, 1);
   assert.equal(parsed.findings[0].source.ruleId, "builtin-dangerous-child-process-shell-true");
 });
+
+test("CLI turn mode uses the configured command reviewer when enabled", () => {
+  const output = execFileSync(
+    "node",
+    [
+      "./src/cli.js",
+      "--review-mode",
+      "turn",
+      "--config",
+      "./tests/fixtures/turn-review.config.json",
+      "--diff-file",
+      "./tests/fixtures/turn-review.diff",
+      "--changed-files",
+      "src/auth/flow.js",
+      "--repo-root",
+      "."
+    ],
+    { cwd: repoRoot, encoding: "utf8" }
+  );
+
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.modelReview.status, "completed");
+  assert.equal(parsed.findings[0].source.ruleId, "model-turn-review-mock-fixture");
+});

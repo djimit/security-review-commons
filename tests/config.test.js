@@ -45,3 +45,20 @@ test("loadConfig accepts suppression metadata", () => {
 
   assert.equal(config.suppressions.length, 1);
 });
+
+test("loadConfig accepts turn review command metadata", () => {
+  const config = loadConfig({
+    turnReview: {
+      enabled: true,
+      provider: "mock",
+      model: "fixture",
+      command: {
+        executable: "node",
+        args: ["./tests/fixtures/mock-turn-reviewer.js"]
+      }
+    }
+  });
+
+  assert.equal(config.turnReview.enabled, true);
+  assert.equal(config.turnReview.command.executable, "node");
+});

@@ -18,7 +18,37 @@
       "properties": {
         "maxDiffBytes": { "type": "integer", "minimum": 1024 },
         "maxChangedFiles": { "type": "integer", "minimum": 1 },
-        "maxCustomPatterns": { "type": "integer", "minimum": 1 }
+        "maxCustomPatterns": { "type": "integer", "minimum": 1 },
+        "maxSuppressions": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "turnReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "provider": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] },
+        "minSeverityToBlock": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "maxModelDiffBytes": { "type": "integer", "minimum": 1024 },
+        "maxPromptChars": { "type": "integer", "minimum": 1024 },
+        "maxModelFindings": { "type": "integer", "minimum": 1 },
+        "timeoutMs": { "type": "integer", "minimum": 1000 },
+        "command": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["executable"],
+          "properties": {
+            "executable": { "type": "string" },
+            "args": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
       }
     },
     "repoGuidance": {

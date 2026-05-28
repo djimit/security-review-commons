@@ -1,0 +1,12 @@
+{
+  "turnReview": {
+    "enabled": true,
+    "provider": "mock",
+    "model": "fixture",
+    "minSeverityToBlock": "high",
+    "command": {
+      "executable": "node",
+      "args": ["./tests/fixtures/mock-turn-reviewer.js"]
+    }
+  }
+}

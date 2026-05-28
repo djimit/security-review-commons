@@ -3,16 +3,24 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import {
   runDeterministicReview,
+  runTurnReview,
   runCheckpointReview
 } from "../core/review.js";
 import { findingsMeetSeverityThreshold } from "../core/severity.js";
+import {
+  createCommandTurnReviewer,
+  loadTurnReviewConfigFromEnv
+} from "./command-turn-reviewer.js";
 
-export function handlePluginHook({ mode, input, env = process.env }) {
+export async function handlePluginHook({ mode, input, env = process.env }) {
   if (mode === "post-edit") {
     return handlePostEditHook({ input, env });
   }
   if (mode === "pre-bash") {
     return handlePreBashHook({ input, env });
+  }
+  if (mode === "stop-turn") {
+    return await handleStopTurnHook({ input, env });
   }
 
   throw new Error(`Unknown plugin hook mode: ${mode}`);
@@ -118,6 +126,55 @@ export function handlePreBashHook({ input, env = process.env }) {
   };
 }
 
+export async function handleStopTurnHook({ input, env = process.env }) {
+  const turnReviewConfig = loadTurnReviewConfigFromEnv(env);
+  if (!turnReviewConfig.enabled) {
+    return { continue: true };
+  }
+
+  const repoRoot = resolveGitRepoRoot({
+    env,
+    cwd: input?.cwd
+  });
+  if (!repoRoot) {
+    return { continue: true };
+  }
+
+  const diff = collectWorkingTreeDiff(repoRoot);
+  const changedFiles = collectWorkingTreeChangedFiles(repoRoot);
+  if (diff.length === 0 || changedFiles.length === 0) {
+    return { continue: true };
+  }
+
+  const result = await runTurnReview({
+    diff,
+    changedFiles,
+    repoRoot,
+    config: {
+      turnReview: turnReviewConfig
+    },
+    reviewer: createCommandTurnReviewer({
+      turnReview: turnReviewConfig,
+      env
+    })
+  });
+  if (!findingsMeetSeverityThreshold(
+    result.findings,
+    turnReviewConfig.minSeverityToBlock
+  )) {
+    return { continue: true };
+  }
+
+  return {
+    continue: true,
+    decision: "block",
+    reason: formatFindingsContext({
+      heading: `security-review-commons found ${result.findings.length} turn-review finding(s) before stopping`,
+      findings: result.findings
+    })
+  };
+}
+
 export function classifyGitCheckpoint(command) {
   if (/\bgit\s+push\b/i.test(command)) {
     return "push";
@@ -209,6 +266,43 @@ function collectCheckpointFiles({ repoRoot, action }) {
   }
 
   return [];
+}
+
+function collectWorkingTreeDiff(repoRoot) {
+  const diffParts = [];
+  for (const args of [
+    ["diff", "--no-ext-diff", "--unified=0", "HEAD"],
+    ["diff", "--no-ext-diff", "--cached", "--unified=0"]
+  ]) {
+    try {
+      const diffText = execFileSync("git", args, {
+        cwd: repoRoot,
+        encoding: "utf8"
+      });
+      if (diffText.trim().length > 0) {
+        diffParts.push(diffText);
+      }
+    } catch {
+      continue;
+    }
+  }
+  return diffParts.join("\n");
+}
+
+function collectWorkingTreeChangedFiles(repoRoot) {
+  const tracked = runGitFileList(repoRoot, [
+    "diff",
+    "--name-only",
+    "--diff-filter=ACMRTUXB",
+    "HEAD"
+  ]);
+  const untracked = runGitFileList(repoRoot, [
+    "ls-files",
+    "--others",
+    "--exclude-standard"
+  ]);
+
+  return [...new Set([...tracked, ...untracked])];
 }
 
 function resolveUpstreamRef(repoRoot) {

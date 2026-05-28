@@ -4,8 +4,10 @@ import path from "node:path";
 import process from "node:process";
 import {
   runDeterministicReview,
+  runTurnReview,
   runCheckpointReview
 } from "./core/review.js";
+import { createCommandTurnReviewer } from "./plugin/command-turn-reviewer.js";
 import { findingsToSarif } from "./core/sarif.js";
 import { runCorpus, corpusFailed, corpusToMarkdown } from "./core/corpus.js";
 import { findingsMeetSeverityThreshold } from "./core/severity.js";
@@ -90,7 +92,7 @@ function readChangedFiles(args) {
   return [...new Set([...inlineFiles, ...fileLines])];
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   const config = args.configFile ? readJsonFile(args.configFile) : {};
   const changedFiles = readChangedFiles(args);
@@ -113,6 +115,7 @@ function main() {
     return;
   }
 
+  const diff = readDiff(args);
   const result =
     args.reviewMode === "checkpoint"
       ? runCheckpointReview({
@@ -121,12 +124,22 @@ function main() {
           layer: args.layer,
           config
         })
-      : runDeterministicReview({
-          diff: readDiff(args),
-          changedFiles,
-          layer: args.layer,
-          config
-        });
+      : args.reviewMode === "turn"
+        ? await runTurnReview({
+            diff,
+            changedFiles,
+            repoRoot: args.repoRoot ?? process.cwd(),
+            config,
+            reviewer: createCommandTurnReviewer({
+              turnReview: config.turnReview
+            })
+          })
+        : runDeterministicReview({
+            diff,
+            changedFiles,
+            layer: args.layer,
+            config
+          });
 
   if (args.format === "sarif") {
     process.stdout.write(
@@ -155,4 +168,4 @@ function main() {
   }
 }
 
-main();
+await main();

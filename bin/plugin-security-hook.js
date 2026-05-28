@@ -11,5 +11,5 @@ if (!mode) {
 
 const stdin = fs.readFileSync(0, "utf8");
 const input = stdin.trim().length > 0 ? JSON.parse(stdin) : {};
-const response = handlePluginHook({ mode, input });
+const response = await handlePluginHook({ mode, input });
 process.stdout.write(`${JSON.stringify(response)}\n`);

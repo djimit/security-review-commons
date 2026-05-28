@@ -1,6 +1,7 @@
 export { loadConfig, DEFAULT_CONFIG } from "./core/config.js";
 export {
   runDeterministicReview,
+  runTurnReview,
   runCheckpointReview,
   runLayeredReview
 } from "./core/review.js";

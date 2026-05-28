@@ -27,6 +27,13 @@ The packaging stays thin. All review logic still routes through the shared core 
 - denies the tool call on `high` or `critical` findings
 - emits advisory context for lower-severity checkpoint findings
 
+### Stop
+
+- is opt-in through runtime environment controls
+- collects the current working-tree diff and changed file list
+- runs turn review with deterministic fallback and an optional command-based reviewer
+- blocks stopping when findings meet the configured severity threshold
+
 ## Local Validation
 
 Validate the packaged hook entrypoints with the local replay tests:
@@ -47,6 +54,12 @@ Dry-run the package contents:
 npm run pack:dry-run
 ```
 
+Run the full turn-review and Stop-hook verification path:
+
+```bash
+node --test tests/review-turn.test.js tests/plugin-hooks.test.js
+```
+
 ## Install Notes
 
 For a local plugin install, point the host runtime at the repository root so the default paths resolve:
@@ -63,6 +76,21 @@ The current host plugin contract expects:
 
 Those environment variable names are host-defined and remain unchanged here.
 
+## Runtime Controls
+
+Current turn-review controls are environment-driven:
+
+- `SECURITY_REVIEW_TURN_REVIEW_ENABLED=true`
+- `SECURITY_REVIEW_TURN_REVIEW_PROVIDER=<name>`
+- `SECURITY_REVIEW_TURN_REVIEW_MODEL=<name>`
+- `SECURITY_REVIEW_TURN_REVIEW_MIN_SEVERITY=high`
+- `SECURITY_REVIEW_TURN_REVIEW_COMMAND=<executable>`
+- `SECURITY_REVIEW_TURN_REVIEW_ARGS=<json-array-or-space-delimited-args>`
+- `SECURITY_REVIEW_TURN_REVIEW_TIMEOUT_MS=<milliseconds>`
+- `SECURITY_REVIEW_TURN_REVIEW_MAX_DIFF_BYTES=<bytes>`
+- `SECURITY_REVIEW_TURN_REVIEW_MAX_PROMPT_CHARS=<chars>`
+- `SECURITY_REVIEW_TURN_REVIEW_MAX_FINDINGS=<count>`
+
 ## Debug Notes
 
 - Hook commands read JSON input from stdin and print only a JSON object on stdout.
@@ -71,6 +99,6 @@ Those environment variable names are host-defined and remain unchanged here.
 
 ## Known Gaps
 
-- No model-backed `Stop` review yet
 - No captured live runtime fixtures yet; current replay tests use synthetic payloads
+- No built-in provider client ships in this slice; model-backed turn review depends on an external reviewer command
 - No bounded multi-file checkpoint collector beyond the existing checkpoint review core

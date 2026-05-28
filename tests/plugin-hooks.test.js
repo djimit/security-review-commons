@@ -25,6 +25,10 @@ test("Plugin manifest and hooks config exist and reference the packaged entrypoi
     hooksConfig.hooks.PreToolUse[0].hooks[0].command,
     /bin\/plugin-security-hook\.js/
   );
+  assert.match(
+    hooksConfig.hooks.Stop[0].hooks[0].command,
+    /bin\/plugin-security-hook\.js/
+  );
 });
 
 test("Plugin post-edit hook replays deterministic edit feedback through the packaged entrypoint", () => {
@@ -108,4 +112,59 @@ test("Plugin pre-bash hook blocks staged high-severity checkpoint findings", () 
     parsed.hookSpecificOutput.permissionDecisionReason,
     /Potential hardcoded credential/
   );
+});
+
+test("Plugin stop-turn hook blocks on configured turn-review findings", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-plugin-stop-hook-"));
+  const filePath = path.join(tempDir, "src/auth/flow.js");
+
+  execFileSync("git", ["init"], { cwd: tempDir, encoding: "utf8" });
+  execFileSync("git", ["config", "user.name", "Test User"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+  execFileSync("git", ["config", "user.email", "test@example.com"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, "export function auth() { return true; }\n");
+  execFileSync("git", ["add", "."], { cwd: tempDir, encoding: "utf8" });
+  execFileSync("git", ["commit", "-m", "baseline"], {
+    cwd: tempDir,
+    encoding: "utf8"
+  });
+
+  fs.writeFileSync(
+    filePath,
+    "export function auth(bypassAuth, user) {\n  if (bypassAuth) {\n    return user;\n  }\n}\n"
+  );
+
+  const output = execFileSync(
+    "node",
+    ["./bin/plugin-security-hook.js", "stop-turn"],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        CLAUDE_PROJECT_DIR: tempDir,
+        CLAUDE_PLUGIN_ROOT: repoRoot,
+        SECURITY_REVIEW_TURN_REVIEW_ENABLED: "true",
+        SECURITY_REVIEW_TURN_REVIEW_PROVIDER: "mock",
+        SECURITY_REVIEW_TURN_REVIEW_MODEL: "fixture",
+        SECURITY_REVIEW_TURN_REVIEW_COMMAND: "node",
+        SECURITY_REVIEW_TURN_REVIEW_ARGS:
+          JSON.stringify(["./tests/fixtures/mock-turn-reviewer.js"])
+      },
+      input: JSON.stringify({
+        hook_event_name: "Stop",
+        cwd: tempDir
+      })
+    }
+  );
+
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.decision, "block");
+  assert.match(parsed.reason, /authorization bypass/i);
 });

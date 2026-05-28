@@ -3,7 +3,8 @@ import path from "node:path";
 import { Parser } from "acorn";
 import { tsPlugin } from "acorn-typescript";
 import { loadConfig } from "./config.js";
-import { evaluatePatterns } from "./patterns.js";
+import { makeFinding } from "./findings.js";
+import { evaluatePatterns, dedupeFindings } from "./patterns.js";
 import { toJsonlEvent } from "./jsonl.js";
 import { normalizeSuppressions, applySuppressions } from "./suppressions.js";
 import { evaluateJsSemanticFindings } from "./js-semantic.js";
@@ -72,6 +73,101 @@ export function runDeterministicReview({
       diffBytesReviewed: cappedDiff.length,
       findingCount: activeFindings.length,
       suppressedFindingCount: suppressedFindings.length,
+      repoGuidanceCount: config.repoGuidance.length
+    })
+  };
+}
+
+export async function runTurnReview({
+  diff,
+  changedFiles,
+  repoRoot = null,
+  config: rawConfig = {},
+  reviewer = null
+}) {
+  const config = loadConfig(rawConfig);
+  const suppressions = normalizeSuppressions(config.suppressions);
+  const { cappedDiff, cappedFiles } = capReviewInput({
+    diff,
+    changedFiles,
+    config
+  });
+  const deterministicFindings = reviewFileContent({
+    diff: cappedDiff,
+    changedFiles: cappedFiles,
+    layer: "turn",
+    config
+  });
+  const reviewContext = buildTurnReviewContext({
+    repoRoot,
+    diff: cappedDiff,
+    changedFiles: cappedFiles,
+    config
+  });
+  const modelReview = {
+    enabled: config.turnReview.enabled,
+    attempted: false,
+    status: config.turnReview.enabled ? "skipped" : "disabled",
+    provider: config.turnReview.provider,
+    model: config.turnReview.model,
+    findingCount: 0
+  };
+  let modelFindings = [];
+
+  if (config.turnReview.enabled) {
+    if (typeof reviewer === "function") {
+      modelReview.attempted = true;
+      try {
+        const response = await reviewer({
+          context: reviewContext,
+          turnReview: config.turnReview
+        });
+        modelFindings = normalizeModelFindings({
+          response,
+          changedFiles: cappedFiles,
+          layer: "turn",
+          provider: config.turnReview.provider,
+          model: config.turnReview.model,
+          maxFindings: config.turnReview.maxModelFindings
+        });
+        modelReview.status = "completed";
+        modelReview.findingCount = modelFindings.length;
+      } catch (error) {
+        modelReview.status = "failed";
+        modelReview.error = error instanceof Error ? error.message : String(error);
+      }
+    } else {
+      modelReview.reason = "No turn reviewer was configured";
+    }
+  }
+
+  const findings = dedupeFindings([...deterministicFindings, ...modelFindings]);
+  const { activeFindings, suppressedFindings } = applySuppressions(
+    findings,
+    suppressions
+  );
+
+  return {
+    findings: activeFindings,
+    suppressedFindings,
+    summary: {
+      totalFindings: findings.length,
+      activeFindings: activeFindings.length,
+      suppressedFindings: suppressedFindings.length
+    },
+    modelReview,
+    reviewContext,
+    auditEvent: toJsonlEvent({
+      layer: "turn",
+      reviewMode: "turn",
+      changedFileCount: cappedFiles.length,
+      diffBytesReviewed: cappedDiff.length,
+      findingCount: activeFindings.length,
+      suppressedFindingCount: suppressedFindings.length,
+      modelReviewEnabled: modelReview.enabled,
+      modelReviewAttempted: modelReview.attempted,
+      modelReviewStatus: modelReview.status,
+      modelFindingCount: modelReview.findingCount,
       repoGuidanceCount: config.repoGuidance.length
     })
   };
@@ -158,6 +254,101 @@ function reviewFileContent({ diff, changedFiles, layer, config }) {
       layer
     })
   ];
+}
+
+function buildTurnReviewContext({ repoRoot, diff, changedFiles, config }) {
+  const boundedDiff = diff.slice(0, config.turnReview.maxModelDiffBytes);
+  const promptSections = [
+    "Review the current working diff for concrete security issues.",
+    "Report only issues supported by evidence in the diff and changed file list.",
+    "Prefer high-signal findings and avoid repeating deterministic findings without new evidence.",
+    `Changed files: ${changedFiles.join(", ") || "none"}`,
+    config.repoGuidance.length > 0
+      ? `Repository guidance:\n- ${config.repoGuidance.join("\n- ")}`
+      : "Repository guidance: none",
+    `Diff:\n${boundedDiff}`
+  ];
+  const prompt = promptSections.join("\n\n").slice(0, config.turnReview.maxPromptChars);
+
+  return {
+    layer: "turn",
+    repoRoot: typeof repoRoot === "string" ? path.resolve(repoRoot) : null,
+    changedFiles,
+    diff: boundedDiff,
+    repoGuidance: config.repoGuidance,
+    maxFindings: config.turnReview.maxModelFindings,
+    prompt
+  };
+}
+
+function normalizeModelFindings({
+  response,
+  changedFiles,
+  layer,
+  provider,
+  model,
+  maxFindings
+}) {
+  const rawFindings = Array.isArray(response?.findings) ? response.findings : [];
+  return rawFindings.slice(0, maxFindings).map((finding, index) =>
+    makeFinding({
+      title: String(finding?.title ?? `Model review finding ${index + 1}`),
+      severity: normalizeSeverity(finding?.severity),
+      confidence: normalizeConfidence(finding?.confidence),
+      category: String(finding?.category ?? "model-review"),
+      files:
+        Array.isArray(finding?.files) && finding.files.every((entry) => typeof entry === "string")
+          ? finding.files
+          : changedFiles,
+      explanation: String(
+        finding?.explanation ?? finding?.reason ?? "Model-backed turn review flagged a potential issue."
+      ),
+      exploitScenario:
+        typeof finding?.exploitScenario === "string" ? finding.exploitScenario : "",
+      proposedFix:
+        typeof finding?.proposedFix === "string" ? finding.proposedFix : "",
+      verificationStatus: "unverified",
+      location: normalizeLocation(finding?.location, changedFiles[0]),
+      source: {
+        ruleId: buildModelRuleId({ provider, model }),
+        layer
+      }
+    })
+  );
+}
+
+function normalizeSeverity(value) {
+  return ["low", "medium", "high", "critical"].includes(value) ? value : "medium";
+}
+
+function normalizeConfidence(value) {
+  return ["low", "medium", "high"].includes(value) ? value : "medium";
+}
+
+function normalizeLocation(location, defaultFile) {
+  if (!location || typeof location !== "object") {
+    return defaultFile ? { file: defaultFile, line: 1, column: 1 } : null;
+  }
+
+  const file = typeof location.file === "string" ? location.file : defaultFile;
+  const line = Number.isInteger(location.line) && location.line > 0 ? location.line : 1;
+  const column =
+    Number.isInteger(location.column) && location.column > 0 ? location.column : 1;
+
+  return file ? { file, line, column } : null;
+}
+
+function buildModelRuleId({ provider, model }) {
+  const providerPart = slugifyRulePart(provider ?? "configured");
+  const modelPart = slugifyRulePart(model ?? "default");
+  return `model-turn-review-${providerPart}-${modelPart}`;
+}
+
+function slugifyRulePart(value) {
+  return String(value)
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "") || "default";
 }
 
 function collectCheckpointInputs({ repoRoot, changedFiles }) {

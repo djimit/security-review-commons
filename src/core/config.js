@@ -6,6 +6,17 @@ const DEFAULT_CONFIG = {
     maxCustomPatterns: 50,
     maxSuppressions: 100
   },
+  turnReview: {
+    enabled: false,
+    provider: null,
+    model: null,
+    minSeverityToBlock: "high",
+    maxModelDiffBytes: 16 * 1024,
+    maxPromptChars: 12 * 1024,
+    maxModelFindings: 5,
+    timeoutMs: 30_000,
+    command: null
+  },
   repoGuidance: [],
   customPatterns: [],
   suppressions: []
@@ -27,6 +38,55 @@ function compileSafeRegex(source, field) {
   return new RegExp(source, "i");
 }
 
+function assertOptionalString(value, field) {
+  if (value !== null && value !== undefined && typeof value !== "string") {
+    throw new Error(`${field} must be a string when provided`);
+  }
+}
+
+function assertInteger(value, field, minimum) {
+  if (!Number.isInteger(value) || value < minimum) {
+    throw new Error(`${field} must be an integer >= ${minimum}`);
+  }
+}
+
+function validateTurnReview(turnReview) {
+  if (typeof turnReview !== "object" || turnReview === null) {
+    throw new Error("turnReview must be an object");
+  }
+
+  if (typeof turnReview.enabled !== "boolean") {
+    throw new Error("turnReview.enabled must be a boolean");
+  }
+  assertOptionalString(turnReview.provider, "turnReview.provider");
+  assertOptionalString(turnReview.model, "turnReview.model");
+  if (!["low", "medium", "high", "critical"].includes(turnReview.minSeverityToBlock)) {
+    throw new Error("turnReview.minSeverityToBlock has an unknown severity");
+  }
+  assertInteger(turnReview.maxModelDiffBytes, "turnReview.maxModelDiffBytes", 1024);
+  assertInteger(turnReview.maxPromptChars, "turnReview.maxPromptChars", 1024);
+  assertInteger(turnReview.maxModelFindings, "turnReview.maxModelFindings", 1);
+  assertInteger(turnReview.timeoutMs, "turnReview.timeoutMs", 1000);
+
+  if (turnReview.command === null) {
+    return;
+  }
+
+  if (typeof turnReview.command !== "object") {
+    throw new Error("turnReview.command must be an object or null");
+  }
+  if (typeof turnReview.command.executable !== "string" || turnReview.command.executable.length === 0) {
+    throw new Error("turnReview.command.executable must be a non-empty string");
+  }
+  if (
+    turnReview.command.args !== undefined &&
+    (!Array.isArray(turnReview.command.args) ||
+      turnReview.command.args.some((entry) => typeof entry !== "string"))
+  ) {
+    throw new Error("turnReview.command.args must be an array of strings");
+  }
+}
+
 export function loadConfig(raw = {}) {
   const merged = {
     ...DEFAULT_CONFIG,
@@ -35,6 +95,14 @@ export function loadConfig(raw = {}) {
       ...DEFAULT_CONFIG.caps,
       ...(raw.caps ?? {})
     },
+    turnReview: {
+      ...DEFAULT_CONFIG.turnReview,
+      ...(raw.turnReview ?? {}),
+      command:
+        raw.turnReview?.command === undefined
+          ? DEFAULT_CONFIG.turnReview.command
+          : raw.turnReview.command
+    },
     repoGuidance: [...DEFAULT_CONFIG.repoGuidance, ...(raw.repoGuidance ?? [])],
     customPatterns: [...DEFAULT_CONFIG.customPatterns, ...(raw.customPatterns ?? [])],
     suppressions: [...DEFAULT_CONFIG.suppressions, ...(raw.suppressions ?? [])]
@@ -42,6 +110,7 @@ export function loadConfig(raw = {}) {
 
   assertStringArray(merged.enabledLayers, "enabledLayers");
   assertStringArray(merged.repoGuidance, "repoGuidance");
+  validateTurnReview(merged.turnReview);
 
   if (merged.customPatterns.length > merged.caps.maxCustomPatterns) {
     throw new Error("customPatterns exceeds maxCustomPatterns");
