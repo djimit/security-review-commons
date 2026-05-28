@@ -4,6 +4,8 @@
 
 This runbook turns the remaining runtime-proof gap into an operator checklist.
 
+For a fill-in worksheet you can use during the session, see [docs/runtime-capture-worksheet.md](./runtime-capture-worksheet.md).
+
 Use it when you have access to:
 
 - a real packaged-plugin host session, or
