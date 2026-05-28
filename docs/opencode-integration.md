@@ -39,3 +39,5 @@ node ./scripts/capture-runtime-fixture.js \
 ```
 
 The capture helper preserves payload shape while redacting obvious secrets and absolute paths. Captured fixtures still need manual review before they should replace or supplement the synthetic fixtures in `tests/fixtures/opencode/`.
+
+For the full OpenCode and packaged-plugin capture checklist, see [docs/runtime-capture-runbook.md](./runtime-capture-runbook.md).
