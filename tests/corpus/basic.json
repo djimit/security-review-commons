@@ -199,6 +199,17 @@
       "changedFiles": ["src/routes/admin.js"],
       "layer": "commit",
       "expectedRuleIds": []
+    },
+    {
+      "id": "checkpoint-deep-import-context",
+      "description": "Checkpoint review should follow imports beyond one hop within the configured depth budget",
+      "reviewMode": "checkpoint",
+      "repoRoot": "./tests/fixtures/checkpoint-deep-repo",
+      "changedFiles": ["src/feature.js"],
+      "layer": "commit",
+      "expectedRuleIds": [
+        "builtin-eval-detected"
+      ]
     }
   ]
 }

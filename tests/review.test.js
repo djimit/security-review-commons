@@ -91,4 +91,33 @@ test("checkpoint review respects explicit context file caps", () => {
 
   assert.equal(result.findings.length, 0);
   assert.match(result.auditEvent, /"adjacentContextFileCount":0/);
+  assert.match(result.auditEvent, /"budgetTruncated":true/);
+});
+
+test("checkpoint review follows imports beyond one hop within depth budget", () => {
+  const result = runCheckpointReview({
+    repoRoot: path.join(repoRoot, "tests/fixtures/checkpoint-deep-repo"),
+    changedFiles: ["src/feature.js"],
+    layer: "commit"
+  });
+
+  assert.equal(result.findings.length, 1);
+  assert.equal(result.findings[0].source.ruleId, "builtin-eval-detected");
+  assert.deepEqual(result.findings[0].files, ["lib/engine.js"]);
+  assert.match(result.auditEvent, /"importContextFileCount":2/);
+});
+
+test("checkpoint review respects explicit import depth caps", () => {
+  const result = runCheckpointReview({
+    repoRoot: path.join(repoRoot, "tests/fixtures/checkpoint-deep-repo"),
+    changedFiles: ["src/feature.js"],
+    layer: "commit",
+    config: {
+      checkpointReview: {
+        maxAdjacentSearchDepth: 1
+      }
+    }
+  });
+
+  assert.equal(result.findings.length, 0);
 });

@@ -1,3 +1,3 @@
-export function registerAdminRoutes(app) {
-  app.get("/admin", () => "ok");
+export function renderAdminPage() {
+  return "ok";
 }

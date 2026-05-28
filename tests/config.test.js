@@ -70,6 +70,21 @@ test("loadConfig accepts turn review command metadata", () => {
   assert.equal(config.turnReview.command.executable, "node");
 });
 
+test("loadConfig accepts checkpoint review budget metadata", () => {
+  const config = loadConfig({
+    checkpointReview: {
+      enabledAdjacentContext: true,
+      maxContextFiles: 4,
+      maxContextBytes: 4096,
+      maxAdjacentSearchDepth: 3
+    }
+  });
+
+  assert.equal(config.checkpointReview.maxContextFiles, 4);
+  assert.equal(config.checkpointReview.maxContextBytes, 4096);
+  assert.equal(config.checkpointReview.maxAdjacentSearchDepth, 3);
+});
+
 test("guidance files are loaded in user, project, local order and remain additive", () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-guidance-"));
   const guidanceDir = path.join(tempDir, ".security-review");
