@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 const DEFAULT_CONFIG = {
   enabledLayers: ["edit", "turn", "commit", "push"],
   caps: {
@@ -171,6 +174,134 @@ export function loadConfig(raw = {}) {
     ...merged,
     customPatterns: compiledPatterns
   };
+}
+
+export function loadResolvedConfig({
+  rawConfig = {},
+  repoRoot = null,
+  env = process.env
+} = {}) {
+  const guidanceConfig = loadGuidanceFiles({ repoRoot, env });
+  return loadConfig(mergeAdditiveConfig(guidanceConfig.config, rawConfig));
+}
+
+export function loadGuidanceFiles({ repoRoot = null, env = process.env } = {}) {
+  const sources = [];
+  const guidancePaths = buildGuidancePaths({ repoRoot, env });
+
+  for (const guidancePath of guidancePaths) {
+    if (!guidancePath.path) {
+      continue;
+    }
+    const parsed = readGuidanceFile(guidancePath.path);
+    if (!parsed) {
+      continue;
+    }
+
+    sources.push({
+      scope: guidancePath.scope,
+      path: guidancePath.path,
+      config: parsed
+    });
+  }
+
+  const config = sources.reduce(
+    (merged, source) => mergeAdditiveConfig(merged, source.config),
+    {
+      repoGuidance: [],
+      customPatterns: [],
+      suppressions: []
+    }
+  );
+
+  return {
+    config,
+    sources
+  };
+}
+
+export function mergeAdditiveConfig(baseConfig = {}, extraConfig = {}) {
+  return {
+    ...baseConfig,
+    ...extraConfig,
+    caps: {
+      ...(baseConfig.caps ?? {}),
+      ...(extraConfig.caps ?? {})
+    },
+    turnReview: {
+      ...(baseConfig.turnReview ?? {}),
+      ...(extraConfig.turnReview ?? {}),
+      command:
+        extraConfig.turnReview?.command === undefined
+          ? baseConfig.turnReview?.command
+          : extraConfig.turnReview.command
+    },
+    checkpointReview: {
+      ...(baseConfig.checkpointReview ?? {}),
+      ...(extraConfig.checkpointReview ?? {})
+    },
+    repoGuidance: [
+      ...(baseConfig.repoGuidance ?? []),
+      ...(extraConfig.repoGuidance ?? [])
+    ],
+    customPatterns: [
+      ...(baseConfig.customPatterns ?? []),
+      ...(extraConfig.customPatterns ?? [])
+    ],
+    suppressions: [
+      ...(baseConfig.suppressions ?? []),
+      ...(extraConfig.suppressions ?? [])
+    ]
+  };
+}
+
+function buildGuidancePaths({ repoRoot, env }) {
+  const resolvedRepoRoot =
+    typeof repoRoot === "string" && repoRoot.length > 0
+      ? path.resolve(repoRoot)
+      : null;
+
+  return [
+    {
+      scope: "user",
+      path:
+        typeof env.SECURITY_REVIEW_USER_GUIDANCE_FILE === "string"
+          ? path.resolve(env.SECURITY_REVIEW_USER_GUIDANCE_FILE)
+          : null
+    },
+    {
+      scope: "project",
+      path: resolvedRepoRoot
+        ? path.join(resolvedRepoRoot, ".security-review", "guidance.json")
+        : null
+    },
+    {
+      scope: "local",
+      path: resolvedRepoRoot
+        ? path.join(resolvedRepoRoot, ".security-review", "guidance.local.json")
+        : null
+    }
+  ];
+}
+
+function readGuidanceFile(filePath) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      throw new Error("guidance file must contain a JSON object");
+    }
+
+    const guidance = {
+      repoGuidance: Array.isArray(parsed.repoGuidance) ? parsed.repoGuidance : [],
+      customPatterns: Array.isArray(parsed.customPatterns) ? parsed.customPatterns : [],
+      suppressions: Array.isArray(parsed.suppressions) ? parsed.suppressions : []
+    };
+
+    assertStringArray(guidance.repoGuidance, "repoGuidance");
+    return guidance;
+  } catch {
+    return null;
+  }
 }
 
 export { DEFAULT_CONFIG };

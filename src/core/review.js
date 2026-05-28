@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Parser } from "acorn";
 import { tsPlugin } from "acorn-typescript";
-import { loadConfig } from "./config.js";
+import { loadConfig, loadResolvedConfig } from "./config.js";
 import { makeFinding } from "./findings.js";
 import { evaluatePatterns, dedupeFindings } from "./patterns.js";
 import { toJsonlEvent } from "./jsonl.js";
@@ -33,7 +33,15 @@ const ADJACENT_CONTEXT_DIR_NAMES = [
   "security"
 ];
 const ADJACENT_CONTEXT_FILE_REGEX =
-  /(^|\/)(auth|guard|guards|config|middleware|policy|policies|permission|permissions|route|routes|router|security)\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
+  /(^|\/)(auth|guard|guards|config|middleware|policy|policies|permission|permissions|route|routes|router|security)([-_.][^/]+)?\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
+const SKIPPED_CONTEXT_DIRECTORIES = new Set([
+  ".git",
+  "node_modules",
+  "dist",
+  "build",
+  "coverage",
+  "vendor"
+]);
 const TypeScriptParser = Parser.extend(tsPlugin());
 
 export function capReviewInput({ diff, changedFiles, config }) {
@@ -46,9 +54,15 @@ export function runDeterministicReview({
   diff,
   changedFiles,
   layer = "turn",
-  config: rawConfig = {}
+  config: rawConfig = {},
+  repoRoot = null,
+  env = process.env
 }) {
-  const config = loadConfig(rawConfig);
+  const config = loadResolvedConfig({
+    rawConfig,
+    repoRoot,
+    env
+  });
   const suppressions = normalizeSuppressions(config.suppressions);
   const { cappedDiff, cappedFiles } = capReviewInput({
     diff,
@@ -97,9 +111,14 @@ export async function runTurnReview({
   changedFiles,
   repoRoot = null,
   config: rawConfig = {},
-  reviewer = null
+  reviewer = null,
+  env = process.env
 }) {
-  const config = loadConfig(rawConfig);
+  const config = loadResolvedConfig({
+    rawConfig,
+    repoRoot,
+    env
+  });
   const suppressions = normalizeSuppressions(config.suppressions);
   const { cappedDiff, cappedFiles } = capReviewInput({
     diff,
@@ -191,16 +210,21 @@ export function runCheckpointReview({
   repoRoot,
   changedFiles,
   layer = "commit",
-  config: rawConfig = {}
+  config: rawConfig = {},
+  env = process.env
 }) {
   if (typeof repoRoot !== "string" || repoRoot.trim().length === 0) {
     throw new Error("repoRoot is required for checkpoint review");
   }
 
-  const config = loadConfig(rawConfig);
+  const config = loadResolvedConfig({
+    rawConfig,
+    repoRoot,
+    env
+  });
   const suppressions = normalizeSuppressions(config.suppressions);
   const cappedFiles = changedFiles.slice(0, config.caps.maxChangedFiles);
-  const reviewInputs = collectCheckpointInputs({
+  const { reviewInputs, metadata } = collectCheckpointInputs({
     repoRoot,
     changedFiles: cappedFiles,
     config
@@ -233,13 +257,15 @@ export function runCheckpointReview({
       reviewedFileCount: reviewInputs.length,
       contextFileCount: reviewInputs.filter((input) => input.kind !== "changed")
         .length,
-      importContextFileCount: reviewInputs.filter((input) => input.kind === "import-context").length,
-      adjacentContextFileCount: reviewInputs.filter((input) => input.kind === "adjacent-context").length,
+      importContextFileCount: metadata.importContextFileCount,
+      adjacentContextFileCount: metadata.adjacentContextFileCount,
       skippedFileCount: cappedFiles.length - reviewInputs.filter((input) => input.kind === "changed").length,
       reviewedBytes: reviewInputs.reduce(
         (total, input) => total + input.content.length,
         0
       ),
+      contextBytesReviewed: metadata.contextBytesReviewed,
+      budgetTruncated: metadata.budgetTruncated,
       findingCount: activeFindings.length,
       suppressedFindingCount: suppressedFindings.length,
       repoGuidanceCount: config.repoGuidance.length
@@ -372,8 +398,13 @@ function collectCheckpointInputs({ repoRoot, changedFiles, config }) {
   const resolvedRepoRoot = path.resolve(repoRoot);
   const reviewInputs = [];
   const seenFiles = new Set();
-  const jsChangedFiles = [];
-  let contextBytes = 0;
+  const reviewSeeds = [];
+  const metadata = {
+    importContextFileCount: 0,
+    adjacentContextFileCount: 0,
+    contextBytesReviewed: 0,
+    budgetTruncated: false
+  };
 
   for (const file of changedFiles) {
     const resolvedFile = resolveWorkspaceFile(resolvedRepoRoot, file);
@@ -390,102 +421,122 @@ function collectCheckpointInputs({ repoRoot, changedFiles, config }) {
     seenFiles.add(file);
 
     if (JS_PATH_REGEX.test(file)) {
-      jsChangedFiles.push({ file, absolutePath: resolvedFile, content });
+      reviewSeeds.push({ file, absolutePath: resolvedFile, content, depth: 0 });
     }
   }
 
-  for (const changedFile of jsChangedFiles) {
-    const importedFiles = collectLocalImportContext({
-      repoRoot: resolvedRepoRoot,
-      absoluteFilePath: changedFile.absolutePath,
-      sourceText: changedFile.content
-    });
+  while (reviewSeeds.length > 0) {
+    const seed = reviewSeeds.shift();
+    if (!seed) {
+      continue;
+    }
 
-    for (const importedFile of importedFiles) {
-      const relativePath = path.relative(resolvedRepoRoot, importedFile);
-      if (seenFiles.has(relativePath)) {
-        continue;
-      }
-
-      const content = readWorkspaceFile(importedFile);
-      if (content == null) {
-        continue;
-      }
-
-      if (
-        !canAddContextInput({
-          config,
-          currentContextCount: reviewInputs.filter((input) => input.kind !== "changed").length,
-          currentContextBytes: contextBytes,
-          nextContentLength: content.length
-        })
-      ) {
-        continue;
-      }
-
-      reviewInputs.push({
-        file: relativePath,
-        content,
-        kind: "import-context"
+    if (seed.depth < config.checkpointReview.maxAdjacentSearchDepth) {
+      const importedFiles = collectLocalImportContext({
+        repoRoot: resolvedRepoRoot,
+        absoluteFilePath: seed.absolutePath,
+        sourceText: seed.content
       });
-      seenFiles.add(relativePath);
-      contextBytes += content.length;
-    }
-  }
 
-  if (config.checkpointReview.enabledAdjacentContext) {
+      for (const importedFile of importedFiles) {
+        const addedInput = tryAddContextInput({
+          repoRoot: resolvedRepoRoot,
+          absoluteFilePath: importedFile,
+          kind: "import-context",
+          seenFiles,
+          reviewInputs,
+          metadata,
+          config
+        });
+        if (!addedInput) {
+          continue;
+        }
+        if (JS_PATH_REGEX.test(addedInput.file)) {
+          reviewSeeds.push({
+            file: addedInput.file,
+            absolutePath: importedFile,
+            content: addedInput.content,
+            depth: seed.depth + 1
+          });
+        }
+      }
+    }
+
+    if (!config.checkpointReview.enabledAdjacentContext) {
+      continue;
+    }
+
     const adjacentFiles = collectAdjacentContextFiles({
       repoRoot: resolvedRepoRoot,
-      changedFiles,
+      absoluteFilePath: seed.absolutePath,
       seenFiles,
       maxDepth: config.checkpointReview.maxAdjacentSearchDepth
     });
 
     for (const adjacentFile of adjacentFiles) {
-      const content = readWorkspaceFile(adjacentFile.absolutePath);
-      if (content == null) {
-        continue;
-      }
-      if (
-        !canAddContextInput({
-          config,
-          currentContextCount: reviewInputs.filter((input) => input.kind !== "changed").length,
-          currentContextBytes: contextBytes,
-          nextContentLength: content.length
-        })
-      ) {
-        continue;
-      }
-
-      reviewInputs.push({
-        file: adjacentFile.relativePath,
-        content,
-        kind: "adjacent-context"
+      tryAddContextInput({
+        repoRoot: resolvedRepoRoot,
+        absoluteFilePath: adjacentFile.absolutePath,
+        kind: "adjacent-context",
+        seenFiles,
+        reviewInputs,
+        metadata,
+        config
       });
-      seenFiles.add(adjacentFile.relativePath);
-      contextBytes += content.length;
     }
   }
 
-  return reviewInputs;
+  return { reviewInputs, metadata };
 }
 
-function canAddContextInput({
-  config,
-  currentContextCount,
-  currentContextBytes,
-  nextContentLength
+function tryAddContextInput({
+  repoRoot,
+  absoluteFilePath,
+  kind,
+  seenFiles,
+  reviewInputs,
+  metadata,
+  config
 }) {
-  if (currentContextCount >= config.checkpointReview.maxContextFiles) {
-    return false;
+  const relativePath = path.relative(repoRoot, absoluteFilePath);
+  if (seenFiles.has(relativePath)) {
+    return null;
   }
+
+  const currentContextCount = reviewInputs.filter((input) => input.kind !== "changed").length;
+  if (currentContextCount >= config.checkpointReview.maxContextFiles) {
+    metadata.budgetTruncated = true;
+    return null;
+  }
+
+  const content = readWorkspaceFile(absoluteFilePath);
+  if (content == null) {
+    return null;
+  }
+
   if (
-    currentContextBytes + nextContentLength >
+    metadata.contextBytesReviewed + content.length >
     config.checkpointReview.maxContextBytes
   ) {
-    return false;
+    metadata.budgetTruncated = true;
+    return null;
   }
-  return true;
+
+  const input = {
+    file: relativePath,
+    content,
+    kind
+  };
+  reviewInputs.push(input);
+  seenFiles.add(relativePath);
+  metadata.contextBytesReviewed += content.length;
+  if (kind === "import-context") {
+    metadata.importContextFileCount += 1;
+  }
+  if (kind === "adjacent-context") {
+    metadata.adjacentContextFileCount += 1;
+  }
+  return input;
 }
 
 function resolveWorkspaceFile(repoRoot, filePath) {
@@ -562,29 +613,24 @@ function collectLocalImportContext({ repoRoot, absoluteFilePath, sourceText }) {
 
 function collectAdjacentContextFiles({
   repoRoot,
-  changedFiles,
+  absoluteFilePath,
   seenFiles,
   maxDepth
 }) {
   const searchDirs = collectAdjacentSearchDirs({
     repoRoot,
-    changedFiles
+    absoluteFilePath,
+    maxDepth
   });
   const adjacentFiles = [];
   const seenAdjacentFiles = new Set();
-  const seenDirs = new Set();
 
   for (const searchDir of searchDirs) {
-    if (seenDirs.has(searchDir)) {
-      continue;
-    }
-    seenDirs.add(searchDir);
-
     for (const adjacentFile of walkAdjacentContextDir({
       repoRoot,
       absoluteDir: searchDir,
       depth: 0,
-      maxDepth,
+      maxDepth: 0,
       seenFiles
     })) {
       if (seenAdjacentFiles.has(adjacentFile.relativePath)) {
@@ -598,28 +644,29 @@ function collectAdjacentContextFiles({
   return adjacentFiles;
 }
 
-function collectAdjacentSearchDirs({ repoRoot, changedFiles }) {
+function collectAdjacentSearchDirs({ repoRoot, absoluteFilePath, maxDepth }) {
   const dirs = new Set();
+  let currentDir = path.dirname(absoluteFilePath);
 
-  for (const changedFile of changedFiles) {
-    const absoluteFile = resolveWorkspaceFile(repoRoot, changedFile);
-    if (!absoluteFile) {
-      continue;
+  for (let depth = 0; depth <= maxDepth; depth += 1) {
+    if (!isPathInsideRoot(repoRoot, currentDir)) {
+      break;
     }
 
-    const fileDir = path.dirname(absoluteFile);
-    const parentDir = path.dirname(fileDir);
-    dirs.add(fileDir);
-    dirs.add(parentDir);
+    dirs.add(currentDir);
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) {
+      break;
+    }
 
-    for (const baseDir of [fileDir, parentDir]) {
-      for (const dirName of ADJACENT_CONTEXT_DIR_NAMES) {
-        const candidate = path.join(baseDir, dirName);
-        if (isPathInsideRoot(repoRoot, candidate)) {
-          dirs.add(candidate);
-        }
+    for (const dirName of ADJACENT_CONTEXT_DIR_NAMES) {
+      const candidate = path.join(parentDir, dirName);
+      if (isPathInsideRoot(repoRoot, candidate)) {
+        dirs.add(candidate);
       }
     }
+
+    currentDir = parentDir;
   }
 
   return [...dirs].filter((candidate) => {
@@ -650,7 +697,10 @@ function walkAdjacentContextDir({
     const relativePath = path.relative(repoRoot, absolutePath);
 
     if (entry.isDirectory()) {
-      if (depth < maxDepth) {
+      if (
+        depth < maxDepth &&
+        !SKIPPED_CONTEXT_DIRECTORIES.has(entry.name)
+      ) {
         collected.push(
           ...walkAdjacentContextDir({
             repoRoot,

@@ -113,6 +113,7 @@ node --test tests/plugin-hooks.test.js
 
 - OpenCode payload normalization is fixture-backed, but host runtime payload capture is still synthetic rather than collected from a live session.
 - Host plugin packaging now exists, including an opt-in `Stop` hook path for turn review, but replay tests are still synthetic rather than captured from a live session.
+- Guidance files are now loaded additively from user, project, and repo-local scopes with explicit precedence, but only additive guidance, patterns, and suppressions are supported in that path.
 - Codex still does not claim native background hook or native git interception parity.
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
 - Checkpoint review now expands one hop of local JS/TS imports plus bounded adjacent auth/config/router/middleware context, but it still does not attempt full inter-file taint tracking.
@@ -133,6 +134,7 @@ node --test tests/plugin-hooks.test.js
 - `tests/corpus/basic.json` defines a baseline corpus of representative fixtures and expected rule IDs
 - `npm run corpus` validates that the published rule set still catches that baseline and fails on corpus mismatches
 - CI uploads SARIF, a Markdown summary, and a corpus report as build artifacts
+- `tests/config.test.js` verifies additive guidance-file precedence and explicit config merging
 
 ## CI Gate Usage
 

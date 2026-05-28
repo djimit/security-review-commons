@@ -28,6 +28,7 @@ These constraints still create the main host-runtime drift risks:
 3. Structured findings, JSONL audit trail, and SARIF-friendly output.
 4. Suppression governance with owner, justification, and expiry.
 5. Checkpoint review that reads full changed files plus bounded local import and adjacent evidence context.
+6. Guidance files load additively with explicit scope order.
 
 ## Current Runtime Status
 
@@ -37,3 +38,4 @@ These constraints still create the main host-runtime drift risks:
 4. OpenCode event names are documented and payload normalization is fixture-backed, but live host payload capture is still pending.
 5. Host plugin packaging exists, including an opt-in Stop-hook path, but replay tests remain synthetic rather than captured from a live session.
 6. Codex integration remains explicit-entrypoint based. Native background lifecycle parity is still not claimed.
+7. Guidance files load in user, project, and local order when present and merge additively into the shared config.

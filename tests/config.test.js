@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadConfig } from "../src/core/config.js";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import {
+  loadConfig,
+  loadGuidanceFiles,
+  loadResolvedConfig
+} from "../src/core/config.js";
 
 test("loadConfig merges defaults and compiles regexes", () => {
   const config = loadConfig({
@@ -61,4 +68,101 @@ test("loadConfig accepts turn review command metadata", () => {
 
   assert.equal(config.turnReview.enabled, true);
   assert.equal(config.turnReview.command.executable, "node");
+});
+
+test("guidance files are loaded in user, project, local order and remain additive", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-guidance-"));
+  const guidanceDir = path.join(tempDir, ".security-review");
+  const userGuidancePath = path.join(tempDir, "user-guidance.json");
+
+  fs.mkdirSync(guidanceDir, { recursive: true });
+  fs.writeFileSync(
+    userGuidancePath,
+    JSON.stringify({ repoGuidance: ["user guidance"] })
+  );
+  fs.writeFileSync(
+    path.join(guidanceDir, "guidance.json"),
+    JSON.stringify({
+      repoGuidance: ["project guidance"],
+      customPatterns: [
+        {
+          id: "project-rule",
+          title: "Project rule",
+          regex: "project-danger",
+          severity: "medium"
+        }
+      ]
+    })
+  );
+  fs.writeFileSync(
+    path.join(guidanceDir, "guidance.local.json"),
+    JSON.stringify({
+      repoGuidance: ["local guidance"],
+      suppressions: [
+        {
+          ruleId: "builtin-hardcoded-secret-token",
+          owner: "local-owner",
+          justification: "Local guidance test"
+        }
+      ]
+    })
+  );
+
+  const loaded = loadGuidanceFiles({
+    repoRoot: tempDir,
+    env: {
+      SECURITY_REVIEW_USER_GUIDANCE_FILE: userGuidancePath
+    }
+  });
+
+  assert.deepEqual(
+    loaded.config.repoGuidance,
+    ["user guidance", "project guidance", "local guidance"]
+  );
+  assert.equal(loaded.sources.length, 3);
+  assert.equal(loaded.sources[0].scope, "user");
+  assert.equal(loaded.sources[1].scope, "project");
+  assert.equal(loaded.sources[2].scope, "local");
+});
+
+test("resolved config preserves additive guidance and explicit caller config", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-guidance-merge-"));
+  const guidanceDir = path.join(tempDir, ".security-review");
+
+  fs.mkdirSync(guidanceDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(guidanceDir, "guidance.json"),
+    JSON.stringify({
+      repoGuidance: ["project guidance"],
+      customPatterns: [
+        {
+          id: "project-rule",
+          title: "Project rule",
+          regex: "project-danger",
+          severity: "medium"
+        }
+      ]
+    })
+  );
+
+  const config = loadResolvedConfig({
+    repoRoot: tempDir,
+    rawConfig: {
+      repoGuidance: ["explicit guidance"],
+      customPatterns: [
+        {
+          id: "explicit-rule",
+          title: "Explicit rule",
+          regex: "explicit-danger",
+          severity: "high"
+        }
+      ]
+    }
+  });
+
+  assert.deepEqual(config.repoGuidance, [
+    "project guidance",
+    "explicit guidance"
+  ]);
+  assert.equal(config.customPatterns.length, 2);
 });

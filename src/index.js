@@ -1,4 +1,9 @@
-export { loadConfig, DEFAULT_CONFIG } from "./core/config.js";
+export {
+  loadConfig,
+  loadResolvedConfig,
+  loadGuidanceFiles,
+  DEFAULT_CONFIG
+} from "./core/config.js";
 export {
   runDeterministicReview,
   runTurnReview,

@@ -42,7 +42,9 @@ export function handlePostEditHook({ input, env = process.env }) {
   const result = runDeterministicReview({
     diff: reviewText,
     changedFiles: [relativePath],
-    layer: "edit"
+    layer: "edit",
+    repoRoot,
+    env
   });
 
   if (result.findings.length === 0) {
@@ -95,7 +97,8 @@ export function handlePreBashHook({ input, env = process.env }) {
   const result = runCheckpointReview({
     repoRoot,
     changedFiles,
-    layer: action
+    layer: action,
+    env
   });
   if (result.findings.length === 0) {
     return { continue: true };
@@ -156,7 +159,8 @@ export async function handleStopTurnHook({ input, env = process.env }) {
     reviewer: createCommandTurnReviewer({
       turnReview: turnReviewConfig,
       env
-    })
+    }),
+    env
   });
   if (!findingsMeetSeverityThreshold(
     result.findings,

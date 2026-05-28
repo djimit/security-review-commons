@@ -91,6 +91,23 @@ Current turn-review controls are environment-driven:
 - `SECURITY_REVIEW_TURN_REVIEW_MAX_DIFF_BYTES=<bytes>`
 - `SECURITY_REVIEW_TURN_REVIEW_MAX_PROMPT_CHARS=<chars>`
 - `SECURITY_REVIEW_TURN_REVIEW_MAX_FINDINGS=<count>`
+- `SECURITY_REVIEW_USER_GUIDANCE_FILE=<absolute-path>`
+
+## Guidance Precedence
+
+Guidance is additive only in this slice. The loader merges scopes in this order:
+
+1. user guidance from `SECURITY_REVIEW_USER_GUIDANCE_FILE`
+2. project guidance from `.security-review/guidance.json`
+3. repo-local guidance from `.security-review/guidance.local.json`
+
+Supported additive fields in guidance files:
+
+- `repoGuidance`
+- `customPatterns`
+- `suppressions`
+
+Lower-precedence guidance does not remove or override higher-precedence guidance in this path. Explicit runtime config passed by the caller still applies after the discovered guidance files.
 
 ## Debug Notes
 

@@ -96,6 +96,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const config = args.configFile ? readJsonFile(args.configFile) : {};
   const changedFiles = readChangedFiles(args);
+  const repoRoot = args.repoRoot ?? process.cwd();
 
   if (args.corpusFile) {
     const report = runCorpus({
@@ -128,7 +129,7 @@ async function main() {
         ? await runTurnReview({
             diff,
             changedFiles,
-            repoRoot: args.repoRoot ?? process.cwd(),
+            repoRoot,
             config,
             reviewer: createCommandTurnReviewer({
               turnReview: config.turnReview
@@ -138,7 +139,8 @@ async function main() {
             diff,
             changedFiles,
             layer: args.layer,
-            config
+            config,
+            repoRoot
           });
 
   if (args.format === "sarif") {
