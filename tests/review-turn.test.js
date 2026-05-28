@@ -80,10 +80,12 @@ test("turn review skips entirely when the turn layer is disabled", async () => {
   assert.match(result.auditEvent, /"skipped":true/);
 });
 
-test("turn review skips entirely when the turn layer is disabled", async () => {
+test("turn review does not call reviewer when turnReview is enabled but turn layer is disabled", async () => {
+  let reviewerCalled = false;
+
   const result = await runTurnReview({
-    diff: 'const token = "supersecret12345";',
-    changedFiles: ["src/auth/login.js"],
+    diff: "if (bypassAuth) return user;",
+    changedFiles: ["src/auth/flow.js"],
     config: {
       enabledLayers: ["edit", "commit", "push"],
       turnReview: {
@@ -91,9 +93,22 @@ test("turn review skips entirely when the turn layer is disabled", async () => {
         provider: "mock",
         model: "fixture"
       }
+    },
+    reviewer: async () => {
+      reviewerCalled = true;
+      return {
+        findings: [
+          {
+            title: "Should not be used",
+            severity: "medium",
+            category: "test"
+          }
+        ]
+      };
     }
   });
 
+  assert.equal(reviewerCalled, false);
   assert.equal(result.findings.length, 0);
   assert.equal(result.modelReview.status, "disabled-by-layer");
   assert.equal(result.reviewContext, null);
