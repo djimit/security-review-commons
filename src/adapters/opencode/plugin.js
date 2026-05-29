@@ -1,7 +1,26 @@
+import fs from "node:fs";
+import path from "node:path";
 import {
   runDeterministicReview,
   runCheckpointReview
 } from "../../core/review.js";
+
+function maybeCaptureRawPayload(eventType, event) {
+  const captureDir = process.env.SECURITY_REVIEW_CAPTURE_DIR;
+  if (!captureDir || typeof captureDir !== "string") {
+    return;
+  }
+  try {
+    fs.mkdirSync(captureDir, { recursive: true });
+    const filename = `opencode-raw-${eventType}-${Date.now()}.json`;
+    fs.writeFileSync(
+      path.join(captureDir, filename),
+      `${JSON.stringify(event, null, 2)}\n`
+    );
+  } catch {
+    // capture is best-effort and must not break normal execution
+  }
+}
 
 function extractDiff(event) {
   return typeof event?.diff === "string" ? event.diff : "";
@@ -60,6 +79,7 @@ export function normalizeToolExecuteBeforeEvent(event) {
 }
 
 export function onFileEdited(event, config = {}) {
+  maybeCaptureRawPayload("file-edited", event);
   const normalized = normalizeFileEditedEvent(event);
   return runDeterministicReview({
     ...normalized,
@@ -69,6 +89,7 @@ export function onFileEdited(event, config = {}) {
 }
 
 export function onSessionIdle(event, config = {}) {
+  maybeCaptureRawPayload("session-idle", event);
   const normalized = normalizeSessionIdleEvent(event);
   return runDeterministicReview({
     ...normalized,
@@ -78,6 +99,7 @@ export function onSessionIdle(event, config = {}) {
 }
 
 export function onSessionDiff(event, config = {}) {
+  maybeCaptureRawPayload("session-diff", event);
   const normalized = normalizeSessionDiffEvent(event);
   return runDeterministicReview({
     ...normalized,
@@ -87,6 +109,7 @@ export function onSessionDiff(event, config = {}) {
 }
 
 export function onGitCheckpoint(event, config = {}) {
+  maybeCaptureRawPayload("git-checkpoint", event);
   return runCheckpointReview({
     repoRoot: extractRepoRoot(event),
     changedFiles: extractChangedFiles(event),
@@ -96,6 +119,7 @@ export function onGitCheckpoint(event, config = {}) {
 }
 
 export function onToolExecuteBefore(event, config = {}) {
+  maybeCaptureRawPayload("tool-execute-before", event);
   const normalized = normalizeToolExecuteBeforeEvent(event);
   if (normalized.tool !== "bash" || !normalized.action) {
     return null;

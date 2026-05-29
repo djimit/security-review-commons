@@ -1,4 +1,6 @@
 {
-  "diff": "eval(userInput)",
-  "changedFiles": ["src/worker.js"]
+  "diff": "diff --git a/src/worker.js b/src/worker.js\n--- a/src/worker.js\n+++ b/src/worker.js\n@@ -1,2 +1,3 @@\n function processTask(input) {\n-  return JSON.parse(input);\n+  eval(input);\n+  const token = \"bearer_sk_live_abcdef123456\";\n }",
+  "changedFiles": [
+    "src/worker.js"
+  ]
 }

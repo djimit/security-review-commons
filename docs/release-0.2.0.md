@@ -10,17 +10,18 @@
 
 ## What This Release Now Proves
 
-- synthetic replay coverage now spans the declared packaged-plugin matrix:
-  - `PostToolUse.Write`
-  - `PreToolUse.Bash.git-commit`
-  - `PreToolUse.Bash.git-push`
-  - `Stop`
-- synthetic replay coverage now spans the declared OpenCode matrix:
+- **captured-live** OpenCode runtime fixture provenance for all 5 supported events:
   - `file.edited`
   - `session.diff`
   - `session.idle`
   - `tool.execute.before.git-commit`
   - `tool.execute.before.git-push`
+- field shapes verified through live capture, including the `args` top-level field discovered in `tool.execute.before` events
+- synthetic replay coverage spans the declared packaged-plugin matrix:
+  - `PostToolUse.Write`
+  - `PreToolUse.Bash.git-commit`
+  - `PreToolUse.Bash.git-push`
+  - `Stop`
 - benchmark output now carries an explicit external comparator sidecar instead of implying parity from self-benchmark results alone
 - source-release automation was exercised successfully and attached:
   - `security-review-commons-0.2.0.tgz`
@@ -31,7 +32,7 @@
 
 ## What This Release Does Not Yet Prove
 
-- no checked-in live host-captured runtime payloads are included yet
+- no checked-in live host-captured packaged-plugin payloads are included yet
 - no external comparator run has been verified; every comparator case remains explicitly unresolved
 - no npm publication is proven in this local state
 

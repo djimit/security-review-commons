@@ -23,6 +23,10 @@ The goal is to replace or supplement the current synthetic fixtures with scrubbe
   - replay or normalization tests pass against it,
   - the provenance manifest marks it as `captured-live`.
 
+## Field Shape Notes
+
+Live capture on 2026-05-29 discovered that OpenCode `tool.execute.before` events include an `args` top-level field (containing `command` as a nested property) in addition to the `command` top-level field. The normalizer in `src/adapters/opencode/plugin.js` already handles both via `event?.args?.command ?? event?.command`. This field is now represented in captured-live fixtures and the manifest `supportedTopLevelFields`.
+
 ## Required Events
 
 ### Packaged plugin

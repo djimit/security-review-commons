@@ -32,10 +32,21 @@ test("runtime fixture manifest covers supported OpenCode and plugin replay paylo
     "./tests/fixtures/plugin/pre-tool-use-bash-git-push.json",
     "./tests/fixtures/plugin/stop.json"
   ]);
+  const validSources = ["synthetic", "captured-live"];
   assert.equal(
-    manifest.entries.every((entry) => entry.source === "synthetic"),
+    manifest.entries.every((entry) => validSources.includes(entry.source)),
     true
   );
+
+  const capturedEvents = manifest.entries
+    .filter((entry) => entry.source === "captured-live")
+    .map((entry) => `${entry.runtime}/${entry.event}`);
+  const syntheticEvents = manifest.entries
+    .filter((entry) => entry.source === "synthetic")
+    .map((entry) => `${entry.runtime}/${entry.event}`);
+
+  console.log(`captured-live: ${capturedEvents.length > 0 ? capturedEvents.join(", ") : "none"}`);
+  console.log(`synthetic: ${syntheticEvents.join(", ")}`);
 });
 
 test("runtime fixture capture script writes a scrubbed fixture and manifest entry", () => {

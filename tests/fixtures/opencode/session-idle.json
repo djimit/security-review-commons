@@ -1,4 +1,6 @@
 {
-  "diff": "eval(userInput)",
-  "changedFiles": ["src/session.js"]
+  "diff": "diff --git a/src/session.js b/src/session.js\n--- a/src/session.js\n+++ b/src/session.js\n@@ -1,2 +1,4 @@\n function handleSession(req) {\n-  return { id: req.session.id };\n+  const sessionToken = \"sk_live_abc123def456\";\n+  eval(req.body.payload);\n+  return { id: req.session.id, token: sessionToken };\n }",
+  "changedFiles": [
+    "src/session.js"
+  ]
 }

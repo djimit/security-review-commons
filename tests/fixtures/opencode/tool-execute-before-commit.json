@@ -1,8 +1,13 @@
 {
   "tool": "bash",
-  "command": "git commit -m \"checkpoint\"",
-  "workspace": {
-    "root": "."
+  "command": "git commit -m \"Add auth module\"",
+  "args": {
+    "command": "git commit -m \"Add auth module\""
   },
-  "changedFiles": ["src/feature.js"]
+  "workspace": {
+    "root": "<redacted>"
+  },
+  "changedFiles": [
+    "src/feature.js"
+  ]
 }
