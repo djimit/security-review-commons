@@ -14,7 +14,25 @@ import {
   loadTurnReviewConfigFromEnv
 } from "./command-turn-reviewer.js";
 
+function maybeCaptureRawPayload(mode, input) {
+  const captureDir = process.env.SECURITY_REVIEW_CAPTURE_DIR;
+  if (!captureDir || typeof captureDir !== "string") {
+    return;
+  }
+  try {
+    fs.mkdirSync(captureDir, { recursive: true });
+    const filename = `plugin-raw-${mode}-${Date.now()}.json`;
+    fs.writeFileSync(
+      path.join(captureDir, filename),
+      `${JSON.stringify(input, null, 2)}\n`
+    );
+  } catch {
+    // capture is best-effort and must not break normal execution
+  }
+}
+
 export async function handlePluginHook({ mode, input, env = process.env }) {
+  maybeCaptureRawPayload(mode, input);
   if (mode === "post-edit") {
     return handlePostEditHook({ input, env });
   }

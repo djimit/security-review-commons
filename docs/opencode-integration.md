@@ -23,7 +23,9 @@ As verified against the OpenCode plugin docs updated May 27, 2026:
 
 ## Important Gap
 
-The docs confirm event names, loading, and logging, but they do not fully specify the event payload shape for every event. This repository now keeps explicit normalizers per supported event and backs them with synthetic fixtures so host-specific normalization can evolve without changing the shared core.
+The docs confirm event names, loading, and logging, but they do not fully specify the event payload shape for every event. This repository now keeps explicit normalizers per supported event and backs them with captured-live fixtures for all OpenCode events, so host-specific normalization can evolve without changing the shared core.
+
+The `args` top-level field was discovered in captured `tool.execute.before` events during live capture — the normalizer already handles this via `event?.args`.
 
 ## Capture Tooling
 

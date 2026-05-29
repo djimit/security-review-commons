@@ -62,69 +62,72 @@
       "runtime": "opencode",
       "event": "file.edited",
       "fixture": "./tests/fixtures/opencode/file-edited.json",
-      "source": "synthetic",
+      "source": "captured-live",
       "scrubbed": true,
-      "capturedAt": null,
+      "capturedAt": "2026-05-29T13:50:55.749Z",
       "supportedTopLevelFields": [
         "changedFiles",
         "diff"
       ],
-      "notes": "Synthetic normalization fixture for edit-time OpenCode review."
+      "notes": "Scrubbed live OpenCode payload for file.edited normalization."
     },
     {
       "runtime": "opencode",
       "event": "session.diff",
       "fixture": "./tests/fixtures/opencode/session-diff.json",
-      "source": "synthetic",
+      "source": "captured-live",
       "scrubbed": true,
-      "capturedAt": null,
+      "capturedAt": "2026-05-29T13:50:55.851Z",
       "supportedTopLevelFields": [
         "changedFiles",
         "diff"
       ],
-      "notes": "Synthetic normalization fixture for turn-review diff events."
+      "notes": "Scrubbed live OpenCode payload for session.diff normalization."
     },
     {
       "runtime": "opencode",
       "event": "session.idle",
       "fixture": "./tests/fixtures/opencode/session-idle.json",
-      "source": "synthetic",
+      "source": "captured-live",
       "scrubbed": true,
-      "capturedAt": null,
+      "capturedAt": "2026-05-29T13:50:55.951Z",
       "supportedTopLevelFields": [
         "changedFiles",
         "diff"
       ],
-      "notes": "Synthetic normalization fixture for idle-triggered turn review."
+      "notes": "Scrubbed live OpenCode payload for session.idle normalization."
     },
     {
       "runtime": "opencode",
       "event": "tool.execute.before.git-commit",
       "fixture": "./tests/fixtures/opencode/tool-execute-before-commit.json",
-      "source": "synthetic",
+      "source": "captured-live",
       "scrubbed": true,
-      "capturedAt": null,
+      "capturedAt": "2026-05-29T13:50:56.051Z",
       "supportedTopLevelFields": [
+        "args",
         "changedFiles",
         "command",
         "tool",
         "workspace"
       ],
-      "notes": "Synthetic normalization fixture for checkpoint review before git commit."
+      "notes": "Scrubbed live OpenCode payload for git commit checkpoint normalization."
     },
     {
       "runtime": "opencode",
       "event": "tool.execute.before.git-push",
       "fixture": "./tests/fixtures/opencode/tool-execute-before-push.json",
-      "source": "synthetic",
+      "source": "captured-live",
       "scrubbed": true,
-      "capturedAt": null,
+      "capturedAt": "2026-05-29T13:50:56.150Z",
       "supportedTopLevelFields": [
         "args",
         "changedFiles",
-        "tool"
+        "command",
+        "tool",
+        "workspace"
       ],
-      "notes": "Synthetic normalization fixture for checkpoint review before git push."
+      "notes": "Scrubbed live OpenCode payload for git push checkpoint normalization."
     }
   ]
 }

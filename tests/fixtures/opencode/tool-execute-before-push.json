@@ -1,7 +1,13 @@
 {
   "tool": "bash",
+  "command": "git push origin main",
   "args": {
     "command": "git push origin main"
   },
-  "changedFiles": ["src/feature.js"]
+  "workspace": {
+    "root": "<redacted>"
+  },
+  "changedFiles": [
+    "src/feature.js"
+  ]
 }

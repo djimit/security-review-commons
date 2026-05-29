@@ -49,7 +49,7 @@ test("OpenCode session diff maps to turn review", () => {
     readJsonFixture("tests/fixtures/opencode/session-diff.json")
   );
 
-  assert.equal(result.findings.length, 1);
+  assert.equal(result.findings.length, 2);
   assert.equal(result.findings[0].source.layer, "turn");
 });
 
