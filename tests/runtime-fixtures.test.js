@@ -105,16 +105,26 @@ test("runtime capture batch script prepares a worksheet and intake directories",
 
   const summary = JSON.parse(output);
   const worksheetPath = path.join(tempDir, "runtime-capture-worksheet.md");
+  const commandsPath = path.join(tempDir, "capture-commands.sh");
 
   assert.equal(summary.outputDir, tempDir);
   assert.equal(fs.existsSync(path.join(tempDir, "raw")), true);
   assert.equal(fs.existsSync(path.join(tempDir, "accepted")), true);
   assert.equal(fs.existsSync(path.join(tempDir, "rejected")), true);
   assert.equal(fs.existsSync(worksheetPath), true);
+  assert.equal(fs.existsSync(commandsPath), true);
   assert.match(fs.readFileSync(worksheetPath, "utf8"), /Created:/);
   assert.match(
     fs.readFileSync(worksheetPath, "utf8"),
     /# Runtime Capture Worksheet/
+  );
+  assert.match(
+    fs.readFileSync(commandsPath, "utf8"),
+    /raw-plugin-post-write\.json/
+  );
+  assert.match(
+    fs.readFileSync(commandsPath, "utf8"),
+    /raw-opencode-tool-before-push\.json/
   );
 });
 

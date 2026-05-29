@@ -52,14 +52,106 @@ function main() {
 
   const worksheetTarget = path.join(outputDir, args.worksheetName);
   fs.writeFileSync(worksheetTarget, `${header}${worksheet}`);
+  const commandsTarget = path.join(outputDir, "capture-commands.sh");
+  fs.writeFileSync(commandsTarget, buildCommandSheet(outputDir));
 
   process.stdout.write(
     `${JSON.stringify({
       outputDir,
       worksheet: worksheetTarget,
+      commands: commandsTarget,
       directories: ["raw", "accepted", "rejected"]
     })}\n`
   );
+}
+
+function buildCommandSheet(outputDir) {
+  const escapedOutputDir = shellEscape(outputDir);
+  const rawDir = `${escapedOutputDir}/raw`;
+
+  return `#!/usr/bin/env bash
+set -euo pipefail
+
+# Generated runtime capture command sheet.
+# Keep raw payloads in ${outputDir}/raw and review scrubbed fixture output before commit.
+
+# Packaged plugin batch bootstrap
+cat ${rawDir}/raw-plugin-post-write.json | npm run capture:fixture -- \\
+  --runtime claude-plugin \\
+  --event PostToolUse.Write \\
+  --fixture ./tests/fixtures/plugin/post-tool-use-write.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --redact-paths tool_input.file_path \\
+  --notes "Scrubbed live packaged-plugin payload for post-write review."
+
+cat ${rawDir}/raw-plugin-pre-commit.json | npm run capture:fixture -- \\
+  --runtime claude-plugin \\
+  --event PreToolUse.Bash.git-commit \\
+  --fixture ./tests/fixtures/plugin/pre-tool-use-bash-git-commit.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --redact-paths cwd \\
+  --notes "Scrubbed live packaged-plugin payload for git commit checkpoint review."
+
+cat ${rawDir}/raw-plugin-pre-push.json | npm run capture:fixture -- \\
+  --runtime claude-plugin \\
+  --event PreToolUse.Bash.git-push \\
+  --fixture ./tests/fixtures/plugin/pre-tool-use-bash-git-push.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --redact-paths cwd \\
+  --notes "Scrubbed live packaged-plugin payload for git push checkpoint review."
+
+cat ${rawDir}/raw-plugin-stop.json | npm run capture:fixture -- \\
+  --runtime claude-plugin \\
+  --event Stop \\
+  --fixture ./tests/fixtures/plugin/stop.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --redact-paths cwd \\
+  --notes "Scrubbed live packaged-plugin payload for stop-turn review."
+
+# OpenCode batch bootstrap
+cat ${rawDir}/raw-opencode-file-edited.json | npm run capture:fixture -- \\
+  --runtime opencode \\
+  --event file.edited \\
+  --fixture ./tests/fixtures/opencode/file-edited.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --notes "Scrubbed live OpenCode payload for file.edited normalization."
+
+cat ${rawDir}/raw-opencode-session-diff.json | npm run capture:fixture -- \\
+  --runtime opencode \\
+  --event session.diff \\
+  --fixture ./tests/fixtures/opencode/session-diff.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --notes "Scrubbed live OpenCode payload for session.diff normalization."
+
+cat ${rawDir}/raw-opencode-session-idle.json | npm run capture:fixture -- \\
+  --runtime opencode \\
+  --event session.idle \\
+  --fixture ./tests/fixtures/opencode/session-idle.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --notes "Scrubbed live OpenCode payload for session.idle normalization."
+
+cat ${rawDir}/raw-opencode-tool-before-commit.json | npm run capture:fixture -- \\
+  --runtime opencode \\
+  --event tool.execute.before.git-commit \\
+  --fixture ./tests/fixtures/opencode/tool-execute-before-commit.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --redact-paths workspace.root,repoRoot,cwd \\
+  --notes "Scrubbed live OpenCode payload for git commit checkpoint normalization."
+
+cat ${rawDir}/raw-opencode-tool-before-push.json | npm run capture:fixture -- \\
+  --runtime opencode \\
+  --event tool.execute.before.git-push \\
+  --fixture ./tests/fixtures/opencode/tool-execute-before-push.json \\
+  --manifest ./tests/fixtures/runtime-fixtures.json \\
+  --redact-paths workspace.root,repoRoot,cwd \\
+  --notes "Scrubbed live OpenCode payload for git push checkpoint normalization."
+
+node --test tests/runtime-fixtures.test.js tests/adapters.test.js tests/plugin-hooks.test.js
+`;
+}
+
+function shellEscape(value) {
+  return `'${String(value).replace(/'/g, `'\\''`)}'`;
 }
 
 main();

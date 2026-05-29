@@ -54,6 +54,7 @@ This creates:
 - `accepted/` for notes about fixtures you intend to check in
 - `rejected/` for payloads or attempts you decided not to keep
 - a copy of the worksheet for that capture batch
+- `capture-commands.sh` with batch-local capture commands and validation
 
 For each event:
 
@@ -88,7 +89,7 @@ Use the worksheet copy created in that directory, then save raw payloads under:
 - `/tmp/runtime-capture-plugin-2026-05-29/raw/raw-plugin-pre-push.json`
 - `/tmp/runtime-capture-plugin-2026-05-29/raw/raw-plugin-stop.json`
 
-Capture them into the checked-in fixture paths:
+Then use the generated command sheet from that directory or run the individual commands below.
 
 ```bash
 cat /tmp/runtime-capture-plugin-2026-05-29/raw/raw-plugin-post-write.json | npm run capture:fixture -- \
@@ -152,7 +153,7 @@ Use the worksheet copy created in that directory, then save raw payloads under:
 - `/tmp/runtime-capture-opencode-2026-05-29/raw/raw-opencode-tool-before-commit.json`
 - `/tmp/runtime-capture-opencode-2026-05-29/raw/raw-opencode-tool-before-push.json`
 
-Capture them into the checked-in fixture paths:
+Then use the generated command sheet from that directory or run the individual commands below.
 
 ```bash
 cat /tmp/runtime-capture-opencode-2026-05-29/raw/raw-opencode-file-edited.json | npm run capture:fixture -- \
