@@ -2,63 +2,6 @@
   "description": "Runtime fixture provenance for synthetic and captured payloads.",
   "entries": [
     {
-      "runtime": "claude-plugin",
-      "event": "PostToolUse.Write",
-      "fixture": "./tests/fixtures/plugin/post-tool-use-write.json",
-      "source": "synthetic",
-      "scrubbed": true,
-      "capturedAt": null,
-      "supportedTopLevelFields": [
-        "hook_event_name",
-        "tool_input",
-        "tool_name"
-      ],
-      "notes": "Synthetic replay fixture matching the packaged plugin post-edit hook contract."
-    },
-    {
-      "runtime": "claude-plugin",
-      "event": "PreToolUse.Bash.git-commit",
-      "fixture": "./tests/fixtures/plugin/pre-tool-use-bash-git-commit.json",
-      "source": "synthetic",
-      "scrubbed": true,
-      "capturedAt": null,
-      "supportedTopLevelFields": [
-        "cwd",
-        "hook_event_name",
-        "tool_input",
-        "tool_name"
-      ],
-      "notes": "Synthetic replay fixture for git commit interception before checkpoint review."
-    },
-    {
-      "runtime": "claude-plugin",
-      "event": "PreToolUse.Bash.git-push",
-      "fixture": "./tests/fixtures/plugin/pre-tool-use-bash-git-push.json",
-      "source": "synthetic",
-      "scrubbed": true,
-      "capturedAt": null,
-      "supportedTopLevelFields": [
-        "cwd",
-        "hook_event_name",
-        "tool_input",
-        "tool_name"
-      ],
-      "notes": "Synthetic replay fixture for git push interception before checkpoint review."
-    },
-    {
-      "runtime": "claude-plugin",
-      "event": "Stop",
-      "fixture": "./tests/fixtures/plugin/stop.json",
-      "source": "synthetic",
-      "scrubbed": true,
-      "capturedAt": null,
-      "supportedTopLevelFields": [
-        "cwd",
-        "hook_event_name"
-      ],
-      "notes": "Synthetic replay fixture for the optional stop-turn hook entrypoint."
-    },
-    {
       "runtime": "opencode",
       "event": "file.edited",
       "fixture": "./tests/fixtures/opencode/file-edited.json",
@@ -128,6 +71,89 @@
         "workspace"
       ],
       "notes": "Scrubbed live OpenCode payload for git push checkpoint normalization."
+    },
+    {
+      "runtime": "claude-plugin",
+      "event": "PostToolUse.Write",
+      "fixture": "./tests/fixtures/plugin/post-tool-use-write.json",
+      "source": "captured-live",
+      "scrubbed": true,
+      "capturedAt": "2026-05-30T10:13:11.850Z",
+      "supportedTopLevelFields": [
+        "cwd",
+        "duration_ms",
+        "effort",
+        "hook_event_name",
+        "permission_mode",
+        "session_id",
+        "tool_input",
+        "tool_name",
+        "tool_response",
+        "tool_use_id",
+        "transcript_path"
+      ],
+      "notes": "Scrubbed live packaged-plugin payload for post-write review."
+    },
+    {
+      "runtime": "claude-plugin",
+      "event": "PreToolUse.Bash.git-commit",
+      "fixture": "./tests/fixtures/plugin/pre-tool-use-bash-git-commit.json",
+      "source": "captured-live",
+      "scrubbed": true,
+      "capturedAt": "2026-05-30T10:13:11.947Z",
+      "supportedTopLevelFields": [
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "permission_mode",
+        "session_id",
+        "tool_input",
+        "tool_name",
+        "tool_use_id",
+        "transcript_path"
+      ],
+      "notes": "Scrubbed live packaged-plugin payload for git commit checkpoint review."
+    },
+    {
+      "runtime": "claude-plugin",
+      "event": "PreToolUse.Bash.git-push",
+      "fixture": "./tests/fixtures/plugin/pre-tool-use-bash-git-push.json",
+      "source": "captured-live",
+      "scrubbed": true,
+      "capturedAt": "2026-05-30T10:13:12.040Z",
+      "supportedTopLevelFields": [
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "permission_mode",
+        "session_id",
+        "tool_input",
+        "tool_name",
+        "tool_use_id",
+        "transcript_path"
+      ],
+      "notes": "Scrubbed live packaged-plugin payload for git push checkpoint review."
+    },
+    {
+      "runtime": "claude-plugin",
+      "event": "Stop",
+      "fixture": "./tests/fixtures/plugin/stop.json",
+      "source": "captured-live",
+      "scrubbed": true,
+      "capturedAt": "2026-05-30T10:13:12.133Z",
+      "supportedTopLevelFields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "notes": "Scrubbed live packaged-plugin payload for stop-turn review."
     }
   ]
 }

@@ -6,13 +6,14 @@ Runtime payload fixtures now carry explicit provenance through `tests/fixtures/r
 
 This manifest distinguishes:
 
-- **captured-live** fixtures whose field shapes were verified against OpenCode runtime events and scrubbed through the capture pipeline
+- **captured-live** fixtures whose field shapes were verified against real host/runtime events and scrubbed through the capture pipeline
 - **synthetic** fixtures that match the documented hook contracts but have not yet been captured from a live host session
 
-As of 2026-05-29:
+As of 2026-05-30:
 
 - All 5 OpenCode events (`file.edited`, `session.diff`, `session.idle`, `tool.execute.before.git-commit`, `tool.execute.before.git-push`) have captured-live provenance with verified field shapes including the `args` top-level field discovered in `tool.execute.before` events.
-- All 4 packaged-plugin events remain synthetic; live host capture requires a real Claude Code packaged-plugin session.
+- All 4 packaged-plugin events (`PostToolUse.Write`, `PreToolUse.Bash.git-commit`, `PreToolUse.Bash.git-push`, `Stop`) now have captured-live provenance from real Claude Code packaged-plugin sessions.
+- Live packaged-plugin capture also verified additional top-level fields such as `session_id`, `permission_mode`, `effort`, `tool_use_id`, and `transcript_path`.
 
 ## Covered Fixtures
 
@@ -60,5 +61,4 @@ Runtime fixture verification currently proves:
 
 It does not yet prove:
 
-- live host/runtime payload parity for packaged-plugin events (these remain synthetic)
 - parity beyond the documented supported event fields

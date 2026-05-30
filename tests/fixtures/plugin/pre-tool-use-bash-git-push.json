@@ -1,8 +1,16 @@
 {
+  "session_id": "5bcfe15b-d725-4f2f-81a5-013ca5da8927",
+  "transcript_path": "<redacted>",
+  "cwd": "<redacted>",
+  "permission_mode": "bypassPermissions",
+  "effort": {
+    "level": "high"
+  },
   "hook_event_name": "PreToolUse",
   "tool_name": "Bash",
-  "cwd": ".",
   "tool_input": {
-    "command": "git push origin main"
-  }
+    "command": "git push origin main",
+    "description": "Push main branch to origin"
+  },
+  "tool_use_id": "toolu_01BKV7dK6TB6vcddpWsJ38Rg"
 }

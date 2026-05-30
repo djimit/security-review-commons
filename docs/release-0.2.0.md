@@ -10,6 +10,11 @@
 
 ## What This Release Now Proves
 
+- **captured-live** packaged-plugin runtime fixture provenance for all 4 supported events:
+  - `PostToolUse.Write`
+  - `PreToolUse.Bash.git-commit`
+  - `PreToolUse.Bash.git-push`
+  - `Stop`
 - **captured-live** OpenCode runtime fixture provenance for all 5 supported events:
   - `file.edited`
   - `session.diff`
@@ -17,11 +22,6 @@
   - `tool.execute.before.git-commit`
   - `tool.execute.before.git-push`
 - field shapes verified through live capture, including the `args` top-level field discovered in `tool.execute.before` events
-- synthetic replay coverage spans the declared packaged-plugin matrix:
-  - `PostToolUse.Write`
-  - `PreToolUse.Bash.git-commit`
-  - `PreToolUse.Bash.git-push`
-  - `Stop`
 - benchmark output now carries an explicit external comparator sidecar instead of implying parity from self-benchmark results alone
 - source-release automation was exercised successfully and attached:
   - `security-review-commons-0.2.0.tgz`
@@ -32,16 +32,14 @@
 
 ## What This Release Does Not Yet Prove
 
-- no checked-in live host-captured packaged-plugin payloads are included yet
 - no external comparator run has been verified; every comparator case remains explicitly unresolved
 - no npm publication is proven in this local state
 
 ## Publication Decision
 
-- npm publication decision: `defer`
-- rationale: the local evidence bar is stronger, but live runtime captures and verified external comparator runs are still missing
+- npm publication decision: `blocked`
+- rationale: the manual publish workflow was attempted for `v0.2.0` on 2026-05-30 and failed with `ENEEDAUTH` because the repository secret `NPM_TOKEN` was not configured
 
 ## Release Follow-up
 
-- the GitHub workflow emitted a Node.js 20 deprecation warning for `actions/checkout@v4`, `actions/setup-node@v4`, and `softprops/action-gh-release@v2`
-- this does not invalidate the successful `v0.2.0` release, but the workflow should be updated before the runtime cutoff window closes
+- npm publication remains blocked until `NPM_TOKEN` is configured in GitHub repository secrets and the manual publish workflow is rerun

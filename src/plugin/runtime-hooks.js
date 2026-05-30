@@ -236,13 +236,25 @@ export async function handleStopTurnHook({ input, env = process.env }) {
 }
 
 export function classifyGitCheckpoint(command) {
-  if (/\bgit\s+push\b/i.test(command)) {
+  if (matchesGitSubcommand(command, "push")) {
     return "push";
   }
-  if (/\bgit\s+commit\b/i.test(command)) {
+  if (matchesGitSubcommand(command, "commit")) {
     return "commit";
   }
   return null;
+}
+
+function matchesGitSubcommand(command, subcommand) {
+  if (typeof command !== "string" || command.length === 0) {
+    return false;
+  }
+
+  const pattern = new RegExp(
+    String.raw`\bgit(?:\s+-[A-Za-z]\s+\S+|\s+--[A-Za-z0-9-]+(?:=\S+)?|\s+--[A-Za-z0-9-]+\s+\S+)*\s+${subcommand}\b`,
+    "i"
+  );
+  return pattern.test(command);
 }
 
 function emitDebugLog(env, payload) {

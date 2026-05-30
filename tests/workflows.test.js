@@ -48,6 +48,8 @@ test("npm publication requires explicit workflow dispatch confirmation", () => {
   assert.match(publish, /confirm_publish/);
   assert.match(publish, /release_tag/);
   assert.match(publish, /npm run check/);
+  assert.match(publish, /Require NPM token/);
+  assert.match(publish, /Repository secret NPM_TOKEN is not configured\./);
   assert.match(publish, /npm publish --access public/);
   assert.match(publish, /secrets\.NPM_TOKEN/);
 });

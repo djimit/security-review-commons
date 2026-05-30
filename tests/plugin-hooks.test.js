@@ -181,6 +181,25 @@ test("Plugin pre-bash hook blocks ahead-of-upstream push findings", () => {
   );
 });
 
+test("Plugin pre-bash hook recognizes git checkpoint commands with git -C prefix", () => {
+  assert.equal(
+    spawnSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          "import { classifyGitCheckpoint } from './src/plugin/runtime-hooks.js';",
+          "console.log(classifyGitCheckpoint(\"git -C /tmp/example commit -m test\") ?? 'null');",
+          "console.log(classifyGitCheckpoint(\"git -C /tmp/example push origin main\") ?? 'null');"
+        ].join("\n")
+      ],
+      { cwd: repoRoot, encoding: "utf8" }
+    ).stdout.trim(),
+    "commit\npush"
+  );
+});
+
 test("Plugin stop-turn hook blocks on configured turn-review findings", () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "src-plugin-stop-hook-"));
   const filePath = path.join(tempDir, "src/auth/flow.js");
