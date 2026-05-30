@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- switch the npm package identity to `@djimit/security-review-commons` so future publication does not depend on unscoped package-name ownership
+- align the shipped Claude plugin manifest version with the package version
+- correct runtime-proof and npm-publication docs to reflect captured-live fixtures and the observed npm registry blocker for the unscoped `0.2.0` publish attempts
+
 ## 0.2.0
 
 - support-matrix closure for synthetic replay coverage across packaged plugin `git commit` and `git push` plus OpenCode `tool.execute.before` commit and push variants

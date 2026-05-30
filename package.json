@@ -1,6 +1,6 @@
 {
-  "name": "security-review-commons",
-  "version": "0.2.0",
+  "name": "@djimit/security-review-commons",
+  "version": "0.2.1",
   "private": false,
   "description": "Portable, auditable code security review core with OpenCode and Codex adapters.",
   "homepage": "https://github.com/djimit/security-review-commons",

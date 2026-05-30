@@ -3,7 +3,7 @@
 ## Current Publish Surface
 
 - Source repository: GitHub
-- Package surface: npm-compatible Node package
+- Package surface: npm-compatible Node package `@djimit/security-review-commons`
 - CLI: `security-review-commons`
 - CI: GitHub Actions on pushes and pull requests
 
@@ -20,7 +20,8 @@
 - model-backed deeper agentic review
 - AST or Semgrep integration
 - npm publish still depends on `NPM_TOKEN` being configured in repository secrets, but it no longer runs from the tag-triggered source-release path
-- the first manual publish attempt for `v0.2.0` failed with `ENEEDAUTH` because `NPM_TOKEN` was not configured on GitHub
+- the unscoped `security-review-commons@0.2.0` publish attempts progressed from `ENEEDAUTH` to `E403` to `E404`; the final blocker was npm registry ownership or availability for the unscoped name rather than GitHub workflow configuration
+- the repository now targets the scoped package name `@djimit/security-review-commons` for the next publishable release
 
 ## Current Deterministic Coverage
 
@@ -47,4 +48,5 @@ The CI workflow now publishes:
 - it runs checks, refreshes the benchmark baseline, creates an npm tarball, and attaches the tarball plus proof artifacts to a GitHub release
 - `.github/workflows/publish-npm.yml` is a separate manual path that requires an explicit release tag and `confirm_publish=true`
 - `.github/workflows/publish-npm.yml` now fails fast with an explicit error if `NPM_TOKEN` is missing
+- future npm publication should use a tag that contains the scoped package metadata rather than retrying `v0.2.0`
 - this keeps release automation honest: a source tag alone cannot publish to npm

@@ -117,15 +117,14 @@ node --test tests/plugin-hooks.test.js
 
 ## Current Limitations
 
-- OpenCode payload normalization is fixture-backed for the declared support matrix, including `tool.execute.before` commit and push variants, but host runtime payload capture is still synthetic rather than collected from a live session.
-- Host plugin packaging now exists, including `git commit`, `git push`, and optional `Stop` hook replay coverage, but the checked-in fixtures are still synthetic rather than captured from a live session.
+- OpenCode payload normalization and packaged-plugin hook parsing are both backed by captured-live fixtures for the declared support matrix, but any new host event variant still requires scrubbed live capture before it should be claimed as supported.
 - Guidance files are now loaded additively from user, project, and repo-local scopes with explicit precedence, but only additive guidance, patterns, and suppressions are supported in that path.
 - Codex still does not claim native background hook or native git interception parity.
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
 - Checkpoint review now expands one hop of local JS/TS imports plus bounded adjacent auth/config/router/middleware context, but it still does not attempt full inter-file taint tracking.
 - Command-based turn review depends on an external reviewer executable when enabled; no built-in provider client ships in this slice.
 - Comparative benchmark output is now generated locally with an explicit comparator sidecar, but external comparator results are still recorded as unresolved until verified against a live baseline run.
-- Source releases are tag-driven, but npm publish now requires an explicit manual workflow dispatch plus `NPM_TOKEN`.
+- Source releases are tag-driven, but npm publish now requires an explicit manual workflow dispatch plus `NPM_TOKEN`, and the old unscoped package name proved non-publishable from the tested npm accounts.
 
 ## Current Rule Coverage
 

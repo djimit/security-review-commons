@@ -1,7 +1,7 @@
 {
   "name": "security-review-commons",
   "description": "Portable security review hooks backed by deterministic review, checkpoint review, and auditable findings.",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "homepage": "https://github.com/djimit/security-review-commons",
   "repository": "https://github.com/djimit/security-review-commons",
   "hooks": "./hooks/hooks.json"
