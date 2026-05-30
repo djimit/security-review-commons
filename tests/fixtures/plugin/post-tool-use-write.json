@@ -1,8 +1,36 @@
 {
+  "session_id": "e5bbb859-fe00-4336-a52c-e7a9b57faed6",
+  "transcript_path": "<redacted>",
+  "cwd": "<redacted>",
+  "permission_mode": "bypassPermissions",
+  "effort": {
+    "level": "high"
+  },
   "hook_event_name": "PostToolUse",
   "tool_name": "Write",
   "tool_input": {
-    "file_path": "src/auth/login.js",
-    "content": "const token = \"supersecret12345\";\n"
-  }
+    "file_path": "<redacted>",
+    "content": "export const demo = 'ok';\n"
+  },
+  "tool_response": {
+    "type": "update",
+    "filePath": "<redacted>",
+    "content": "export const demo = 'ok';\n",
+    "structuredPatch": [
+      {
+        "oldStart": 1,
+        "oldLines": 1,
+        "newStart": 1,
+        "newLines": 1,
+        "lines": [
+          "-export const status = 'clean';",
+          "+export const demo = 'ok';"
+        ]
+      }
+    ],
+    "originalFile": "export const status = 'clean';\n",
+    "userModified": false
+  },
+  "tool_use_id": "toolu_01PSMSDjbvYgiz7AXuGPMsq1",
+  "duration_ms": 2
 }

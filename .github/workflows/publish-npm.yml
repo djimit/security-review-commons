@@ -27,6 +27,14 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm run check
+      - name: Require NPM token
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "Repository secret NPM_TOKEN is not configured."
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

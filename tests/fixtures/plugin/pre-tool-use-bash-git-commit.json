@@ -1,8 +1,16 @@
 {
+  "session_id": "041425bb-e626-4d17-a73c-a2cc55c50566",
+  "transcript_path": "<redacted>",
+  "cwd": "<redacted>",
+  "permission_mode": "bypassPermissions",
+  "effort": {
+    "level": "high"
+  },
   "hook_event_name": "PreToolUse",
   "tool_name": "Bash",
-  "cwd": ".",
   "tool_input": {
-    "command": "git commit -m \"test commit\""
-  }
+    "command": "git -C /private/tmp/src-plugin-host-repo.EYFCRu commit -m separate",
+    "description": "Commit staged changes"
+  },
+  "tool_use_id": "toolu_014Le8AugmWD9QQGvCCzALak"
 }

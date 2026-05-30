@@ -36,7 +36,7 @@ These constraints still create the main host-runtime drift risks:
 2. Turn review is implemented as an async core contract with deterministic fallback and optional command-based model review.
 3. Checkpoint review reads working tree files plus bounded local import and adjacent auth/config/router/middleware context.
 4. OpenCode event names are documented and payload normalization is fixture-backed for `file.edited`, `session.diff`, `session.idle`, and `tool.execute.before` commit or push checkpoints, but live host payload capture is still pending.
-5. Host plugin packaging exists, including `PostToolUse`, `PreToolUse` git commit or push checkpoints, and an opt-in Stop-hook path, and replay fixtures now use explicit runtime-fixture manifests, but the listed fixtures remain synthetic rather than captured from a live session.
+5. Host plugin packaging exists, including `PostToolUse`, `PreToolUse` git commit or push checkpoints, and an opt-in Stop-hook path, and the listed fixtures are now backed by captured-live packaged-plugin payloads from real Claude Code sessions.
 6. Codex integration remains explicit-entrypoint based. Native background lifecycle parity is still not claimed.
 7. Guidance files load in user, project, and local order when present and merge additively into the shared config.
 8. Runtime layer kill switches, debug mode, and review caps are verified through CLI and plugin replay tests, with debug output constrained to metadata-only stderr events.

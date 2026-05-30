@@ -17,10 +17,10 @@
 
 ## Not Yet Done
 
-- checked-in live OpenCode or packaged-plugin runtime captures
 - model-backed deeper agentic review
 - AST or Semgrep integration
 - npm publish still depends on `NPM_TOKEN` being configured in repository secrets, but it no longer runs from the tag-triggered source-release path
+- the first manual publish attempt for `v0.2.0` failed with `ENEEDAUTH` because `NPM_TOKEN` was not configured on GitHub
 
 ## Current Deterministic Coverage
 
@@ -46,4 +46,5 @@ The CI workflow now publishes:
 - `.github/workflows/release.yml` triggers on tags matching `v*`
 - it runs checks, refreshes the benchmark baseline, creates an npm tarball, and attaches the tarball plus proof artifacts to a GitHub release
 - `.github/workflows/publish-npm.yml` is a separate manual path that requires an explicit release tag and `confirm_publish=true`
+- `.github/workflows/publish-npm.yml` now fails fast with an explicit error if `NPM_TOKEN` is missing
 - this keeps release automation honest: a source tag alone cannot publish to npm
