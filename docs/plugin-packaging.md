@@ -2,7 +2,7 @@
 
 ## Status
 
-`security-review-commons` now ships a host plugin wrapper around the shared review core:
+The `@djimit/security-review-commons` package now ships a host plugin wrapper around the shared review core, while the local Claude plugin manifest keeps the simpler host-facing name `security-review-commons`:
 
 - plugin manifest at `.claude-plugin/plugin.json`
 - hook config at `hooks/hooks.json`

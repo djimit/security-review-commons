@@ -20,11 +20,17 @@ test("Plugin manifest and hooks config exist and reference the packaged entrypoi
       "utf8"
     )
   );
+  const packageManifest = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, "package.json"), "utf8")
+  );
   const hooksConfig = JSON.parse(
     fs.readFileSync(path.join(repoRoot, "hooks/hooks.json"), "utf8")
   );
 
+  assert.equal(packageManifest.name, "@djimit/security-review-commons");
+  assert.equal(packageManifest.version, "0.2.1");
   assert.equal(manifest.name, "security-review-commons");
+  assert.equal(manifest.version, "0.2.1");
   assert.equal(manifest.hooks, "./hooks/hooks.json");
   assert.equal(hooksConfig.hooks.PostToolUse[0].matcher, "Edit|Write|MultiEdit");
   assert.match(

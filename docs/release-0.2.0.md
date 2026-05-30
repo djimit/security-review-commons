@@ -38,8 +38,9 @@
 ## Publication Decision
 
 - npm publication decision: `blocked`
-- rationale: the manual publish workflow was attempted for `v0.2.0` on 2026-05-30 and failed with `ENEEDAUTH` because the repository secret `NPM_TOKEN` was not configured
+- rationale: manual publish attempts for `v0.2.0` on 2026-05-30 progressed from missing-token failure (`ENEEDAUTH`) to npm 2FA-policy failure (`E403`) and then to npm registry ownership or availability failure (`E404`) for the unscoped package name `security-review-commons`
 
 ## Release Follow-up
 
-- npm publication remains blocked until `NPM_TOKEN` is configured in GitHub repository secrets and the manual publish workflow is rerun
+- npm publication for `v0.2.0` remains blocked because the tag still carries the unscoped package name
+- future npm publication should use a new source release whose tag contains the scoped package identity `@djimit/security-review-commons`

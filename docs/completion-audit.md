@@ -26,7 +26,8 @@ These remaining gaps are outside the current repository state or require an addi
 
 3. npm publication
    - Publication is intentionally gated on `NPM_TOKEN` and explicit manual workflow dispatch confirmation.
-   - A manual publish attempt for `v0.2.0` failed with `ENEEDAUTH` because `NPM_TOKEN` was not configured in repository secrets.
+   - Manual publish attempts for `v0.2.0` progressed from missing-token failure (`ENEEDAUTH`) to npm 2FA-policy failure (`E403`) to unscoped registry ownership or availability failure (`E404`).
+   - The repository now targets the scoped package name `@djimit/security-review-commons` for the next publishable release.
    - No live publish is proven in the current local state.
 
 4. Parent-repo OpenSpec synchronization
@@ -35,4 +36,4 @@ These remaining gaps are outside the current repository state or require an addi
 
 ## Current End-State Assessment
 
-The repository is internally consistent, both supported runtime matrices now have captured-live proof, the `v0.2.0` source release path has been proven, and the remaining blockers are comparator resolution and any future npm publication decision.
+The repository is internally consistent, both supported runtime matrices now have captured-live proof, the `v0.2.0` source release path has been proven, and the remaining blockers are comparator resolution plus a new source release that carries the scoped npm package identity.
