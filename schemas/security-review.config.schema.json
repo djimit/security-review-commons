@@ -231,7 +231,169 @@
           "createdOn": {
             "type": "string",
             "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["file", "repository"],
+            "default": "file"
           }
+        }
+      }
+    },
+    "modes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "type": "string",
+              "enum": ["changed-files", "full-diff", "all"],
+              "default": "changed-files"
+            },
+            "failOn": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["info", "low", "medium", "high", "critical"]
+              }
+            }
+          }
+        },
+        "audit": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "type": "string",
+              "enum": ["repository", "changed-files"],
+              "default": "repository"
+            },
+            "includeHistory": {
+              "type": "boolean",
+              "default": false
+            },
+            "failOn": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["info", "low", "medium", "high", "critical"]
+              }
+            }
+          }
+        },
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "type": "string",
+              "enum": ["repository"],
+              "default": "repository"
+            },
+            "writeBaseline": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      }
+    },
+    "scanners": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "secrets": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "patterns": {
+              "type": "boolean",
+              "default": true
+            },
+            "entropy": {
+              "type": "boolean",
+              "default": true
+            },
+            "entropyThreshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 8,
+              "default": 4.5
+            },
+            "customPatterns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "title", "regex", "severity"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "title": { "type": "string" },
+                  "regex": { "type": "string" },
+                  "severity": {
+                    "type": "string",
+                    "enum": ["info", "low", "medium", "high", "critical"]
+                  },
+                  "pathRegex": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "ast": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "languages": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["javascript", "typescript", "python"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["BIO2", "NORA", "ISO27001", "NIST-CSF", "OWASP", "EU-AI-ACT", "AVG", "GDPR"]
+          }
+        },
+        "evidenceLevel": {
+          "type": "string",
+          "enum": ["summary", "detailed", "audit-ready"],
+          "default": "summary"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "formats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["json", "sarif", "summary", "markdown", "compliance-markdown", "compliance-json"]
+          }
+        },
+        "includeComplianceMapping": {
+          "type": "boolean",
+          "default": false
         }
       }
     }

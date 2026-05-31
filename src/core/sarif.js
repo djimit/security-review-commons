@@ -1,4 +1,5 @@
 const SARIF_LEVEL = {
+  info: "note",
   low: "note",
   medium: "warning",
   high: "error",
@@ -31,7 +32,12 @@ export function findingsToSarif({ findings, toolName = "security-review-commons"
       confidence: finding.confidence,
       severity: finding.severity,
       layer: finding.source.layer,
-      verificationStatus: finding.verificationStatus
+      verificationStatus: finding.verificationStatus,
+      detectionMethod: finding.detectionMethod ?? "pattern",
+      falsePositiveRisk: finding.falsePositiveRisk ?? "medium",
+      remediationEffort: finding.remediationEffort ?? "medium",
+      complianceMapping: finding.complianceMapping ?? [],
+      evidence: finding.evidence ?? null
     }
   }));
 

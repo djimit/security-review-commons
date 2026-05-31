@@ -4,21 +4,18 @@ Portable, auditable code-security review core with thin adapters for OpenCode an
 
 ## Status
 
-This repository now implements a stronger phase-4 local foundation:
+This repository implements a phase-4 local foundation with audit-as-assurance-mode:
 
-- a shared finding schema and deterministic rule engine,
-- additive policy and reminder loading,
-- capped diff review,
-- async turn review with deterministic fallback and optional command-based model review,
-- checkpoint review over full changed-file contents with bounded import and adjacent evidence context,
-- JSONL audit logging,
-- suppression governance with expiry and ownership,
-- SARIF emission,
-- a runnable CLI,
-- OpenCode hook mapping with explicit payload normalizers for documented events,
-- explicit Codex edit, turn, and checkpoint entrypoints,
-- deterministic coverage for CI, containers, Terraform, dependency-governance drift, selected web sinks, Python deserialization hazards, and broader high-signal Python command-execution sinks,
-- CI for lint and tests.
+- shared finding schema v2 with `info` severity, `detectionMethod`, `falsePositiveRisk`, `remediationEffort`, `complianceMapping`, and `evidence` fields
+- deterministic per-edit warnings, background diff review, and checkpoint review
+- repository-wide audit mode (pattern scanner + entropy scanner) with SARIF, summary, markdown, and compliance report output
+- baseline mode for delta comparison (new/resolved/unchanged findings)
+- compliance mapping to BIO2, NORA, ISO 27001, NIST CSF, and OWASP Top 10
+- suppression governance with expiry, ownership, path scoping, and repository-scoped audit suppressions
+- JSONL audit logging
+- a runnable CLI with `review`, `audit`, and `baseline` subcommands
+- OpenCode and Codex adapters
+- CI for lint and tests (208 tests passing)
 
 It does not claim security guarantees. It is a review assistant with explicit trust boundaries.
 
@@ -35,76 +32,126 @@ It does not claim security guarantees. It is a review assistant with explicit tr
 
 ## Repo Layout
 
-- `src/core/` shared review logic
+- `src/core/` shared review logic (review, audit, baseline, entropy scanner, compliance)
 - `src/adapters/opencode/` OpenCode integration scaffold
 - `src/adapters/codex/` Codex integration scaffold
 - `.claude-plugin/`, `hooks/`, `bin/` host plugin packaging
 - `.github/workflows/` CI
-- `schemas/` JSON Schemas
+- `schemas/` JSON Schemas (finding v2, config)
 - `examples/` sample additive policy and custom patterns
 - `docs/` architecture, parity spec, threat model
-- `tests/` node:test coverage
+- `tests/` node:test coverage (208 tests)
+- `tests/corpus/audit/` audit mode fixture files
 
 ## Usage
 
-Install dependencies:
+### Review Mode (default)
 
 ```bash
-npm install
+node ./src/cli.js --diff-file <file> --changed-files <paths> --format sarif
 ```
 
-Run checks:
+### Audit Mode
+
+Repository-wide security audit with pattern and entropy scanning:
 
 ```bash
-npm run check
+# Full audit (JSON output)
+node ./src/cli.js audit --repo-root .
+
+# Audit with compliance mapping (markdown)
+node ./src/cli.js audit --format compliance-markdown --repo-root .
+
+# Audit with compliance mapping (JSON)
+node ./src/cli.js audit --format compliance-json --repo-root .
+
+# Audit including git history
+node ./src/cli.js audit --include-history --repo-root .
+
+# Legacy flag (deprecated, use subcommand instead)
+node ./src/cli.js --audit --format summary
 ```
 
-Dry-run the published package contents:
+Audit output formats:
+
+| Format | Flag | Description |
+|--------|------|-------------|
+| JSON | `--format json` | Full findings with metadata (default) |
+| Summary | `--format summary` | Severity counts |
+| Markdown | `--format markdown` | Human-readable report |
+| SARIF | `--format sarif` | SARIF 2.1.0 for GitHub Advanced Security |
+| Compliance Markdown | `--format compliance-markdown` | Findings grouped by framework and control |
+| Compliance JSON | `--format compliance-json` | Structured compliance report |
+
+### Baseline Mode
+
+Create and compare against a security baseline:
 
 ```bash
-npm run pack:dry-run
+# Write a baseline snapshot
+node ./src/cli.js baseline --write-baseline --repo-root .
+
+# Audit against a baseline (exit 1 for new critical/high findings, exit 2 for missing baseline)
+node ./src/cli.js audit --baseline .security-baseline.json --repo-root .
 ```
 
-Run the example deterministic review from Node:
+### Entropy Scanner
 
-```bash
-node -e 'import { runDeterministicReview } from "./src/core/review.js"; import fs from "node:fs"; const diff = fs.readFileSync("./tests/fixtures/sample.diff","utf8"); const res = runDeterministicReview({ diff, changedFiles:["src/auth/login.js"] }); console.log(JSON.stringify(res, null, 2));'
+The audit mode automatically runs entropy scanning alongside pattern matching. High-entropy strings (>4.5 bits/char by default) that don't match known secret prefixes are flagged with `detectionMethod: "entropy"` and elevated `falsePositiveRisk` in test directories.
+
+Configure via `security-review.config.json`:
+
+```json
+{
+  "scanners": {
+    "entropy": true,
+    "entropyThreshold": 4.5
+  }
+}
 ```
 
-Run the CLI and emit SARIF:
+### Compliance Mapping
 
-```bash
-node ./src/cli.js --diff-file ./tests/fixtures/sample.diff --changed-files src/auth/login.js --format sarif
+Each finding maps to regulatory frameworks: BIO2, NORA, ISO 27001, NIST CSF, OWASP Top 10. Filter by profile:
+
+```json
+{
+  "compliance": {
+    "profiles": ["BIO2", "NORA"],
+    "evidenceLevel": "detailed"
+  }
+}
 ```
 
-Run checkpoint review against working tree files:
+### Suppressions
 
-```bash
-node ./src/cli.js --review-mode checkpoint --repo-root ./tests/fixtures/checkpoint-repo --changed-files-file ./tests/fixtures/checkpoint-changed-files.txt --layer commit
+Suppress false positives with owner, justification, and expiry:
+
+```json
+{
+  "suppressions": [
+    {
+      "ruleId": "no-hardcoded-secrets",
+      "pathRegex": "test/fixtures/.*",
+      "owner": "security-team@example.com",
+      "justification": "Test fixture mock secrets",
+      "expiresOn": "2025-12-31",
+      "scope": "file"
+    }
+  ]
+}
 ```
 
-Run turn review with an optional configured reviewer:
+Repository-scoped suppressions only apply in audit mode:
 
-```bash
-node ./src/cli.js --review-mode turn --config ./tests/fixtures/turn-review.config.json --diff-file ./tests/fixtures/turn-review.diff --changed-files src/auth/flow.js --repo-root .
-```
-
-Run the baseline corpus:
-
-```bash
-npm run corpus
-```
-
-Run the comparative baseline benchmark harness:
-
-```bash
-npm run benchmark
-```
-
-Run the packaged plugin hook replay tests:
-
-```bash
-node --test tests/plugin-hooks.test.js
+```json
+{
+  "ruleId": "no-internal-ips",
+  "owner": "infra-team@example.com",
+  "justification": "Accepted: internal monitoring endpoints",
+  "expiresOn": "2025-12-31",
+  "scope": "repository"
+}
 ```
 
 ## Trust Boundaries
@@ -117,23 +164,33 @@ node --test tests/plugin-hooks.test.js
 
 ## Current Limitations
 
-- OpenCode payload normalization and packaged-plugin hook parsing are both backed by captured-live fixtures for the declared support matrix, but any new host event variant still requires scrubbed live capture before it should be claimed as supported.
-- Guidance files are now loaded additively from user, project, and repo-local scopes with explicit precedence, but only additive guidance, patterns, and suppressions are supported in that path.
+- OpenCode payload normalization and packaged-plugin hook parsing are both backed by captured-live fixtures for the declared support matrix, but new host event variants still require scrubbed live capture.
+- Guidance files are loaded additively from user, project, and repo-local scopes with explicit precedence; only additive guidance, patterns, and suppressions are supported in that path.
 - Codex still does not claim native background hook or native git interception parity.
-- Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It still does not cover full TS-only constructs, decorators, or type-aware flow analysis.
-- Checkpoint review now expands one hop of local JS/TS imports plus bounded adjacent auth/config/router/middleware context, but it still does not attempt full inter-file taint tracking.
+- Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It does not cover full TS-only constructs, decorators, or type-aware flow analysis.
+- Checkpoint review expands one hop of local JS/TS imports plus bounded adjacent auth/config/router/middleware context, but does not attempt full inter-file taint tracking.
 - Command-based turn review depends on an external reviewer executable when enabled; no built-in provider client ships in this slice.
-- Comparative benchmark output is now generated locally with an explicit comparator sidecar, but external comparator results are still recorded as unresolved until verified against a live baseline run.
-- Source releases are tag-driven, but npm publish now requires an explicit manual workflow dispatch plus `NPM_TOKEN`, and the old unscoped package name proved non-publishable from the tested npm accounts.
+- Entropy scanner detects high-entropy strings but cannot distinguish secrets from encoded data, hashes, or test fixtures — results have `falsePositiveRisk` elevated in test directories but still require manual review.
+- Baseline mode compares by `(ruleId, file, line)` identity; findings moved to different lines across commits will appear as resolved+new rather than unchanged.
+- Compliance mapping covers BIO2, NORA, ISO 27001, NIST CSF 2.0, and OWASP Top 10 (2021); EU AI Act and AVG/GDPR mappings are partial and advisory only.
+- Source releases are tag-driven; npm publish requires an explicit manual workflow dispatch plus `NPM_TOKEN`.
 
 ## Current Rule Coverage
 
+Review mode (per-edit and diff):
 - application sinks: command injection, eval-like execution, unsafe YAML loading, SSRF, path traversal, hardcoded secrets, open redirect, DOM HTML injection, auth-bypass flags and disabled authz config, direct object lookups from request identifiers and helper lookups by request ID, server-side template rendering from untrusted input, Python `pickle`, `torch.load`, `subprocess` with `shell=True`, `os.system`, `os.popen`, and `subprocess.getoutput` or `getstatusoutput`
 - parser-backed JS/TS semantic flow checks: request-derived values into `exec`, `eval`, `fetch`, redirect targets, and `path.join/resolve`
 - conservative sanitizer-aware suppression for explicit wrappers like `validateUrl`, `assertAllowedUrl`, and `sanitizeRelativePath`
 - CI and workflow drift: `pull_request_target`, `permissions: write-all`, `curl | sh`
 - container and IaC drift: Docker root runtime, Kubernetes privileged/root execution, Terraform public SSH ingress
 - dependency governance: `latest`, `*`, and `x` package selectors in `package.json`
+
+Audit mode (repository-wide):
+- all review-mode rules applied to every tracked file
+- 18 additional audit patterns: hardcoded credentials (AWS, Azure, GCP, generic API keys), internal IP disclosure, weak TLS, HTTP in production, debug flags, CORS misconfiguration, missing HSTS, SQL injection, missing input validation, insecure file uploads, exposed .env files, wildcard CORS, missing security headers
+- Shannon entropy scanner for high-entropy strings (>4.5 bits/char) that don't match known prefix patterns, with deduplication against pattern findings
+- compliance mapping to BIO2, NORA, ISO 27001, NIST CSF 2.0, and OWASP Top 10 for all 47 rules
+- baseline delta comparison with `new`, `resolved`, `unchanged` classification
 
 ## Verification Harness
 
@@ -146,8 +203,12 @@ node --test tests/plugin-hooks.test.js
 
 ## CI Gate Usage
 
-- `node ./src/cli.js --diff-file <file> --changed-files <paths> --fail-on-severity high`
-  exits non-zero when a finding at or above `high` is present
+- `node ./src/cli.js review --diff-file <file> --changed-files <paths> --fail-on-severity high`
+  exits non-zero when a finding at or above `high` is present (legacy mode: omit `review`)
+- `node ./src/cli.js audit --repo-root . --fail-on-severity high`
+  exits non-zero when an audit finding at or above `high` is present
+- `node ./src/cli.js audit --baseline .security-baseline.json --repo-root .`
+  exits 1 for new critical/high findings, 2 for missing baseline file
 - `node ./src/cli.js --corpus ./tests/corpus/basic.json --strict-corpus`
   exits non-zero when any corpus case deviates from expected findings
 - `node ./src/cli.js --debug --enabled-layers edit,commit,push --diff-file <file> --changed-files <paths>`

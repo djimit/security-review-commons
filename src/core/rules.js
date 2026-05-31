@@ -351,13 +351,30 @@ export const BUILTIN_RULES = [
   }
 ];
 
+import { getComplianceMappingForCategory, getFalsePositiveRiskForSeverity, getRemediationEffortForSeverity } from "./compliance-data.js";
+
+for (const rule of BUILTIN_RULES) {
+  if (!rule.scanner) rule.scanner = "pattern";
+  if (!rule.detectionMethod) rule.detectionMethod = rule.scanner;
+  if (!rule.falsePositiveRisk) rule.falsePositiveRisk = getFalsePositiveRiskForSeverity(rule.severity);
+  if (!rule.remediationEffort) rule.remediationEffort = getRemediationEffortForSeverity(rule.severity);
+  if (!rule.complianceMapping || rule.complianceMapping.length === 0) {
+    rule.complianceMapping = getComplianceMappingForCategory(rule.category);
+  }
+}
+
 export function getBuiltinRuleMetadata() {
   return BUILTIN_RULES.map((rule) => ({
     ruleId: rule.id,
     language: rule.language ?? inferLanguage(rule),
     framework: rule.framework ?? "generic",
     precision: rule.precision ?? "medium",
-    recall_risk: rule.recall_risk ?? "medium"
+    recall_risk: rule.recall_risk ?? "medium",
+    scanner: rule.scanner,
+    detectionMethod: rule.detectionMethod,
+    falsePositiveRisk: rule.falsePositiveRisk,
+    remediationEffort: rule.remediationEffort,
+    complianceMapping: rule.complianceMapping
   }));
 }
 

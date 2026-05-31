@@ -1,0 +1,14 @@
+services:
+  api:
+    image: myapp:latest
+    networks:
+      - internal
+    environment:
+      - DB_HOST=10.0.1.50
+      - DB_PORT=5432
+  monitoring:
+    image: prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml

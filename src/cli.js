@@ -14,21 +14,38 @@ import { findingsToSarif } from "./core/sarif.js";
 import { runCorpus, corpusFailed, corpusToMarkdown } from "./core/corpus.js";
 import { findingsMeetSeverityThreshold } from "./core/severity.js";
 import { summarizeFindings, summaryToMarkdown } from "./core/summary.js";
-import { normalizeSuppressions, validateSuppressionGovernance } from "./core/suppressions.js";
+import { normalizeSuppressions, validateSuppressionGovernance, applySuppressions } from "./core/suppressions.js";
+import { runRepoAudit } from "./core/repo-audit.js";
+import { auditReportToMarkdown } from "./core/repo-audit.js";
+import { findingsToSarif as auditFindingsToSarif } from "./core/sarif.js";
+import { findingsToComplianceMarkdown, findingsToComplianceJson } from "./core/compliance-report.js";
+import { writeBaseline, loadBaseline, compareBaseline, checkGitignoreAwareness } from "./core/baseline.js";
 
 function parseArgs(argv) {
   const args = {
     format: "json",
     layer: "turn",
     changedFiles: [],
-    reviewMode: "deterministic"
+    reviewMode: "deterministic",
+    audit: false,
+    subcommand: null
   };
+
+  const SUBCOMMANDS = new Set(["review", "audit", "baseline"]);
+  if (argv.length > 0 && SUBCOMMANDS.has(argv[0])) {
+    args.subcommand = argv[0];
+    argv = argv.slice(1);
+  } else if (argv.length > 0 && !argv[0].startsWith("-")) {
+    args.subcommand = null;
+  }
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
     const next = argv[index + 1];
 
-    if (token === "--diff-file") {
+    if (token === "--audit") {
+      args.audit = true;
+    } else if (token === "--diff-file") {
       args.diffFile = next;
       index += 1;
     } else if (token === "--config") {
@@ -87,6 +104,15 @@ function parseArgs(argv) {
       index += 1;
     } else if (token === "--checkpoint-max-adjacent-depth") {
       args.maxAdjacentSearchDepth = Number.parseInt(next, 10);
+      index += 1;
+    } else if (token === "--include-history") {
+      args.includeHistory = true;
+    } else if (token === "--no-history") {
+      args.includeHistory = false;
+    } else if (token === "--write-baseline") {
+      args.writeBaseline = true;
+    } else if (token === "--baseline") {
+      args.baselinePath = next;
       index += 1;
     }
   }
@@ -171,6 +197,104 @@ async function main() {
     repoRoot,
     env: process.env
   });
+
+  if (args.audit || args.subcommand === "audit") {
+    if (args.audit) {
+      process.stderr.write("Warning: --audit is deprecated. Use 'security-review audit' instead.\n");
+    }
+    const includeHistory = args.includeHistory ?? (resolvedConfig.modes?.audit?.includeHistory ?? false);
+    const auditConfig = resolvedConfig.modes?.audit ?? { scope: "repository", includeHistory: false, failOn: ["critical"] };
+    const auditResult = runRepoAudit({
+      repoRoot,
+      includeGitHistory: includeHistory,
+      ignorePatterns: args.ignorePatterns ?? []
+    });
+
+    const rawSuppressions = normalizeSuppressions(resolvedConfig.suppressions ?? []);
+    const { activeFindings, suppressedFindings } = applySuppressions(
+      auditResult.findings,
+      rawSuppressions,
+      { mode: "audit" }
+    );
+    const auditOutput = {
+      ...auditResult,
+      findings: activeFindings,
+      suppressedFindings,
+      summary: {
+        ...auditResult.summary,
+        suppressed: suppressedFindings.length
+      }
+    };
+
+    const effectiveFailOn = args.failOnSeverity ?? (auditConfig.failOn?.join(",") || undefined);
+
+    if (args.format === "sarif") {
+      process.stdout.write(
+        `${JSON.stringify(auditFindingsToSarif({ findings: auditOutput.findings }), null, 2)}\n`
+      );
+    } else if (args.format === "summary") {
+      process.stdout.write(
+        `${JSON.stringify(auditOutput.summary, null, 2)}\n`
+      );
+    } else if (args.format === "markdown") {
+      process.stdout.write(`${auditReportToMarkdown(auditOutput)}\n`);
+    } else if (args.format === "compliance-markdown") {
+      const profiles = resolvedConfig.compliance?.profiles ?? [];
+      process.stdout.write(`${findingsToComplianceMarkdown(auditOutput.findings, profiles)}\n`);
+    } else if (args.format === "compliance-json") {
+      const profiles = resolvedConfig.compliance?.profiles ?? [];
+      process.stdout.write(`${JSON.stringify(findingsToComplianceJson(auditOutput.findings, profiles), null, 2)}\n`);
+    } else {
+      process.stdout.write(`${JSON.stringify(auditOutput, null, 2)}\n`);
+    }
+
+    if (findingsMeetSeverityThreshold(auditOutput.findings, effectiveFailOn)) {
+      process.exitCode = 1;
+    }
+
+    if (args.baselinePath) {
+      try {
+        const baseline = await loadBaseline(args.baselinePath);
+        if (!baseline) {
+          process.stderr.write(`Error: Baseline file not found at ${args.baselinePath}\n`);
+          process.exitCode = 2;
+          return;
+        }
+        const comparison = compareBaseline(auditOutput.findings, baseline.findings);
+        process.stdout.write(`${JSON.stringify(comparison, null, 2)}\n`);
+        const newCriticalHigh = comparison.new.filter(
+          (f) => f.severity === "critical" || f.severity === "high"
+        );
+        if (newCriticalHigh.length > 0) {
+          process.exitCode = process.exitCode || 1;
+        }
+      } catch (err) {
+        process.stderr.write(`Error loading baseline: ${err.message}\n`);
+        process.exitCode = 2;
+      }
+    }
+    return;
+  }
+
+  if (args.subcommand === "baseline") {
+    const baselineRepoRoot = args.repoRoot ?? process.cwd();
+
+    if (args.writeBaseline) {
+      const auditResult = runRepoAudit({ repoRoot: baselineRepoRoot });
+      const result = await writeBaseline(auditResult.findings, resolvedConfig, baselineRepoRoot);
+      process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+
+      const gitignoreCheck = await checkGitignoreAwareness(baselineRepoRoot);
+      if (gitignoreCheck.finding) {
+        process.stderr.write(`Info: ${gitignoreCheck.finding.proposedFix}\n`);
+      }
+      return;
+    }
+
+    process.stderr.write("Error: baseline subcommand requires --write-baseline flag\n");
+    process.exitCode = 1;
+    return;
+  }
 
   if (args.corpusFile) {
     const report = runCorpus({
