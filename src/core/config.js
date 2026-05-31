@@ -52,7 +52,42 @@ const DEFAULT_CONFIG = {
   },
   repoGuidance: [],
   customPatterns: [],
-  suppressions: []
+  suppressions: [],
+  modes: {
+    review: {
+      scope: "changed-files",
+      failOn: ["critical", "high"]
+    },
+    audit: {
+      scope: "repository",
+      includeHistory: false,
+      failOn: ["critical"]
+    },
+    baseline: {
+      scope: "repository",
+      writeBaseline: true
+    }
+  },
+  scanners: {
+    secrets: {
+      patterns: true,
+      entropy: true,
+      entropyThreshold: 4.5,
+      customPatterns: []
+    },
+    ast: {
+      enabled: true,
+      languages: ["javascript", "typescript"]
+    }
+  },
+  compliance: {
+    profiles: [],
+    evidenceLevel: "summary"
+  },
+  output: {
+    formats: ["json"],
+    includeComplianceMapping: false
+  }
 };
 const ALLOWED_LAYERS = new Set(["edit", "turn", "commit", "push"]);
 const NODE_EXECUTABLE_PLACEHOLDERS = new Set([

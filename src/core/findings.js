@@ -21,6 +21,11 @@ export function makeFinding(input) {
     proposedFix: input.proposedFix ?? "",
     verificationStatus: input.verificationStatus ?? "unverified",
     location: input.location ?? null,
-    source: input.source
+    source: input.source,
+    detectionMethod: input.detectionMethod ?? "pattern",
+    falsePositiveRisk: input.falsePositiveRisk ?? "medium",
+    remediationEffort: input.remediationEffort ?? "medium",
+    complianceMapping: input.complianceMapping ?? [],
+    evidence: input.evidence ?? null
   };
 }

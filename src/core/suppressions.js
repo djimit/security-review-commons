@@ -40,7 +40,8 @@ export function normalizeSuppressions(rawSuppressions = []) {
       justification,
       approvedBy,
       ticket,
-      createdOn
+      createdOn,
+      scope
     } = entry;
     if (typeof ruleId !== "string" || ruleId.length === 0) {
       throw new Error(`suppressions[${index}].ruleId must be a non-empty string`);
@@ -73,7 +74,8 @@ export function normalizeSuppressions(rawSuppressions = []) {
       createdOn: createdOn ?? null,
       expiresOn: expiresOn ?? null,
       severity: suppressionSeverity(ruleId),
-      compiledPathRegex: pathRegex ? new RegExp(pathRegex, "i") : null
+      compiledPathRegex: pathRegex ? new RegExp(pathRegex, "i") : null,
+      scope: scope ?? "file"
     };
   });
 }
@@ -125,7 +127,7 @@ export function validateSuppressionGovernance(suppressions) {
   return violations;
 }
 
-export function applySuppressions(findings, suppressions) {
+export function applySuppressions(findings, suppressions, options = {}) {
   const activeFindings = [];
   const suppressedFindings = [];
 
@@ -137,7 +139,13 @@ export function applySuppressions(findings, suppressions) {
       if (isExpired(suppression.expiresOn)) {
         return false;
       }
-      if (!suppression.compiledPathRegex) {
+      if (suppression.scope === "repository" && options.mode !== "audit") {
+        return false;
+      }
+      if (!suppression.compiledPathRegex && suppression.scope !== "repository") {
+        return true;
+      }
+      if (suppression.scope === "repository") {
         return true;
       }
       return finding.files.some((file) => suppression.compiledPathRegex.test(file));

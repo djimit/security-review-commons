@@ -24,10 +24,20 @@ export {
   normalizeFileEditedEvent,
   normalizeSessionDiffEvent,
   normalizeSessionIdleEvent,
-  normalizeToolExecuteBeforeEvent,
+  normalizeToolExecuteBefore,
   onFileEdited,
   onSessionDiff,
   onSessionIdle,
   onToolExecuteBefore,
   onGitCheckpoint
 } from "./adapters/opencode/plugin.js";
+export { runRepoAudit, REPO_AUDIT_PATTERNS, maskSecrets, auditReportToMarkdown, inferFileLanguage } from "./core/repo-audit.js";
+export { findingsToComplianceMarkdown, findingsToComplianceJson } from "./core/compliance-report.js";
+export { writeBaseline, loadBaseline, compareBaseline, checkGitignoreAwareness, BASELINE_FILENAME } from "./core/baseline.js";
+export {
+  calculateEntropy,
+  extractStrings,
+  scanContentForHighEntropy,
+  deduplicateWithPatternFindings
+} from "./core/entropy-scanner.js";
+export { registerRule, getRule, getRules, clearRules, resetRegistry, loadBuiltinRules } from "./core/scanner-registry.js";

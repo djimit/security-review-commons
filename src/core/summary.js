@@ -3,7 +3,8 @@ export function summarizeFindings(findings) {
     critical: 0,
     high: 0,
     medium: 0,
-    low: 0
+    low: 0,
+    info: 0
   };
   const byCategory = {};
 
