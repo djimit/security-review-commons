@@ -123,7 +123,13 @@ Each finding maps to regulatory frameworks: BIO2, NORA, ISO 27001, NIST CSF, OWA
 }
 ```
 
-### Suppressions
+### CLI Help
+
+```bash
+node ./src/cli.js --help
+node ./src/cli.js audit --help
+node ./src/cli.js baseline --help
+```
 
 Suppress false positives with owner, justification, and expiry:
 
@@ -170,9 +176,10 @@ Repository-scoped suppressions only apply in audit mode:
 - Parser-backed semantic analysis covers JavaScript and a lightweight subset of TypeScript syntax, with explicit sink-scoped sanitizer suppression for a small built-in allowlist. It does not cover full TS-only constructs, decorators, or type-aware flow analysis.
 - Checkpoint review expands one hop of local JS/TS imports plus bounded adjacent auth/config/router/middleware context, but does not attempt full inter-file taint tracking.
 - Command-based turn review depends on an external reviewer executable when enabled; no built-in provider client ships in this slice.
-- Entropy scanner detects high-entropy strings but cannot distinguish secrets from encoded data, hashes, or test fixtures — results have `falsePositiveRisk` elevated in test directories but still require manual review.
-- Baseline mode compares by `(ruleId, file, line)` identity; findings moved to different lines across commits will appear as resolved+new rather than unchanged.
-- Compliance mapping covers BIO2, NORA, ISO 27001, NIST CSF 2.0, and OWASP Top 10 (2021); EU AI Act and AVG/GDPR mappings are partial and advisory only.
+- Entropy scanner detects high-entropy strings but cannot distinguish secrets from encoded data, hashes, or test fixtures — results have `falsePositiveRisk` elevated in test directories but still require manual review. URLs, UUIDs, SHA hashes, dotted config paths, and JSON keys are automatically excluded.
+- Baseline mode compares by `(ruleId, file)` identity with line-delta fuzzy matching (`≤5` lines). Findings moving more than 5 lines are classified as `shifted` rather than `new+resolved`.
+- Compliance mapping covers BIO2, NORA, ISO 27001, NIST CSF 2.0, and OWASP Top 10 (2021) across all 23 finding categories; EU AI Act and AVG/GDPR mappings are partial and advisory only.
+- AST scanner backend is defined in the scanner registry (`scanner: "ast"`) but not yet implemented. The existing `js-semantic.js` parser covers JS/TS flow analysis in review mode and is not wired as an audit scanner. This is scoped for a future phase.
 - Source releases are tag-driven; npm publish requires an explicit manual workflow dispatch plus `NPM_TOKEN`.
 
 ## Current Rule Coverage

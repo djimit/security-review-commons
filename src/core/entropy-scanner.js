@@ -18,6 +18,26 @@ const TEST_DIR_PATTERNS = [
   "/fixtures/", "/mocks/", "/.test.", ".test.", ".spec."
 ];
 
+const URL_PATTERN = /^https?:\/\/[^\s'"]+$/i;
+const JSON_KEY_PATTERN = /^["'][\w.]+["']\s*:/;
+const CONFIG_DEFAULT_PATTERN = /^(?:true|false|null|undefined|\d+(?:\.\d+)?|""|'')$/;
+const HASH_PATTERN = /^[0-9a-f]{40,64}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const NUMERIC_ID_PATTERN = /^[\d,_-]+$/;
+const DOTTED_PATH_PATTERN = /^(?:\.\.\.)?[a-zA-Z][\w.]*\.[a-zA-Z]/;
+
+function isLikelyBenignHighEntropy(value) {
+  if (URL_PATTERN.test(value)) return true;
+  if (JSON_KEY_PATTERN.test(value)) return true;
+  if (CONFIG_DEFAULT_PATTERN.test(value)) return true;
+  if (HASH_PATTERN.test(value)) return true;
+  if (UUID_PATTERN.test(value)) return true;
+  if (NUMERIC_ID_PATTERN.test(value)) return true;
+  if (DOTTED_PATH_PATTERN.test(value)) return true;
+  if (value.startsWith("//") || value.startsWith("/*")) return true;
+  return false;
+}
+
 function calculateEntropy(str) {
   if (!str || str.length === 0) return 0;
   const freq = {};
@@ -69,9 +89,19 @@ function maskHighEntropyString(str) {
   return str.substring(0, 8) + "****" + str.substring(str.length - 4);
 }
 
+function shouldIgnoreString(value, ignorePatterns) {
+  if (!ignorePatterns || ignorePatterns.length === 0) return false;
+  for (const pattern of ignorePatterns) {
+    const regex = typeof pattern === "string" ? new RegExp(pattern, "i") : pattern;
+    if (regex.test(value)) return true;
+  }
+  return false;
+}
+
 function scanContentForHighEntropy(content, filePath, options = {}) {
   const threshold = options.entropyThreshold ?? 4.5;
   const minLength = options.minStringLength ?? 20;
+  const ignorePatterns = options.ignorePatterns ?? [];
   const findings = [];
 
   if (isBinaryFile(filePath) || isLockFile(filePath)) return findings;
@@ -81,7 +111,7 @@ function scanContentForHighEntropy(content, filePath, options = {}) {
 
   for (const { value, index } of strings) {
     const entropy = calculateEntropy(value);
-    if (entropy >= threshold) {
+    if (entropy >= threshold && !isLikelyBenignHighEntropy(value) && !shouldIgnoreString(value, ignorePatterns)) {
       const lineNumber = content.substring(0, index).split("\n").length;
       const startLine = Math.max(1, lineNumber - 1);
       const endLine = lineNumber + 1;
@@ -147,6 +177,8 @@ export {
   isLockFile,
   getFalsePositiveRisk,
   maskHighEntropyString,
+  isLikelyBenignHighEntropy,
+  shouldIgnoreString,
   scanContentForHighEntropy,
   deduplicateWithPatternFindings,
   BINARY_EXTENSIONS,

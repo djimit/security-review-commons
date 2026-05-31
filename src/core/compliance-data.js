@@ -82,6 +82,83 @@ const CATEGORY_COMPLIANCE_MAP = {
     { framework: "ISO27001", control: "A.8.28", title: "Secure coding", severity: "critical" },
     { framework: "NIST-CSF", control: "PR.IP", title: "Protective technology", severity: "critical" },
     { framework: "OWASP", control: "A03:2021", title: "Injection", severity: "critical" }
+  ],
+  "container-hardening": [
+    { framework: "BIO2", control: "B.08", title: "Bescherming tegen malware", severity: "high" },
+    { framework: "NORA", control: "IR.04", title: "Netwerkbeveiliging", severity: "high" },
+    { framework: "ISO27001", control: "A.8.1", title: "User endpoint devices", severity: "medium" },
+    { framework: "NIST-CSF", control: "PR.IP", title: "Protective technology", severity: "medium" },
+    { framework: "OWASP", control: "A05:2021", title: "Security misconfiguration", severity: "medium" }
+  ],
+  "ci-trust-boundary": [
+    { framework: "BIO2", control: "B.11", title: "Beheer van technische kwetsbaarheden", severity: "high" },
+    { framework: "NORA", control: "IR.06", title: "Kwetsbaarheden", severity: "high" },
+    { framework: "ISO27001", control: "A.8.9", title: "Configuration management", severity: "high" },
+    { framework: "NIST-CSF", control: "PR.IP", title: "Protective technology", severity: "high" },
+    { framework: "OWASP", control: "A05:2021", title: "Security misconfiguration", severity: "high" }
+  ],
+  "ci-privilege": [
+    { framework: "BIO2", control: "B.03", title: "Identiteitsbeheer en toegangsbeheer", severity: "high" },
+    { framework: "NORA", control: "IR.05", title: "Informatiebeveiliging", severity: "high" },
+    { framework: "ISO27001", control: "A.8.2", title: "Privileged access rights", severity: "high" },
+    { framework: "NIST-CSF", control: "PR.AC", title: "Identity management and access control", severity: "high" },
+    { framework: "OWASP", control: "A01:2021", title: "Broken access control", severity: "high" }
+  ],
+  "supply-chain": [
+    { framework: "BIO2", control: "B.11", title: "Beheer van technische kwetsbaarheden", severity: "high" },
+    { framework: "NORA", control: "IR.06", title: "Kwetsbaarheden", severity: "high" },
+    { framework: "ISO27001", control: "A.5.19", title: "Information security in supplier relationships", severity: "high" },
+    { framework: "NIST-CSF", control: "ID.SC", title: "Supply chain risk management", severity: "high" },
+    { framework: "OWASP", control: "A06:2021", title: "Vulnerable and outdated components", severity: "high" }
+  ],
+  "container-privilege": [
+    { framework: "BIO2", control: "B.03", title: "Identiteitsbeheer en toegangsbeheer", severity: "high" },
+    { framework: "NORA", control: "IR.04", title: "Netwerkbeveiliging", severity: "high" },
+    { framework: "ISO27001", control: "A.8.2", title: "Privileged access rights", severity: "high" },
+    { framework: "NIST-CSF", control: "PR.AC", title: "Identity management and access control", severity: "medium" },
+    { framework: "OWASP", control: "A05:2021", title: "Security misconfiguration", severity: "medium" }
+  ],
+  "network-exposure": [
+    { framework: "BIO2", control: "B.08", title: "Bescherming tegen malware", severity: "medium" },
+    { framework: "NORA", control: "IR.04", title: "Netwerkbeveiliging", severity: "medium" },
+    { framework: "ISO27001", control: "A.8.22", title: "Segregation of networks", severity: "medium" },
+    { framework: "NIST-CSF", control: "PR.AC", title: "Identity management and access control", severity: "medium" },
+    { framework: "OWASP", control: "A05:2021", title: "Security misconfiguration", severity: "medium" }
+  ],
+  "dependency-governance": [
+    { framework: "BIO2", control: "B.11", title: "Beheer van technische kwetsbaarheden", severity: "medium" },
+    { framework: "NORA", control: "IR.06", title: "Kwetsbaarheden", severity: "medium" },
+    { framework: "ISO27001", control: "A.8.29", title: "Security in development and support", severity: "medium" },
+    { framework: "NIST-CSF", control: "PR.IP", title: "Protective technology", severity: "medium" },
+    { framework: "OWASP", control: "A06:2021", title: "Vulnerable and outdated components", severity: "medium" }
+  ],
+  "idor": [
+    { framework: "BIO2", control: "B.03", title: "Identiteitsbeheer en toegangsbeheer", severity: "high" },
+    { framework: "NORA", control: "IR.05", title: "Informatiebeveiliging", severity: "high" },
+    { framework: "ISO27001", control: "A.8.2", title: "Privileged access rights", severity: "high" },
+    { framework: "NIST-CSF", control: "PR.AC", title: "Identity management and access control", severity: "high" },
+    { framework: "OWASP", control: "A01:2021", title: "Broken access control", severity: "high" }
+  ],
+  "open-redirect": [
+    { framework: "BIO2", control: "B.11", title: "Beheer van technische kwetsbaarheden", severity: "medium" },
+    { framework: "NORA", control: "IR.06", title: "Kwetsbaarheden", severity: "medium" },
+    { framework: "ISO27001", control: "A.8.28", title: "Secure coding", severity: "medium" },
+    { framework: "NIST-CSF", control: "PR.IP", title: "Protective technology", severity: "medium" },
+    { framework: "OWASP", control: "A01:2021", title: "Broken access control", severity: "medium" }
+  ],
+  "ssrf": [
+    { framework: "BIO2", control: "B.11", title: "Beheer van technische kwetsbaarheden", severity: "high" },
+    { framework: "NORA", control: "IR.06", title: "Kwetsbaarheden", severity: "high" },
+    { framework: "ISO27001", control: "A.8.9", title: "Configuration management", severity: "high" },
+    { framework: "NIST-CSF", control: "PR.IP", title: "Protective technology", severity: "high" },
+    { framework: "OWASP", control: "A10:2021", title: "Server-side request forgery", severity: "high" }
+  ],
+  "template-injection": [
+    { framework: "BIO2", control: "B.11", title: "Beheer van technische kwetsbaarheden", severity: "critical" },
+    { framework: "NORA", control: "IR.06", title: "Kwetsbaarheden", severity: "critical" },
+    { framework: "ISO27001", control: "A.8.28", title: "Secure coding", severity: "high" },
+    { framework: "NIST-CSF", control: "PR.IP", title: "Protective technology", severity: "high" },
+    { framework: "OWASP", control: "A03:2021", title: "Injection", severity: "critical" }
   ]
 };
 

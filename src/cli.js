@@ -21,6 +21,48 @@ import { findingsToSarif as auditFindingsToSarif } from "./core/sarif.js";
 import { findingsToComplianceMarkdown, findingsToComplianceJson } from "./core/compliance-report.js";
 import { writeBaseline, loadBaseline, compareBaseline, checkGitignoreAwareness } from "./core/baseline.js";
 
+function printHelp() {
+  const help = `
+security-review — Portable, auditable code-security review
+
+Usage:
+  security-review review   [options]          Per-edit diff review (default)
+  security-review audit    [options]          Repository-wide security audit
+  security-review baseline [options]          Baseline snapshot management
+
+Review options:
+  --diff-file <path>           Read diff from file (default: stdin)
+  --changed-files <paths>      Comma-separated list of changed files
+  --changed-files-file <path>  Read changed files from file
+  --layer <layer>              Review layer: edit, turn, commit, push
+  --review-mode <mode>         Review mode: deterministic, turn, checkpoint
+  --config <path>              Load config from JSON file
+  --format <fmt>               Output: json, sarif, summary, markdown
+  --fail-on-severity <level>   Exit 1 if finding at or above severity
+  --enabled-layers <layers>    Comma-separated layers to enable
+  --debug                      Emit debug events to stderr
+
+Audit options:
+  --repo-root <path>           Repository root directory (default: cwd)
+  --include-history            Include git history in scan
+  --no-history                 Exclude git history (default)
+  --baseline <path>            Compare findings against baseline file
+  --format <fmt>               Output: json, sarif, summary, markdown,
+                               compliance-markdown, compliance-json
+  --fail-on-severity <level>   Exit 1 if finding at or above severity
+
+Baseline options:
+  --write-baseline             Write baseline snapshot to repo root
+  --repo-root <path>           Repository root directory (default: cwd)
+
+Common options:
+  --help, -h                   Show this help message
+  --corpus <path>              Run corpus validation
+  --strict-corpus              Exit 1 on corpus mismatch
+`;
+  process.stdout.write(help);
+}
+
 function parseArgs(argv) {
   const args = {
     format: "json",
@@ -32,6 +74,10 @@ function parseArgs(argv) {
   };
 
   const SUBCOMMANDS = new Set(["review", "audit", "baseline"]);
+  if (argv.length > 0 && (argv[0] === "--help" || argv[0] === "-h")) {
+    printHelp();
+    process.exit(0);
+  }
   if (argv.length > 0 && SUBCOMMANDS.has(argv[0])) {
     args.subcommand = argv[0];
     argv = argv.slice(1);
