@@ -12,6 +12,11 @@ function findingIdentity(finding) {
   return `${finding.source?.ruleId ?? finding.ruleId ?? "unknown"}::${file}::${line}`;
 }
 
+function findingTypeIdentity(finding) {
+  const file = finding.files?.[0] ?? finding.location?.file ?? finding.file ?? "";
+  return `${finding.source?.ruleId ?? finding.ruleId ?? "unknown"}::${file}`;
+}
+
 function computeIntegrity(payload) {
   const canonical = JSON.stringify(payload);
   return createHash("sha256").update(canonical).digest("hex");
@@ -78,27 +83,61 @@ export async function loadBaseline(baselinePath) {
   return baseline;
 }
 
-export function compareBaseline(currentFindings, baselineFindings) {
+export function compareBaseline(currentFindings, baselineFindings, options = {}) {
+  const maxLineDelta = options.maxLineDelta ?? 5;
   const baselineIds = new Set(baselineFindings.map((f) => f.id ?? findingIdentity(f)));
   const currentIds = new Set(currentFindings.map((f) => findingIdentity(f)));
+
+  const baselineByType = new Map();
+  for (const f of baselineFindings) {
+    const typeId = findingTypeIdentity(f);
+    if (!baselineByType.has(typeId)) baselineByType.set(typeId, []);
+    baselineByType.get(typeId).push(f);
+  }
 
   const newFindings = [];
   const resolvedFindings = [];
   const unchangedFindings = [];
+  const shiftedFindings = [];
 
   for (const f of currentFindings) {
-    const id = findingIdentity(f);
-    if (!baselineIds.has(id)) {
-      newFindings.push(f);
-    } else {
+    const exactId = findingIdentity(f);
+    if (baselineIds.has(exactId)) {
       unchangedFindings.push(f);
+      continue;
     }
+
+    const typeId = findingTypeIdentity(f);
+    const candidates = baselineByType.get(typeId);
+    if (candidates) {
+      const currentLine = f.location?.line ?? f.line ?? 0;
+      const match = candidates.find((b) => {
+        const baselineLine = b.line ?? b.location?.line ?? 0;
+        return Math.abs(currentLine - baselineLine) <= maxLineDelta;
+      });
+      if (match) {
+        shiftedFindings.push({ ...f, _shiftedFrom: match.id ?? findingIdentity(match) });
+        continue;
+      }
+    }
+
+    newFindings.push(f);
   }
 
-  for (const f of baselineFindings) {
-    const id = f.id ?? findingIdentity(f);
+  for (const b of baselineFindings) {
+    const id = b.id ?? findingIdentity(b);
     if (!currentIds.has(id)) {
-      resolvedFindings.push(f);
+      const typeId = findingTypeIdentity(b);
+      const currentTypeMatch = currentFindings.some((f) => {
+        const fTypeId = findingTypeIdentity(f);
+        if (fTypeId !== typeId) return false;
+        const currentLine = f.location?.line ?? f.line ?? 0;
+        const baselineLine = b.line ?? 0;
+        return Math.abs(currentLine - baselineLine) <= maxLineDelta;
+      });
+      if (!currentTypeMatch) {
+        resolvedFindings.push(b);
+      }
     }
   }
 
@@ -106,10 +145,12 @@ export function compareBaseline(currentFindings, baselineFindings) {
     new: newFindings,
     resolved: resolvedFindings,
     unchanged: unchangedFindings,
+    shifted: shiftedFindings,
     summary: {
       newCount: newFindings.length,
       resolvedCount: resolvedFindings.length,
       unchangedCount: unchangedFindings.length,
+      shiftedCount: shiftedFindings.length,
       totalCurrent: currentFindings.length,
       totalBaseline: baselineFindings.length
     }
@@ -159,4 +200,4 @@ export async function checkGitignoreAwareness(repoRoot) {
   return { hasGitignore: true, hasEntry: true, finding: null };
 }
 
-export { BASELINE_FILENAME, BASELINE_VERSION, findingIdentity, computeIntegrity };
+export { BASELINE_FILENAME, BASELINE_VERSION, findingIdentity, findingTypeIdentity, computeIntegrity };

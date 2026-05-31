@@ -9,6 +9,7 @@ import {
   compareBaseline,
   checkGitignoreAwareness,
   findingIdentity,
+  findingTypeIdentity,
   computeIntegrity,
   BASELINE_FILENAME,
   BASELINE_VERSION
@@ -192,6 +193,67 @@ describe("baseline", () => {
       const hash1 = computeIntegrity({ version: 1 });
       const hash2 = computeIntegrity({ version: 2 });
       assert.notEqual(hash1, hash2);
+    });
+  });
+
+  describe("compareBaseline fuzzy matching", () => {
+    it("classifies shifted findings (same rule+file, line delta ≤5) as shifted", () => {
+      const baseline = [
+        { id: "rule-1::src/app.js::10", ruleId: "rule-1", severity: "medium", category: "secret-exposure", file: "src/app.js", line: 10 }
+      ];
+      const current = [
+        makeTestFinding("rule-1", "src/app.js", 13)
+      ];
+      const result = compareBaseline(current, baseline);
+      assert.equal(result.shifted.length, 1, "Should detect shifted finding");
+      assert.equal(result.new.length, 0, "Should not classify as new");
+      assert.equal(result.resolved.length, 0, "Should not classify as resolved");
+      assert.equal(result.summary.shiftedCount, 1);
+    });
+
+    it("classifies large line shifts as new + resolved", () => {
+      const baseline = [
+        { id: "rule-1::src/app.js::10", ruleId: "rule-1", severity: "medium", category: "secret-exposure", file: "src/app.js", line: 10 }
+      ];
+      const current = [
+        makeTestFinding("rule-1", "src/app.js", 100)
+      ];
+      const result = compareBaseline(current, baseline);
+      assert.equal(result.new.length, 1, "Should classify as new when line delta >5");
+      assert.equal(result.resolved.length, 1, "Should classify old as resolved");
+    });
+
+    it("exact match is unchanged, not shifted", () => {
+      const baseline = [
+        { id: "rule-1::src/app.js::10", ruleId: "rule-1", severity: "medium", category: "secret-exposure", file: "src/app.js", line: 10 }
+      ];
+      const current = [
+        makeTestFinding("rule-1", "src/app.js", 10)
+      ];
+      const result = compareBaseline(current, baseline);
+      assert.equal(result.unchanged.length, 1, "Exact match should be unchanged");
+      assert.equal(result.shifted.length, 0, "Exact match should not be shifted");
+    });
+
+    it("respects custom maxLineDelta option", () => {
+      const baseline = [
+        { id: "rule-1::src/app.js::10", ruleId: "rule-1", severity: "medium", category: "secret-exposure", file: "src/app.js", line: 10 }
+      ];
+      const current = [
+        makeTestFinding("rule-1", "src/app.js", 13)
+      ];
+      const resultStrict = compareBaseline(current, baseline, { maxLineDelta: 0 });
+      assert.equal(resultStrict.new.length, 1, "With maxLineDelta=0, shifted line should be new");
+    });
+  });
+
+  describe("findingTypeIdentity", () => {
+    it("groups findings by ruleId and file only", () => {
+      const f = makeTestFinding("rule-1", "src/app.js", 10);
+      const typeId = findingTypeIdentity(f);
+      assert.ok(typeId.includes("rule-1"));
+      assert.ok(typeId.includes("src/app.js"));
+      assert.ok(!typeId.includes("10"), "Type identity should not include line number");
     });
   });
 });

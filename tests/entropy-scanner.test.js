@@ -7,6 +7,8 @@ import {
   isLockFile,
   getFalsePositiveRisk,
   maskHighEntropyString,
+  isLikelyBenignHighEntropy,
+  shouldIgnoreString,
   scanContentForHighEntropy,
   deduplicateWithPatternFindings
 } from "../src/core/entropy-scanner.js";
@@ -193,6 +195,73 @@ describe("entropy-scanner", () => {
       ];
       const result = deduplicateWithPatternFindings(entropyFindings, patternFindings);
       assert.equal(result.length, 1, "Should keep non-overlapping entropy findings");
+    });
+  });
+
+  describe("isLikelyBenignHighEntropy", () => {
+    it("filters out URLs", () => {
+      assert.ok(isLikelyBenignHighEntropy("https://api.example.com/v2/organizations/org-id-12345/users"), "URLs should be filtered");
+    });
+
+    it("filters out UUIDs", () => {
+      assert.ok(isLikelyBenignHighEntropy("550e8400-e29b-41d4-a716-446655440000"), "UUIDs should be filtered");
+    });
+
+    it("filters out SHA hashes", () => {
+      assert.ok(isLikelyBenignHighEntropy("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"), "SHA-256 hashes should be filtered");
+    });
+
+    it("filters out JSON keys", () => {
+      assert.ok(isLikelyBenignHighEntropy('"database_connection_string_primary":'), "JSON keys should be filtered");
+    });
+
+    it("does not filter real API keys", () => {
+      assert.ok(!isLikelyBenignHighEntropy("sk_live_FAKE_TEST_KEY_NOT_REAL_1234567890"), "API key patterns should not be filtered");
+    });
+
+    it("does not filter high-entropy random strings", () => {
+      assert.ok(!isLikelyBenignHighEntropy("xK9mP2vN8qR5wL3jF7tY1hB4sD6gH0aZ"), "Random strings should not be filtered");
+    });
+
+    it("filters out numeric IDs", () => {
+      assert.ok(isLikelyBenignHighEntropy("1234567890-0987654321"), "Numeric IDs should be filtered");
+    });
+  });
+
+  describe("FP reduction in scanContentForHighEntropy", () => {
+    it("does not flag URLs as high-entropy secrets", () => {
+      const content = 'const url = "https://api.example.com/v2/organizations/org-id-12345/users";';
+      const findings = scanContentForHighEntropy(content, "src/config.js", { entropyThreshold: 4.0 });
+      const urlFindings = findings.filter(f => f.stringValue.includes("https://"));
+      assert.equal(urlFindings.length, 0, "URLs should not be flagged");
+    });
+
+    it("does not flag UUIDs as high-entropy secrets", () => {
+      const content = 'const id = "550e8400-e29b-41d4-a716-446655440000";';
+      const findings = scanContentForHighEntropy(content, "src/app.js", { entropyThreshold: 3.0 });
+      const uuidFindings = findings.filter(f => f.stringValue.includes("550e"));
+      assert.equal(uuidFindings.length, 0, "UUIDs should not be flagged");
+    });
+
+    it("does not flag SHA hashes as high-entropy secrets", () => {
+      const content = 'const hash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";';
+      const findings = scanContentForHighEntropy(content, "src/utils.js", { entropyThreshold: 3.5 });
+      const hashFindings = findings.filter(f => f.stringValue.includes("2cf24dba"));
+      assert.equal(hashFindings.length, 0, "SHA hashes should not be flagged");
+    });
+
+    it("respects ignorePatterns option", () => {
+      const content = 'const API_KEY = "xK9mP2vN8qR5wL3jF7tY1hB4sD6gH0aZ";';
+      const findings = scanContentForHighEntropy(content, "app.js", { entropyThreshold: 4.0, ignorePatterns: ["xK9m.*"] });
+      assert.equal(findings.length, 0, "Should ignore strings matching ignorePatterns");
+    });
+
+    it("respects ignorePatterns as regex", () => {
+      const content = 'const key = "xK9mP2vN8qR5wL3jF7tY1hB4sD6gH0aZ";';
+      const findingsNoIgnore = scanContentForHighEntropy(content, "app.js", { entropyThreshold: 4.0 });
+      const findingsWithIgnore = scanContentForHighEntropy(content, "app.js", { entropyThreshold: 4.0, ignorePatterns: [/xK9m/i] });
+      assert.ok(findingsNoIgnore.length > 0, "Without ignore, should find high-entropy");
+      assert.equal(findingsWithIgnore.length, 0, "With ignore regex, should skip matching strings");
     });
   });
 });
