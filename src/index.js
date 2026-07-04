@@ -24,7 +24,7 @@ export {
   normalizeFileEditedEvent,
   normalizeSessionDiffEvent,
   normalizeSessionIdleEvent,
-  normalizeToolExecuteBefore,
+  normalizeToolExecuteBeforeEvent as normalizeToolExecuteBefore,
   onFileEdited,
   onSessionDiff,
   onSessionIdle,
