@@ -1,12 +1,12 @@
 export function findingsToComplianceMarkdown(findings, profiles) {
   const effectiveProfiles = profiles?.length > 0 ? profiles : null;
-  const byFramework = {};
-  const byControl = {};
+  const byFramework = Object.create(null);
+  const byControl = Object.create(null);
 
   for (const finding of findings) {
     const mappings = finding.complianceMapping ?? [];
     if (mappings.length === 0) {
-      const uncategorized = byFramework["Uncategorized"] ?? {};
+      const uncategorized = byFramework["Uncategorized"] ?? Object.create(null);
       const uncategorizedControls = uncategorized["—"] ?? [];
       uncategorizedControls.push(finding);
       byFramework["Uncategorized"] = uncategorized;
@@ -15,7 +15,7 @@ export function findingsToComplianceMarkdown(findings, profiles) {
     }
     for (const mapping of mappings) {
       if (effectiveProfiles && !effectiveProfiles.includes(mapping.framework)) continue;
-      const fw = byFramework[mapping.framework] ?? {};
+      const fw = byFramework[mapping.framework] ?? Object.create(null);
       const ctrl = fw[mapping.control] ?? [];
       ctrl.push(finding);
       fw[mapping.control] = ctrl;
