@@ -75,6 +75,18 @@ describe("compliance-report", () => {
       const md = findingsToComplianceMarkdown([BIO2_FINDING], []);
       assert.ok(md.includes("[HIGH]"), "Should include severity");
     });
+
+    it("does not assign through prototype keys", () => {
+      const finding = makeFinding({
+        ...BIO2_FINDING,
+        complianceMapping: [{ framework: "__proto__", control: "polluted", title: "Unsafe" }]
+      });
+
+      const md = findingsToComplianceMarkdown([finding], []);
+
+      assert.ok(md.includes("## __proto__"));
+      assert.equal({}.polluted, undefined);
+    });
   });
 
   describe("findingsToComplianceJson", () => {
