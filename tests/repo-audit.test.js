@@ -28,7 +28,7 @@ describe("repo-audit", () => {
     });
 
     it("masks AWS access keys", () => {
-      const input = "AWS_ACCESS_KEY_ID=[REDACTED BY DJIMIT HISTORY REMEDIATION]";
+      const input = "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE";
       const result = maskSecrets(input);
       assert.equal(result.includes("AKIA****"), true);
     });
